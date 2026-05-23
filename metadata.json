@@ -1,0 +1,6 @@
+{
+  "name": "Aprenda Violão do Zero",
+  "description": "Plataforma interativa com lições, dicionário de acordes, metrônomo, afinador de referência e tutor de IA para iniciantes no violão.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
