@@ -397,6 +397,658 @@ const SONG_DATABASE: Song[] = [
         text: "Temos nosso próprio tempo...",
       },
     ],
+  },
+  {
+    id: "song-5",
+    title: "Anunciação",
+    artist: "Alceu Valença",
+    bpm: 112,
+    rhythm: "Folk / Baião Suave (6/8 ou Pop)",
+    strummingPattern: ["↓", "↓", "↑", "↑", "↓", "↑"],
+    chordsUsed: ["G", "Am", "C", "D"],
+    videoTip: "Mantenha a rítmica firme com energia na batida. O Am e o C criam o contraste melódico típico do Nordeste.",
+    lines: [
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "C", position: 22 },
+        ],
+        text: "Na bruma leve das paixões que vem de dentro"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "C", position: 20 },
+        ],
+        text: "Tu vens chegando pra brincar no meu quintal"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "No teu cavalo, peito nu, cabelo ao vento"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "D", position: 20 },
+          { chord: "G", position: 30 },
+        ],
+        text: "E o sol brilhando no seu arreio de prata"
+      },
+      {
+        chords: [
+          { chord: "G", position: 10 },
+          { chord: "C", position: 22 },
+        ],
+        text: "Tu vens, tu vens, eu já escuto os teus sinais"
+      },
+      {
+        chords: [
+          { chord: "G", position: 10 },
+          { chord: "D", position: 22 },
+          { chord: "G", position: 32 },
+        ],
+        text: "Tu vens, tu vens, eu já escuto os teus sinais"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "C", position: 22 },
+        ],
+        text: "A voz do anjo sussurrou no meu ouvido"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "C", position: 20 },
+        ],
+        text: "Eu não duvido, já escuto os teus sinais"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "Que tu virias numa tarde de domingo"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "D", position: 20 },
+          { chord: "G", position: 30 },
+        ],
+        text: "Anunciar nos sinos das catedrais"
+      },
+      {
+        chords: [
+          { chord: "G", position: 10 },
+          { chord: "C", position: 22 },
+        ],
+        text: "Tu vens, tu vens, eu já escuto os teus sinais"
+      },
+      {
+        chords: [
+          { chord: "G", position: 10 },
+          { chord: "D", position: 22 },
+          { chord: "G", position: 32 },
+        ],
+        text: "Tu vens, tu vens, eu já escuto os teus sinais"
+      }
+    ]
+  },
+  {
+    id: "song-6",
+    title: "Knockin' on Heaven's Door",
+    artist: "Bob Dylan",
+    bpm: 70,
+    rhythm: "Balada Pop Lenta",
+    strummingPattern: ["↓", "↓", "↑", "↑", "↓", "↑"],
+    chordsUsed: ["G", "D", "Am", "C"],
+    videoTip: "Siga o ciclo clássico: G - D - Am / G - D - C. Toque de forma suave e constante com sentimento.",
+    lines: [
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "Mama, take this badge off of me"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "C", position: 22 },
+        ],
+        text: "I can't use it anymore"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "It's gettin' dark, too dark to see"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "C", position: 22 },
+        ],
+        text: "Feel I'm knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "Am", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "C", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "Am", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "C", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "Mama, put my guns in the ground"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "C", position: 22 },
+        ],
+        text: "I can't shoot them anymore"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "That long black cloud is comin' down"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 11 },
+          { chord: "C", position: 22 },
+        ],
+        text: "I feel I'm knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "Am", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      },
+      {
+        chords: [
+          { chord: "G", position: 13 },
+          { chord: "D", position: 24 },
+          { chord: "C", position: 35 },
+        ],
+        text: "Knock, knock, knockin' on heaven's door"
+      }
+    ]
+  },
+  {
+    id: "song-7",
+    title: "Anna Julia",
+    artist: "Los Hermanos",
+    bpm: 120,
+    rhythm: "Pop Rock animado (4/4)",
+    strummingPattern: ["↓", "↓", "↑", "↑", "↓", "↑"],
+    chordsUsed: ["G", "D", "Em", "C", "Bm"],
+    videoTip: "Use a pestana em Bm no 2ª traste comprimindo as cordas firmemente com o lado do dedo indicador. Mantenha o indicador paralelo ao traste.",
+    lines: [
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 10 },
+          { chord: "Em", position: 18 },
+          { chord: "C", position: 28 },
+        ],
+        text: "Quem te vê passar assim por nós"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 10 },
+          { chord: "Em", position: 18 },
+          { chord: "C", position: 28 },
+        ],
+        text: "Sem pretender e sem saber de nós"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 10 },
+          { chord: "Em", position: 18 },
+          { chord: "C", position: 28 },
+        ],
+        text: "Não sabe a força que tem o teu olhar"
+      },
+      {
+        chords: [
+          { chord: "G", position: 0 },
+          { chord: "D", position: 10 },
+          { chord: "Em", position: 18 },
+          { chord: "C", position: 28 },
+        ],
+        text: "E como dói te ver passar sem suspirar"
+      },
+      {
+        chords: [
+          { chord: "G", position: 8 },
+          { chord: "Bm", position: 24 },
+        ],
+        text: "Pois você é o meu amor"
+      },
+      {
+        chords: [
+          { chord: "C", position: 8 },
+          { chord: "G", position: 17 },
+          { chord: "D", position: 24 },
+        ],
+        text: "E pra sempre contigo eu quero estar"
+      },
+      {
+        chords: [
+          { chord: "G", position: 5 },
+          { chord: "Bm", position: 18 },
+        ],
+        text: "Anna Júlia! Oh, Anna Júlia!"
+      },
+      {
+        chords: [
+          { chord: "C", position: 0 },
+          { chord: "G", position: 10 },
+          { chord: "D", position: 18 },
+        ],
+        text: "Não sabe o quanto eu sofri por te amar"
+      }
+    ]
+  },
+  {
+    id: "song-8",
+    title: "Gostava Tanto de Você",
+    artist: "Tim Maia",
+    bpm: 88,
+    rhythm: "Soul / Groove Brasileiro lento (4/4)",
+    strummingPattern: ["↓", "↓↑", "↑↓", "↑"],
+    chordsUsed: ["C", "Em", "F", "G", "Am"],
+    videoTip: "O acorde de F (Fá Maior) exige pestana completa na primeira casa. Pressione o dedão atrás do braço em formato de pinça para dar sustentação.",
+    lines: [
+      {
+        chords: [
+          { chord: "C", position: 0 },
+          { chord: "Em", position: 12 },
+        ],
+        text: "Não sei por que você se foi"
+      },
+      {
+        chords: [
+          { chord: "F", position: 0 },
+          { chord: "G", position: 12 },
+        ],
+        text: "Quantas saudades eu senti"
+      },
+      {
+        chords: [
+          { chord: "C", position: 0 },
+          { chord: "Em", position: 12 },
+        ],
+        text: "E de tristeza vou viver"
+      },
+      {
+        chords: [
+          { chord: "F", position: 0 },
+          { chord: "G", position: 12 },
+        ],
+        text: "E aquele amor que não esqueci"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 0 },
+          { chord: "Em", position: 12 },
+        ],
+        text: "Não quero ver você chorar"
+      },
+      {
+        chords: [
+          { chord: "F", position: 0 },
+          { chord: "G", position: 12 },
+        ],
+        text: "Não quero ver você sofrer"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 0 },
+          { chord: "Em", position: 12 },
+        ],
+        text: "Nas estradas onde eu andar"
+      },
+      {
+        chords: [
+          { chord: "F", position: 0 },
+          { chord: "G", position: 12 },
+        ],
+        text: "Em todo lugar que eu viver"
+      },
+      {
+        chords: [
+          { chord: "C", position: 4 },
+          { chord: "Em", position: 14 },
+        ],
+        text: "Eu vou dizer para todo mundo"
+      },
+      {
+        chords: [
+          { chord: "F", position: 4 },
+          { chord: "G", position: 14 },
+        ],
+        text: "Que eu gostava tanto de você"
+      },
+      {
+        chords: [
+          { chord: "C", position: 4 },
+          { chord: "Em", position: 14 },
+        ],
+        text: "Que eu gostava tanto de você"
+      }
+    ]
+  },
+  {
+    id: "song-9",
+    title: "House of the Rising Sun",
+    artist: "The Animals",
+    bpm: 78,
+    rhythm: "Dedilhado Clássico 6/8 (P-i-m-a-m-i)",
+    strummingPattern: ["P", "i", "m", "a", "m", "i"],
+    chordsUsed: ["Am", "C", "D", "F", "E"],
+    videoTip: "Esta música é a rainha do dedilhado! Toque o baixo (P) na corda correspondente, seguido pelo indicador (i) na 3ª corda, médio (m) na 2ª e anelar (a) na 1ª, voltando pelo médio e indicador.",
+    lines: [
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "C", position: 12 },
+          { chord: "D", position: 22 },
+          { chord: "F", position: 32 },
+        ],
+        text: "There is a house in New Orleans"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "C", position: 12 },
+          { chord: "E", position: 22 },
+        ],
+        text: "They call the Rising Sun"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "C", position: 12 },
+          { chord: "D", position: 22 },
+          { chord: "F", position: 32 },
+        ],
+        text: "And it's been the ruin of many a poor boy"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "E", position: 12 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "And God, I know, I'm one"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "C", position: 12 },
+          { chord: "D", position: 22 },
+          { chord: "F", position: 32 },
+        ],
+        text: "My mother was a tailor"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "E", position: 12 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "She sewed my new blue jeans"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "C", position: 12 },
+          { chord: "D", position: 22 },
+          { chord: "F", position: 32 },
+        ],
+        text: "My father was a gamblin' man"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 3 },
+          { chord: "E", position: 12 },
+          { chord: "Am", position: 22 },
+        ],
+        text: "Down in New Orleans"
+      }
+    ]
+  },
+  {
+    id: "song-10",
+    title: "Hallelujah",
+    artist: "Leonard Cohen",
+    bpm: 80,
+    rhythm: "Dedilhado Ternário Balada (P-i-m-a-m-i)",
+    strummingPattern: ["P", "i", "m", "a", "m", "i"],
+    chordsUsed: ["C", "Am", "F", "G", "E7"],
+    videoTip: "Pressione delicadamente o primeiro baixo do acorde e faça a subida e descida limpas com a ponta dos dedos. Ideal para testar a sensibilidade acústica.",
+    lines: [
+      {
+        chords: [
+          { chord: "C", position: 12 },
+          { chord: "Am", position: 28 },
+        ],
+        text: "I've heard there was a secret chord"
+      },
+      {
+        chords: [
+          { chord: "C", position: 12 },
+          { chord: "Am", position: 28 },
+        ],
+        text: "That David played, and it pleased the Lord"
+      },
+      {
+        chords: [
+          { chord: "F", position: 10 },
+          { chord: "G", position: 23 },
+          { chord: "C", position: 33 },
+          { chord: "G", position: 40 },
+        ],
+        text: "But you don't really care for music, do you?"
+      },
+      {
+        chords: [
+          { chord: "C", position: 4 },
+          { chord: "F", position: 13 },
+          { chord: "G", position: 22 },
+        ],
+        text: "It goes like this, the fourth, the fifth"
+      },
+      {
+        chords: [
+          { chord: "Am", position: 4 },
+          { chord: "F", position: 16 },
+        ],
+        text: "The minor fall, the major lift"
+      },
+      {
+        chords: [
+          { chord: "G", position: 4 },
+          { chord: "E7", position: 15 },
+          { chord: "Am", position: 24 },
+        ],
+        text: "The baffled king composing Hallelujah"
+      },
+      {
+        chords: [
+          { chord: "F", position: 13 },
+          { chord: "Am", position: 27 },
+        ],
+        text: "Hallelujah, Hallelujah"
+      },
+      {
+        chords: [
+          { chord: "F", position: 13 },
+          { chord: "C", position: 27 },
+          { chord: "G", position: 33 },
+          { chord: "C", position: 39 },
+        ],
+        text: "Hallelujah, Hallelu-u-u-u-jah"
+      }
+    ]
+  },
+  {
+    id: "song-11",
+    title: "Hotel California (Intro)",
+    artist: "Eagles",
+    bpm: 74,
+    rhythm: "Dedilhado Sequencial (P-i-m-a-m-i)",
+    strummingPattern: ["P", "i", "m", "a", "m", "i"],
+    chordsUsed: ["Bm", "F#", "A", "E", "G", "D", "Em"],
+    videoTip: "Combine dedilhado com pestana! Toque o baixo (P) e dedilhe as cordas mais agudas. O acorde F# (Fá sustenido) exige pestana completa na 2ª casa, parecida com o F.",
+    lines: [
+      {
+        chords: [
+          { chord: "Bm", position: 5 },
+          { chord: "F#", position: 28 },
+        ],
+        text: "On a dark desert highway, cool wind in my hair"
+      },
+      {
+        chords: [
+          { chord: "A", position: 5 },
+          { chord: "E", position: 28 },
+        ],
+        text: "Warm smell of colitas, rising up through the air"
+      },
+      {
+        chords: [
+          { chord: "G", position: 5 },
+          { chord: "D", position: 28 },
+        ],
+        text: "Up ahead in the distance, I saw a shimmering light"
+      },
+      {
+        chords: [
+          { chord: "Em", position: 5 },
+          { chord: "F#", position: 28 },
+        ],
+        text: "My head grew heavy and my sight grew dim, I had to stop for the night"
+      }
+    ]
+  },
+  {
+    id: "song-12",
+    title: "Apenas Mais uma de Amor",
+    artist: "Lulu Santos",
+    bpm: 82,
+    rhythm: "Dedilhado Ternário Suave (P-i-m-a-m-i)",
+    strummingPattern: ["P", "i", "m", "a", "m", "i"],
+    chordsUsed: ["C", "G", "Am", "F", "Dm"],
+    videoTip: "Excelente balada romântica. Use dedilhado contínuo subindo e descendo. O F (Fá) exige pestana na 1ª casa, alternando com acordes abertos como C e G.",
+    lines: [
+      {
+        chords: [
+          { chord: "C", position: 3 },
+          { chord: "G", position: 22 },
+          { chord: "Am", position: 35 },
+        ],
+        text: "Eu gosto tanto de você, que até prefiro esconder"
+      },
+      {
+        chords: [
+          { chord: "F", position: 3 },
+          { chord: "C", position: 20 },
+          { chord: "G", position: 35 },
+        ],
+        text: "Deixo assim ficar, subentendido"
+      },
+      {
+        chords: [
+          { chord: "C", position: 3 },
+          { chord: "G", position: 22 },
+          { chord: "Am", position: 35 },
+        ],
+        text: "Como uma ideia que existe na cabeça"
+      },
+      {
+        chords: [
+          { chord: "F", position: 3 },
+          { chord: "C", position: 20 },
+          { chord: "G", position: 35 },
+        ],
+        text: "E não tem a menor obrigação de acontecer"
+      },
+      {
+        chords: [
+          { chord: "Dm", position: 3 },
+          { chord: "G", position: 24 },
+        ],
+        text: "Eu acho até engraçado"
+      },
+      {
+        chords: [
+          { chord: "Dm", position: 3 },
+          { chord: "G", position: 24 },
+        ],
+        text: "As coisas que a gente sente e não diz"
+      },
+      {
+        chords: [
+          { chord: "C", position: 3 },
+          { chord: "G", position: 16 },
+          { chord: "Am", position: 28 },
+          { chord: "F", position: 38 },
+        ],
+        text: "E tudo o que eu penso e sinto se desfaz num instante"
+      }
+    ]
   }
 ];
 
@@ -408,6 +1060,13 @@ const CHORD_FRETS: Record<string, (number | "x")[]> = {
   Am: ["x", 0, 2, 2, 1, 0],
   Em: [0, 2, 2, 0, 0, 0],
   Bm7: ["x", 2, 4, 2, 3, 2],
+  Bm: ["x", 2, 4, 4, 3, 2],
+  F: [1, 3, 3, 2, 1, 1],
+  "F#": [2, 4, 4, 3, 2, 2],
+  A: ["x", 0, 2, 2, 2, 0],
+  Dm: ["x", "x", 0, 2, 3, 1],
+  E: [0, 2, 2, 1, 0, 0],
+  E7: [0, 2, 0, 1, 0, 0],
   C7M: ["x", 3, 2, 0, 0, 0],
   D9: ["x", "x", 0, 2, 3, 0],
   G7: [3, 2, 0, 0, 0, 1],
@@ -681,6 +1340,25 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
               </div>
             </div>
           </div>
+
+          {/* Dicionário Visual de Acordes da Música no final da página */}
+          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-stone-800 text-left">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-stone-100 flex items-center gap-2 mb-1.5">
+              <Disc className="w-4 h-4 text-amber-600 animate-pulse" />
+              Acordes Utilizados nesta Música (Clique para ouvir)
+            </h4>
+            <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-4 leading-relaxed">
+              Estude as posições ideais e clique em qualquer diagrama para ouvir a afinação acústica exata do acorde:
+            </p>
+            <div className="flex flex-wrap gap-4 pt-1">
+              {selectedSong.chordsUsed.map((chordName) => {
+                const frets = CHORD_FRETS[chordName] || ["x", "x", 0, 2, 3, 2];
+                return (
+                  <SongChordCard key={chordName} name={chordName} frets={frets} />
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Action guidelines */}
@@ -693,6 +1371,135 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Custom compact Guitar Chord Card Component for Songs visual guide
+ */
+function SongChordCard({ name, frets }: { name: string; frets: (number | "x")[]; key?: string }) {
+  const width = 88;
+  const height = 110;
+  const leftMargin = 14;
+  const rightMargin = 74;
+  const topMargin = 22;
+  const bottomMargin = 96;
+  const totalStrings = 6;
+  const totalFrets = 4;
+  const colWidth = (rightMargin - leftMargin) / (totalStrings - 1);
+  const rowHeight = (bottomMargin - topMargin) / totalFrets;
+  const baseFret = 1;
+
+  const handlePlay = () => {
+    playGuitarChord(frets, "strum");
+  };
+
+  return (
+    <div
+      onClick={handlePlay}
+      className="flex flex-col items-center p-3 bg-slate-50 hover:bg-slate-100/70 dark:bg-stone-950/45 dark:hover:bg-stone-950/80 border border-slate-200/60 dark:border-stone-850 rounded-2xl w-[114px] transition-all hover:scale-105 active:scale-95 cursor-pointer text-center group shadow-sm"
+      title={`Clique para ouvir ${name}`}
+    >
+      <span className="font-mono font-black text-xs leading-none text-slate-800 dark:text-stone-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors block mb-1.5">
+        {name}
+      </span>
+
+      <svg width={width} height={height} className="text-slate-600 dark:text-stone-400">
+        {/* Draw Fretboard Top Nut */}
+        <line
+          x1={leftMargin - 1}
+          y1={topMargin}
+          x2={rightMargin + 1}
+          y2={topMargin}
+          strokeWidth="3"
+          className="stroke-amber-900/80 dark:stroke-amber-200/80"
+        />
+
+        {/* Draw Fretboard fret separators */}
+        {Array.from({ length: totalFrets }).map((_, fIdx) => {
+          const yCoord = topMargin + ((fIdx + 1) * rowHeight);
+          return (
+            <line
+              key={fIdx}
+              x1={leftMargin}
+              y1={yCoord}
+              x2={rightMargin}
+              y2={yCoord}
+              strokeWidth="1"
+              className="stroke-slate-250 dark:stroke-stone-800"
+            />
+          );
+        })}
+
+        {/* Draw Strings */}
+        {Array.from({ length: totalStrings }).map((_, sIdx) => {
+          const xCoord = leftMargin + (sIdx * colWidth);
+          const stringWeight = 0.6 + ((5 - sIdx) * 0.2);
+          return (
+            <line
+              key={sIdx}
+              x1={xCoord}
+              y1={topMargin}
+              x2={xCoord}
+              y2={bottomMargin}
+              strokeWidth={stringWeight}
+              className="stroke-slate-400/85 dark:stroke-stone-600"
+            />
+          );
+        })}
+
+        {/* Mute (X) and Open (O) indicators at the top */}
+        {frets.map((f, sIdx) => {
+          const xCoord = leftMargin + (sIdx * colWidth);
+          const yCoord = topMargin - 7;
+
+          if (f === "x") {
+            return (
+              <g key={sIdx}>
+                <line x1={xCoord - 2.5} y1={yCoord - 2.5} x2={xCoord + 2.5} y2={yCoord + 2.5} stroke="#ef4444" strokeWidth="1.2" />
+                <line x1={xCoord + 2.5} y1={yCoord - 2.5} x2={xCoord - 2.5} y2={yCoord + 2.5} stroke="#ef4444" strokeWidth="1.2" />
+              </g>
+            );
+          } else if (f === 0) {
+            return (
+              <circle
+                key={sIdx}
+                cx={xCoord}
+                cy={yCoord}
+                r="2.5"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="1.2"
+              />
+            );
+          }
+          return null;
+        })}
+
+        {/* Draw pressed fingers points */}
+        {frets.map((f, sIdx) => {
+          if (f !== "x" && f > 0) {
+            const x = leftMargin + (sIdx * colWidth);
+            const relativeFret = f - baseFret + 1;
+            const y = topMargin + ((relativeFret - 0.5) * rowHeight);
+
+            return (
+              <circle
+                key={sIdx}
+                cx={x}
+                cy={y}
+                r="4.5"
+                className="fill-amber-700 dark:fill-amber-500"
+              />
+            );
+          }
+          return null;
+        })}
+      </svg>
+      <span className="text-[10px] font-mono text-slate-400 dark:text-stone-500 mt-2 select-all">
+        {frets.map(f => (f === "x" ? "X" : f)).join(" ")}
+      </span>
     </div>
   );
 }

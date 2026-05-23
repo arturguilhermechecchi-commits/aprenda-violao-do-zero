@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LessonsTab from "./components/LessonsTab";
 import ChordsTab from "./components/ChordsTab";
 import TunerTab from "./components/TunerTab";
@@ -8,7 +8,8 @@ import SongsTab from "./components/SongsTab";
 import AdminTab from "./components/AdminTab";
 import LoginScreen from "./components/LoginScreen";
 import { UserSession } from "./types";
-import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck } from "lucide-react";
+import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck, Pocket, AudioWaveform, Sliders, Check, Settings2, RefreshCw } from "lucide-react";
+import { updateAudioConfig, playGuitarChord } from "./components/AcousticAudio";
 
 type TabId = "lessons" | "chords" | "songs" | "tuner" | "metronome" | "aichat" | "admin";
 
@@ -31,6 +32,143 @@ export default function App() {
     }
     return null;
   });
+
+  // Audio configuration settings backed by SQLite
+  const [isAudioPanelOpen, setIsAudioPanelOpen] = useState<boolean>(false);
+  const [masterVolume, setMasterVolume] = useState<number>(80);
+  const [guitarType, setGuitarType] = useState<string>("acoustic_steel");
+  const [metronomeFrequency, setMetronomeFrequency] = useState<number>(1000);
+  const [strumSpeed, setStrumSpeed] = useState<string>("strum");
+  const [isSavingAudio, setIsSavingAudio] = useState<boolean>(false);
+  const [saveAudioSuccess, setSaveAudioSuccess] = useState<boolean>(false);
+
+  // Fetch Audio settings from SQLite database
+  useEffect(() => {
+    if (!currentUser?.email) return;
+
+    fetch(`/api/audio-settings?email=${encodeURIComponent(currentUser.email)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.settings) {
+          const s = data.settings;
+          setMasterVolume(s.master_volume);
+          setGuitarType(s.guitar_type);
+          setMetronomeFrequency(s.metronome_frequency);
+          setStrumSpeed(s.strum_speed);
+
+          // Configure standard Web Audio module
+          updateAudioConfig({
+            masterVolume: s.master_volume / 100,
+            guitarType: s.guitar_type,
+            metronomeFrequency: s.metronome_frequency,
+            strumSpeed: s.strum_speed
+          });
+        }
+      })
+      .catch((err) => console.error("Erro ao sincronizar configurações de áudio:", err));
+  }, [currentUser?.email]);
+
+  // Synchronize actual playing synthesizer in real-time when user drags knobs
+  useEffect(() => {
+    updateAudioConfig({
+      masterVolume: masterVolume / 100,
+      guitarType: guitarType,
+      metronomeFrequency: metronomeFrequency,
+      strumSpeed: strumSpeed
+    });
+  }, [masterVolume, guitarType, metronomeFrequency, strumSpeed]);
+
+  // Keep latest configuration in a ref to avoid stale closure issues in unload events
+  const audioSettingsRef = useRef({
+    email: currentUser?.email,
+    masterVolume,
+    guitarType,
+    metronomeFrequency,
+    strumSpeed
+  });
+
+  useEffect(() => {
+    audioSettingsRef.current = {
+      email: currentUser?.email,
+      masterVolume,
+      guitarType,
+      metronomeFrequency,
+      strumSpeed
+    };
+  }, [currentUser?.email, masterVolume, guitarType, metronomeFrequency, strumSpeed]);
+
+  // Automatic saving on page exit or visibility hidden (tab change / browser minimized)
+  useEffect(() => {
+    const saveOnExit = () => {
+      const config = audioSettingsRef.current;
+      if (!config.email) return;
+
+      const bodyData = JSON.stringify({
+        email: config.email,
+        masterVolume: config.masterVolume,
+        guitarType: config.guitarType,
+        metronomeFrequency: config.metronomeFrequency,
+        strumSpeed: config.strumSpeed
+      });
+
+      // Fetch with keepalive: true holds the connection open even after document context has been destroyed
+      try {
+        fetch("/api/audio-settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: bodyData,
+          keepalive: true
+        });
+      } catch (e) {
+        console.error("Erro no salvamento automático ao sair:", e);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        saveOnExit();
+      }
+    };
+
+    window.addEventListener("beforeunload", saveOnExit);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", saveOnExit);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, []);
+
+  const handleSaveAudioSettings = async () => {
+    if (!currentUser?.email) return;
+    setIsSavingAudio(true);
+    setSaveAudioSuccess(false);
+
+    try {
+      const res = await fetch("/api/audio-settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentUser.email,
+          masterVolume,
+          guitarType,
+          metronomeFrequency,
+          strumSpeed
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveAudioSuccess(true);
+        setTimeout(() => setSaveAudioSuccess(false), 2500);
+      }
+    } catch (e) {
+      console.error("Erro ao salvar áudio no SQLite:", e);
+    } finally {
+      setIsSavingAudio(false);
+    }
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -91,11 +229,11 @@ export default function App() {
                 {currentUser?.username ? currentUser.username.charAt(0).toUpperCase() : "U"}
               </div>
               <div className="hidden md:block text-left text-xs">
-                <span className="font-bold text-slate-805 dark:text-stone-200 block max-w-[120px] truncate">
+                <span className="font-bold text-slate-900 dark:text-stone-200 block max-w-[140px] truncate">
                   {currentUser?.username}
                 </span>
-                <span className="text-[9px] text-slate-400 dark:text-stone-500 block leading-none font-mono">
-                  {currentUser?.email === "convidado@violao.com" ? "Convidado" : "Aluno Ativo"}
+                <span className="text-[9px] text-slate-400 dark:text-stone-500 block leading-none font-mono mt-0.5">
+                  {currentUser?.email === "convidado@violao.com" ? "Convidado" : "Aluno Ativo"} • <strong className="text-amber-700 dark:text-amber-500 font-bold">{currentUser?.guitarLevel || "Iniciante"}</strong>
                 </span>
               </div>
               
@@ -108,6 +246,19 @@ export default function App() {
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
+
+            <button
+              onClick={() => setIsAudioPanelOpen(!isAudioPanelOpen)}
+              id="audio-studio-toggler"
+              className={`p-2 rounded-xl border flex items-center gap-1.5 font-bold tracking-tight text-xs transition duration-150 ${
+                isAudioPanelOpen
+                  ? "bg-amber-700 hover:bg-amber-600 border-amber-600 text-white shadow-sm font-black"
+                  : "border-slate-200 dark:border-stone-800 bg-slate-50 dark:bg-stone-950 hover:bg-slate-100 dark:hover:bg-stone-850 text-slate-700 dark:text-stone-300"
+              }`}
+            >
+              <Volume2 className="w-4 h-4 text-amber-500 animate-pulse" />
+              Estúdio de Som
+            </button>
 
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
@@ -124,6 +275,212 @@ export default function App() {
 
         </div>
       </header>
+
+      {/* Audio Panel Console Container (Backed by SQLite) */}
+      {isAudioPanelOpen && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+          <div className="bg-stone-900 border-2 border-stone-850 rounded-3xl p-6 text-stone-100 shadow-2xl relative overflow-hidden">
+            {/* Wooden Side Accents for Retro Studio Vibe */}
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-amber-800" />
+            <div className="absolute right-0 top-0 bottom-0 w-2 bg-amber-800" />
+            
+            <div className="pl-2 pr-2">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-stone-800 pb-4 mb-5 gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-950/60 border border-amber-900/50 rounded-xl">
+                    <AudioWaveform className="w-5 h-5 text-amber-500 animate-pulse" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-extrabold text-sm tracking-wide uppercase text-amber-400">
+                      Estúdio de Timbre & Áudio (SQLite)
+                    </h3>
+                    <p className="text-[10px] text-stone-400 font-mono flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>Controle os osciladores, filtros passa-baixas e a velocidade.</span>
+                      <span className="inline-flex items-center gap-1 text-[9px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-900/50 font-bold uppercase tracking-wider animate-pulse">
+                        ● Salvamento Automático Ativo ao Sair
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => playGuitarChord(["x", 3, 2, 0, 1, 0], "strum")}
+                    className="px-3.5 py-1.5 bg-amber-800/80 hover:bg-amber-700 border border-amber-700 rounded-xl text-[11px] font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Music className="w-3.5 h-3.5" /> Testar Acorde C
+                  </button>
+                  <button
+                    onClick={handleSaveAudioSettings}
+                    disabled={isSavingAudio}
+                    className={`px-4 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer ${
+                      saveAudioSuccess
+                        ? "bg-emerald-600 border border-emerald-500 text-white"
+                        : "bg-amber-500 hover:bg-amber-400 text-stone-950 disabled:opacity-55"
+                    }`}
+                  >
+                    {isSavingAudio ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : saveAudioSuccess ? (
+                      <Check className="w-3.5 h-3.5" />
+                    ) : (
+                      <Settings2 className="w-3.5 h-3.5" />
+                    )}
+                    {saveAudioSuccess ? "Salvo no SQLite!" : "Salvar no Banco"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Console Sliders & Knobs */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                
+                {/* 1. Instrument Selection */}
+                <div className="bg-stone-950/60 border border-stone-850 p-4 rounded-2xl">
+                  <span className="text-[10px] font-mono text-stone-500 uppercase font-black block mb-2.5">
+                    🎸 Tipo de Violão / Timbre
+                  </span>
+                  <div className="space-y-1.5">
+                    {[
+                      { id: "acoustic_steel", name: "Aço Acústico (Padrão)", desc: "Brilhante e encorpado" },
+                      { id: "classic_nylon", name: "Nylon Clássico", desc: "Suave, aveludado e macio" },
+                      { id: "electric_jazz", name: "Jazz Hollowbody", desc: "Médios quentes de jazz" },
+                      { id: "electric_overdrive", name: "Distorção Overdrive", desc: "Bite de rock agressivo" }
+                    ].map((item) => (
+                      <label
+                        key={item.id}
+                        className={`flex items-center justify-between p-2 rounded-xl cursor-pointer border text-xs transition duration-150 ${
+                          guitarType === item.id
+                            ? "bg-amber-950/40 border-amber-500/60 text-amber-300"
+                            : "bg-transparent border-transparent text-stone-400 hover:bg-stone-900/50"
+                        }`}
+                        onClick={() => setGuitarType(item.id)}
+                      >
+                        <div className="text-left">
+                          <p className="font-extrabold text-[11px] leading-tight">{item.name}</p>
+                          <p className="text-[9px] text-stone-500 leading-none mt-0.5">{item.desc}</p>
+                        </div>
+                        <input
+                          type="radio"
+                          name="guitarType"
+                          checked={guitarType === item.id}
+                          onChange={() => {}}
+                          className="sr-only"
+                        />
+                        {guitarType === item.id && <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Master Volume */}
+                <div className="bg-stone-950/60 border border-stone-850 p-4 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono text-stone-500 uppercase font-black block mb-2.5">
+                      🎛️ Volume Geral (Master)
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <Volume2 className="w-5 h-5 text-amber-500 shrink-0" />
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={masterVolume}
+                        onChange={(e) => setMasterVolume(Number(e.target.value))}
+                        className="w-full accent-amber-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer"
+                      />
+                      <span className="text-xs font-mono font-bold shrink-0 w-8 text-right text-amber-400">
+                        {masterVolume}%
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-stone-500 mt-2 leading-relaxed">
+                      Controla o ganho máximo de amplificação das 6 cordas nos canais stereo.
+                    </p>
+                  </div>
+                  
+                  {/* Visual LED Volume indicator meter */}
+                  <div className="mt-4 flex gap-1 h-3.5 bg-stone-900/80 p-0.5 rounded border border-stone-800 overflow-hidden items-end">
+                    {Array.from({ length: 14 }).map((_, idx) => {
+                      const isActive = masterVolume >= (idx + 1) * 7.1;
+                      let color = "bg-green-500";
+                      if (idx > 10) color = "bg-red-500";
+                      else if (idx > 7) color = "bg-yellow-500";
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-full h-full rounded-sm transition duration-150 ${
+                            isActive ? color : "bg-stone-850"
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Metronome Tone Pitch */}
+                <div className="bg-stone-950/60 border border-stone-850 p-4 rounded-2xl flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-mono text-stone-500 uppercase font-black block mb-2.5">
+                      ⏱️ Tom do Metrônomo (Hz)
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <Activity className="w-5 h-5 text-amber-500 shrink-0" />
+                      <input
+                        type="range"
+                        min="400"
+                        max="2000"
+                        step="50"
+                        value={metronomeFrequency}
+                        onChange={(e) => setMetronomeFrequency(Number(e.target.value))}
+                        className="w-full accent-amber-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer"
+                      />
+                      <span className="text-xs font-mono font-bold shrink-0 w-12 text-right text-amber-400">
+                        {metronomeFrequency}Hz
+                      </span>
+                    </div>
+                    <p className="text-[9px] text-stone-500 mt-2 leading-relaxed">
+                      Altera a frequência do clique principal (Comp. 1: {metronomeFrequency}Hz, seguintes: {Math.round(metronomeFrequency * 0.6)}Hz).
+                    </p>
+                  </div>
+
+                  <div className="mt-4 text-center">
+                    <span className="text-[9px] font-bold uppercase tracking-wider font-mono text-stone-400">
+                      Médio-Grave: {metronomeFrequency < 800 ? "🚪 Bloco de Madeira" : metronomeFrequency > 1400 ? "🔔 Sino Cristal" : "🥁 Clique Clássico"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 4. Strum Speed Style */}
+                <div className="bg-stone-950/60 border border-stone-850 p-4 rounded-2xl">
+                  <span className="text-[10px] font-mono text-stone-500 uppercase font-black block mb-2.5">
+                    ⚡ Espaçamento de Cordas
+                  </span>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { id: "strum", name: "Varredura Média (35ms)", desc: "Simula palhetada confortável" },
+                      { id: "fast", name: "Varredura Rápida (15ms)", desc: "Ataque veloz e agressivo" },
+                      { id: "plucked", name: "Dedilhado Lento (180ms)", desc: "Notas soadas individualmente" }
+                    ].map((style) => (
+                      <button
+                        key={style.id}
+                        onClick={() => setStrumSpeed(style.id)}
+                        className={`text-left p-2 rounded-xl border transition-all cursor-pointer ${
+                          strumSpeed === style.id
+                            ? "bg-amber-950/40 border-amber-500/60 text-amber-300"
+                            : "bg-transparent border-stone-850 text-stone-400 hover:bg-stone-900/40 hover:border-stone-800"
+                        }`}
+                      >
+                        <p className="font-extrabold text-[10px] leading-tight">{style.name}</p>
+                        <p className="text-[9px] text-stone-500 leading-none mt-0.5">{style.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Header with Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
@@ -249,7 +606,14 @@ export default function App() {
 
         {/* Tab view containers */}
         <main className="transition-all duration-300">
-          {activeTab === "lessons" && <LessonsTab currentUser={currentUser} />}
+          {activeTab === "lessons" && (
+            <LessonsTab 
+              currentUser={currentUser} 
+              onUserLevelUpdate={(newLevel) => {
+                setCurrentUser((prev) => prev ? { ...prev, guitarLevel: newLevel } : null);
+              }}
+            />
+          )}
           {activeTab === "chords" && <ChordsTab />}
           {activeTab === "songs" && <SongsTab currentUser={currentUser} />}
           {activeTab === "tuner" && <TunerTab />}

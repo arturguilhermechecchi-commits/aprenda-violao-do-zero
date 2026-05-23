@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { UserSession } from "../types";
-import { Lock, Mail, User, Eye, EyeOff, Music, Sparkles, BookOpen, LogIn, UserPlus, ShieldAlert } from "lucide-react";
+import { Lock, Mail, User, Eye, EyeOff, Music, Sparkles, BookOpen, LogIn, UserPlus } from "lucide-react";
 
 interface LoginScreenProps {
   onLoginSuccess: (session: UserSession) => void;
@@ -12,6 +12,7 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [guitarLevel, setGuitarLevel] = useState("Iniciante");
   const [showPassword, setShowPassword] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [successText, setSuccessText] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
         username: data.username,
         email: data.email,
         joinedAt: data.joinedAt,
+        guitarLevel: data.guitarLevel || "Iniciante",
       };
 
       onLoginSuccess(session);
@@ -93,6 +95,7 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
           email: cleanEmail,
           username: cleanUsername,
           password: cleanPassword,
+          guitarLevel: guitarLevel,
         }),
       });
 
@@ -121,20 +124,46 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
     setErrorText(null);
   };
 
-  const loadAdminAccount = () => {
-    setEmail("arturguilhermechecchi@gmail.com");
-    setPassword("admin123");
-    setErrorText(null);
-  };
-
   const enterAsGuest = async () => {
-    // Standard guest bypass or auto-register guest if they want
-    const session: UserSession = {
-      username: "Aluno Convidado",
-      email: "convidado@violao.com",
-      joinedAt: new Date().toLocaleDateString("pt-BR"),
-    };
-    onLoginSuccess(session);
+    setIsLoading(true);
+    setErrorText(null);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "convidado@violao.com", password: "convidado123" }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Fallback robust so they are never locked out
+        onLoginSuccess({
+          username: "Aluno Convidado",
+          email: "convidado@violao.com",
+          joinedAt: new Date().toLocaleDateString("pt-BR"),
+          guitarLevel: guitarLevel || "Iniciante",
+        });
+        return;
+      }
+
+      onLoginSuccess({
+        username: data.username,
+        email: data.email,
+        joinedAt: data.joinedAt,
+        guitarLevel: guitarLevel || "Iniciante",
+      });
+    } catch (err) {
+      console.error("Erro ao autenticar convidado:", err);
+      onLoginSuccess({
+        username: "Aluno Convidado",
+        email: "convidado@violao.com",
+        joinedAt: new Date().toLocaleDateString("pt-BR"),
+        guitarLevel: guitarLevel || "Iniciante",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
 
@@ -254,6 +283,34 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
             {/* Form */}
             <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-4 text-left">
               
+              {/* Guitar Level Selector horizontal buttons block */}
+              <div className="mb-6 p-3 bg-stone-950/40 rounded-2xl border border-stone-800/40">
+                <label className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block mb-2">
+                  Selecione seu nível de Violão:
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "Iniciante", label: "Iniciante", icon: "🎸" },
+                    { value: "Intermediário", label: "Intermediário", icon: "🎶" },
+                    { value: "Avançado", label: "Avançado", icon: "🔥" }
+                  ].map((lvl) => (
+                    <button
+                      key={lvl.value}
+                      type="button"
+                      onClick={() => setGuitarLevel(lvl.value)}
+                      className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold transition flex flex-col items-center justify-center gap-1 cursor-pointer ${
+                        guitarLevel === lvl.value
+                          ? "bg-amber-950/50 border-amber-500 text-amber-400 shadow-sm shadow-amber-500/10"
+                          : "bg-stone-950 border-stone-900 text-stone-400 hover:border-stone-800"
+                      }`}
+                    >
+                      <span className="text-base">{lvl.icon}</span>
+                      <span>{lvl.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Username field (Register mode only) */}
               {isRegistering && (
                 <div>
@@ -334,25 +391,15 @@ export default function LoginScreen({ onLoginSuccess, isDarkMode }: LoginScreenP
                   Conexões rápidas de demonstração do sistema:
                 </span>
                 
-                <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2">
+                <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={loadDemoAccount}
                     id="load-demo-account-btn"
                     className="py-2.5 px-3 bg-stone-950 hover:bg-stone-850 text-amber-500 border border-amber-900/35 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-1"
                   >
-                    <Sparkles className="w-3 h-3" />
+                    <Sparkles className="w-3" />
                     Aluno Demo
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={loadAdminAccount}
-                    id="load-admin-account-btn"
-                    className="py-2.5 px-3 bg-red-950/40 hover:bg-red-900/20 text-red-400 border border-red-900/40 rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-1 font-sans"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5 text-red-500" />
-                    Admin Artur
                   </button>
 
                   <button

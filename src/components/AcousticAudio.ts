@@ -2,6 +2,27 @@ let audioCtx: AudioContext | null = null;
 let tunerOscillator: OscillatorNode | null = null;
 let tunerGainNode: GainNode | null = null;
 
+export interface AudioConfig {
+  masterVolume: number; // 0 to 1
+  guitarType: string; // 'acoustic_steel', 'classic_nylon', 'electric_jazz', 'electric_overdrive'
+  metronomeFrequency: number; // 400 to 2000
+  strumSpeed: string; // 'strum', 'fast', 'plucked'
+}
+
+export const audioConfig: AudioConfig = {
+  masterVolume: 0.8,
+  guitarType: "acoustic_steel",
+  metronomeFrequency: 1000,
+  strumSpeed: "strum"
+};
+
+export function updateAudioConfig(settings: Partial<AudioConfig>) {
+  if (settings.masterVolume !== undefined) audioConfig.masterVolume = settings.masterVolume;
+  if (settings.guitarType !== undefined) audioConfig.guitarType = settings.guitarType;
+  if (settings.metronomeFrequency !== undefined) audioConfig.metronomeFrequency = settings.metronomeFrequency;
+  if (settings.strumSpeed !== undefined) audioConfig.strumSpeed = settings.strumSpeed;
+}
+
 // Base frequencies for acoustic guitar strings: 6th (Low E) to 1st (High e)
 const stringBaseFreqs = [
   82.41,  // E2 (6ª corda)
@@ -35,28 +56,49 @@ function playStringTone(
   const baseFreq = stringBaseFreqs[stringIndex];
   const frequency = baseFreq * Math.pow(2, fret / 12);
 
-  // We combine a triangle wave (for fat acoustic wood depth) and a sine wave (for support)
+  // We combine a triangle/sine/sawtooth wave depending on the selected guitar_type in SQLite
   const osc1 = ctx.createOscillator();
   const osc2 = ctx.createOscillator();
   const gainNode = ctx.createGain();
   const filter = ctx.createBiquadFilter();
 
-  osc1.type = "triangle";
-  osc2.type = "sine";
+  if (audioConfig.guitarType === "classic_nylon") {
+    osc1.type = "sine";
+    osc2.type = "sine";
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(700, time);
+    filter.frequency.exponentialRampToValueAtTime(80, time + duration);
+  } else if (audioConfig.guitarType === "electric_jazz") {
+    osc1.type = "triangle";
+    osc2.type = "triangle";
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1000, time);
+    filter.frequency.exponentialRampToValueAtTime(120, time + duration);
+  } else if (audioConfig.guitarType === "electric_overdrive") {
+    osc1.type = "sawtooth";
+    osc2.type = "triangle";
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1800, time);
+    filter.frequency.exponentialRampToValueAtTime(250, time + duration);
+  } else {
+    // default: acoustic_steel
+    osc1.type = "triangle";
+    osc2.type = "sine";
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1500, time);
+    filter.frequency.exponentialRampToValueAtTime(150, time + duration);
+  }
 
   osc1.frequency.setValueAtTime(frequency, time);
   osc2.frequency.setValueAtTime(frequency * 2, time); // Harmony harmonic
 
-  filter.type = "lowpass";
-  // The cutoff sweeps down as the string rings out, mimicking string damping
-  filter.frequency.setValueAtTime(1500, time);
-  filter.frequency.exponentialRampToValueAtTime(150, time + duration);
+  // Attack-Decay-Sustain-Release Gain Envelope scaled by custom masterVolume
+  let maxGain = stringIndex >= 3 ? 0.25 : 0.4; // Bass strings slightly louder
+  maxGain *= (audioConfig.masterVolume || 0.8);
 
-  // Attack-Decay-Sustain-Release Gain Envelope
-  const maxGain = stringIndex >= 3 ? 0.25 : 0.4; // Bass strings slightly louder, treble crisp
   gainNode.gain.setValueAtTime(0, time);
   gainNode.gain.linearRampToValueAtTime(maxGain, time + 0.008); // Sharp pluck attack
-  gainNode.gain.exponentialRampToValueAtTime(0.005, time + duration); // Gradual decay
+  gainNode.gain.exponentialRampToValueAtTime(0.0001, time + duration); // Gradual decay
 
   osc1.connect(filter);
   osc2.connect(filter);
@@ -153,11 +195,16 @@ export function playMetronomeBeat(isFirstBeat: boolean) {
     const gainNode = ctx.createGain();
 
     osc.type = "sine";
-    // First beat is high pitched, other beats are woodblock low click
-    osc.frequency.setValueAtTime(isFirstBeat ? 1000 : 600, now);
+    
+    // Use dynamically configured metronome frequency
+    const freq = audioConfig.metronomeFrequency || 1000;
+    osc.frequency.setValueAtTime(isFirstBeat ? freq : freq * 0.6, now);
+
+    // Apply master volume modifier as well!
+    const targetVolume = 0.3 * (audioConfig.masterVolume || 0.8);
 
     gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(0.3, now + 0.002);
+    gainNode.gain.linearRampToValueAtTime(targetVolume, now + 0.002);
     gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08); // short click
 
     osc.connect(gainNode);

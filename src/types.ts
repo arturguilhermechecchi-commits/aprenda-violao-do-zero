@@ -1,3 +1,17 @@
+export interface ChordVariation {
+  name: string;
+  difficulty: "Iniciante" | "Intermediário" | "Avançado";
+  frets: (number | "x")[];
+  fingers: (number | null)[];
+  baseFret: number;
+  barre?: {
+    fret: number;
+    startString: number;
+    endString: number;
+  };
+  usageTip: string;
+}
+
 export interface Chord {
   name: string;
   frets: (number | "x")[]; // from 6th (E) on index 0 to 1st (e) on index 5
@@ -10,6 +24,7 @@ export interface Chord {
   };
   altName?: string;
   usageTip: string;
+  variations?: ChordVariation[];
 }
 
 export interface Lesson {
@@ -19,6 +34,7 @@ export interface Lesson {
   description: string;
   contentMarkdown: string;
   order: number;
+  level?: string;
 }
 
 export interface SongLine {
@@ -49,5 +65,6 @@ export interface UserSession {
   username: string;
   email: string;
   joinedAt: string;
+  guitarLevel?: string;
 }
 
