@@ -473,6 +473,58 @@ As respostas devem ser acolhedoras, amigáveis, precisas e focadas estritamente 
   }
 });
 
+// Performance analytics routes
+app.get("/api/performance/summary", (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "E-mail é obrigatório." });
+    }
+    const summary = dbOperations.getUserPerformanceSummary(email);
+    return res.json({ summary });
+  } catch (error) {
+    console.error("Erro ao obter resumo de desempenho:", error);
+    return res.status(500).json({ error: "Erro interno ao consolidar relatório de desempenho." });
+  }
+});
+
+app.post("/api/performance/session", (req, res) => {
+  try {
+    const { email, durationMinutes, focusArea, notes, difficulty } = req.body;
+    if (!email || !durationMinutes || !focusArea || !difficulty) {
+      return res.status(400).json({ error: "Muitos campos obrigatórios estão ausentes." });
+    }
+    const success = dbOperations.addPracticeSession(
+      email.trim().toLowerCase(),
+      Number(durationMinutes),
+      String(focusArea),
+      String(notes || ""),
+      String(difficulty)
+    );
+    return res.json({ success });
+  } catch (error) {
+    console.error("Erro ao adicionar sessão de treino:", error);
+    return res.status(500).json({ error: "Erro interno no servidor de treinos." });
+  }
+});
+
+// Video lessons routes
+app.get("/api/video-lessons", (req, res) => {
+  try {
+    const level = String(req.query.level || "").trim();
+    if (level) {
+      const videos = dbOperations.getVideoLessons(level);
+      return res.json({ videos });
+    } else {
+      const videos = dbOperations.getAllVideoLessons();
+      return res.json({ videos });
+    }
+  } catch (error) {
+    console.error("Erro ao carregar videoaulas:", error);
+    return res.status(500).json({ error: "Erro interno ao buscar as videoaulas por nível." });
+  }
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({

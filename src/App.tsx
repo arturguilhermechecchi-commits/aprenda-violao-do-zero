@@ -6,12 +6,13 @@ import MetronomeTab from "./components/MetronomeTab";
 import AIChatTab from "./components/AIChatTab";
 import SongsTab from "./components/SongsTab";
 import AdminTab from "./components/AdminTab";
+import PerformanceTab from "./components/PerformanceTab";
 import LoginScreen from "./components/LoginScreen";
 import { UserSession } from "./types";
-import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck, Pocket, AudioWaveform, Sliders, Check, Settings2, RefreshCw } from "lucide-react";
+import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck, Pocket, AudioWaveform, Sliders, Check, Settings2, RefreshCw, BarChart3 } from "lucide-react";
 import { updateAudioConfig, playGuitarChord } from "./components/AcousticAudio";
 
-type TabId = "lessons" | "chords" | "songs" | "tuner" | "metronome" | "aichat" | "admin";
+type TabId = "lessons" | "chords" | "songs" | "tuner" | "metronome" | "aichat" | "admin" | "performance";
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("lessons");
@@ -576,6 +577,19 @@ export default function App() {
           </button>
 
           <button
+            onClick={() => setActiveTab("performance")}
+            id="tab-btn-performance"
+            className={`flex items-center gap-2 py-3 px-5 rounded-2xl font-bold text-xs transition duration-150 border ${
+              activeTab === "performance"
+                ? "bg-amber-900 border-amber-900 text-stone-50 shadow-sm"
+                : "bg-white dark:bg-stone-900 text-slate-650 dark:text-stone-300 border-slate-200 dark:border-stone-800 hover:border-slate-350 dark:hover:border-stone-700"
+            }`}
+          >
+            <BarChart3 className="w-4 h-4 text-amber-600 dark:text-amber-500" />
+            6. Meu Desempenho
+          </button>
+
+          <button
             onClick={() => setActiveTab("aichat")}
             id="tab-btn-aichat"
             className={`flex items-center gap-2 py-3 px-5 rounded-xl font-bold text-xs transition duration-150 border ${
@@ -618,6 +632,7 @@ export default function App() {
           {activeTab === "songs" && <SongsTab currentUser={currentUser} />}
           {activeTab === "tuner" && <TunerTab />}
           {activeTab === "metronome" && <MetronomeTab />}
+          {activeTab === "performance" && <PerformanceTab currentUser={currentUser} />}
           {activeTab === "aichat" && <AIChatTab currentUser={currentUser} />}
           {activeTab === "admin" && currentUser && currentUser.email === "arturguilhermechecchi@gmail.com" && (
             <AdminTab currentUser={currentUser} />

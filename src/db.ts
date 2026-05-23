@@ -105,6 +105,28 @@ db.exec(`
     content_markdown TEXT NOT NULL,
     level TEXT NOT NULL DEFAULT 'Iniciante'
   );
+
+  CREATE TABLE IF NOT EXISTS practice_sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    session_date TEXT NOT NULL,
+    duration_minutes INTEGER NOT NULL,
+    focus_area TEXT NOT NULL,
+    notes TEXT,
+    difficulty TEXT NOT NULL,
+    FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS video_lessons (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    video_url TEXT NOT NULL,
+    level TEXT NOT NULL,
+    duration TEXT NOT NULL,
+    instructor TEXT NOT NULL,
+    thumbnail_url TEXT
+  );
 `);
 
 // Migrate existing databases to have 'guitar_level' column if they don't have it
@@ -896,6 +918,65 @@ Para ganhar performance muscular sem lesionar seus tendões:
 - **10 minutos:** Sweep picking focado no abafamento estrito em 70 BPM.
 - **10 minutos:** Padrões de duas mãos (Tapping) priorizando a clareza e dinâmicas de volumes iguais.
 - Mantenha o metrônomo sempre ativo na aba Metrônomo!`
+    },
+    {
+      id: "les-adv10",
+      title: "Campo Harmônico Maior Avançado: Tétrades e Tensões",
+      category: "theory",
+      description: "Aprofunde-se na estrutura harmônica avançada adicionando sétimas e notas de tensão aos acordes maiores.",
+      order: 10,
+      contentMarkdown: `O estudo inicial do Campo Harmônico Maior se dá por tríades básicas. No entanto, para alcançar a maturidade harmônica típica do Jazz, Bossa Nova e MPB refinada, é obrigatório dominar o **Campo Harmônico Maior em Tétrades (acordes com 4 notas) e suas Tensões Disponíveis (9ª, 11ª, 13ª)**.
+
+---
+
+### 1. A Estrutura de Sétimas (Tétrades em C Maior):
+Ao empilhar quatro terças sucessivas (Tônica, Terça, Quinta e Sétima) sobre cada grau da escala maior, geramos sete tipos de acordes refinados:
+
+1. **I7M (Grau I):** C7M (Dó com Sétima Maior) - Jônio \`[C - E - G - B]\`
+2. **IIm7 (Grau II):** Dm7 (Ré menor com Sétima) - Dórico \`[D - F - A - C]\`
+3. **IIIm7 (Grau III):** Em7 (Mi menor com Sétima) - Frígio \`[E - G - B - D]\`
+4. **IV7M (Grau IV):** F7M (Fá com Sétima Maior) - Lídio \`[F - A - C - E]\`
+5. **V7 (Grau V):** G7 (Sol dominante com Sétima) - Mixolídio \`[G - B - D - F]\`
+6. **VIm7 (Grau VI):** Am7 (Lá menor com Sétima) - Eólio \`[A - C - E - G]\`
+7. **VIIm7(b5) (Grau VII):** Bm7(b5) (Si Meio-Diminuto) - Lócrio \`[B - D - F - A]\`
+
+---
+
+### 2. Notas de Tensão Disponíveis (Extensions):
+No nível avançado, podemos colorir as tétrades empilhando mais terças: as **Nonas (9ª)**, **Décimas Primeiras (11ª)** e **Décimas Terceiras (13ª)**. Nem todas as tensões são permitidas em todos os graus pois algumas criam dissonâncias duras e indesejadas (notas evitadas). Veja o mapa de sofisticação:
+
+- **Grau I (7M):** Aceita **9ª** (C9 ou C7M/9) e **13ª** (C7M/13). *Evite a 11ª justa*, pois briga com a terça maior do acorde. Se desejar usar a 11ª, ela deve ser aumentada (**#11**).
+- **Grau II (m7):** Altamente maleável. Aceita **9ª** e **11ª** com extrema doçura sonhadora (Ex: \`Dm7(9)\` ou \`Dm7(11)\`). É o som predileto da bossa nova.
+- **Grau III (m7):** Som de suspense. Aceita **11ª**. *Evite a 9ª e a 13ª*, pois criam intervalos de segunda menor em relação às notas do acorde e soam muito tensas.
+- **Grau IV (7M):** O ápice da flutuação. Aceita **9ª** e **#11** (Lídio). O acorde de \`F7M(#11)\` soa mágico, brilhando como trilha sonora de ficção científica.
+- **Grau V (7):** O mais flexível por ser um acorde de tensão. Aceita **9ª**, **13ª** (Ex: \`G7(9)\`, \`G7(13)\`) ou tensões alteradas se estiver preparando uma resolução menor (\`G7(b9)\`, \`G7(#9)\`).
+- **Grau VI (m7):** Clima introspectivo. Aceita **9a** e **11a** (Ex: \`Am7(9)\` ou \`Am11\`).
+- **Grau VII (m7b5):** Aceita a **11ª** para suavizar o caráter instável do acorde meio-diminuto (Ex: \`Bm7(b5/11)\`).
+
+---
+
+### 3. Digitações Clássicas de Jazz e MPB (Em Lá - A):
+Experimente usar estes shapes sofisticados para reescrever o campo harmônico na região central do braço:
+
+\`\`\`text
+Acordes Disponíveis em A:
+A7M (I)      : X - 12 - 11 - 13 - 10 - X  (Dedo de pinça preciso)
+Bm7(9) (II)  : X - 2 - X - 2 - 2 - 2      (Lindo toque de bossa)
+C#m7(11) (III): X - 4 - 2 - 4 - 5 - X
+D7M(#11) (IV): X - 5 - 4 - 6 - 7 - X      (Aura sonhadora lídia)
+E7(9) (V)    : X - 7 - 6 - 7 - 7 - X      (Funk/Fusion de peso)
+F#m7(9) (VI) : X - 9 - 7 - 9 - 9 - X
+G#m7(b5) (VII): 4 - X - 4 - 4 - 3 - X
+\`\`\`
+
+---
+
+### 4. Exercício de Conexão Rítmica Avançada (MPB Groove):
+Substitua uma cadência pop básica (\`A -> F#m -> D -> E\`) por tétrades e extensões:
+
+**A7M  →  F#m7(9)  →  Bm7(9)  →  E7(9,13)  →  A7M**
+
+Toque com o polegar tocando o baixo e os dedos I, M, A agindo como puxadas sincopadas nos contra-tempos. Sinta a incrível doçura e maturidade harmônica dessa sequência e incorpore esse conhecimento às suas composições!`
     }
   ];
 
@@ -1131,6 +1212,82 @@ try {
   }
 } catch (e) {
   console.error("[Database] Erro ao semear perguntas do quiz:", e);
+}
+
+// Seed video lessons
+try {
+  const checkVideoLessonsCount = db.prepare("SELECT COUNT(*) as count FROM video_lessons").get() as any;
+  if (!checkVideoLessonsCount || checkVideoLessonsCount.count === 0) {
+    console.log("[Database] Semeando tabela de videoaulas no SQLite...");
+    const insertVideo = db.prepare(`
+      INSERT INTO video_lessons (title, description, video_url, level, duration, instructor, thumbnail_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    // Iniciante
+    insertVideo.run(
+      "Aprenda a Tocar Violão do ZERO! (Primeira Aula Prática)",
+      "Nesta aula você conhecerá a melhor postura e treinará suas primeiras notas e dedilhados básicos sem sentir dor nos dedos.",
+      "https://www.youtube.com/embed/SgXMIpW8tjs",
+      "Iniciante",
+      "15:20",
+      "Prof. Lucas - Cifra Club",
+      ""
+    );
+    insertVideo.run(
+      "Seu Primeiro Ritmo no Violão (Batida de Pop/Rock Básica)",
+      "Como sincronizar a sua mão direita com movimentos constantes de palheta ou dedos de forma simples.",
+      "https://www.youtube.com/embed/Z84g08J-6E8",
+      "Iniciante",
+      "10:45",
+      "Prof. Gustavo",
+      ""
+    );
+
+    // Intermediário
+    insertVideo.run(
+      "O Segredo Clínico para Fazer Pestana Sem Desafinar ou Doer",
+      "Ajuste o ângulo do seu indicador e use a gravidade na escala para obter um som 100% limpo com zero esforço extremo.",
+      "https://www.youtube.com/embed/fexn6l6tT_w",
+      "Intermediário",
+      "12:15",
+      "Prof. Gabriel - Cordas Club",
+      ""
+    );
+    insertVideo.run(
+      "Os Padrões de Dedilhado de Violão Mais Lindos e Fáceis",
+      "Aprenda os padrões clássicos (Tonic-I-M-A-M-I) e como usá-los sobre dezenas de músicas românticas.",
+      "https://www.youtube.com/embed/5UfO_7B_g_I",
+      "Intermediário",
+      "14:30",
+      "Prof. Leo Eymard",
+      ""
+    );
+
+    // Avançado
+    insertVideo.run(
+      "Campo Harmônico Maior Avançado: Tétrades, Sétimas e Extensões",
+      "Entenda o empilhamento em terças, evite notas desarmônicas e crie conexões de Jazz e Bossa Nova cheias de estilo.",
+      "https://www.youtube.com/embed/K8U2Fp3jH50",
+      "Avançado",
+      "22:10",
+      "Prof. Felipe - Harmonia Aplicada",
+      ""
+    );
+    insertVideo.run(
+      "A Batida Definitiva de Bossa Nova no Violão MPB",
+      "Como conciliar o polegar independente no baixo (marcação rítmica do surdo) com as puxadas harmônicas das três cordas agudas.",
+      "https://www.youtube.com/embed/D3sO_MbeR2c",
+      "Avançado",
+      "19:40",
+      "Bossa Nova Prática",
+      ""
+    );
+
+    console.log("[Database] Tabela de videoaulas semeada com sucesso.");
+  }
+} catch (e) {
+  console.error("[Database] Erro ao semear videoaulas:", e);
 }
 
 // Seed default test student account so it works out of the box
@@ -1436,6 +1593,161 @@ export const dbOperations = {
       DELETE FROM completed_challenges WHERE user_email = ? AND challenge_id = ?
     `);
     stmt.run(email, challengeId);
+  },
+
+  addPracticeSession(email: string, durationMinutes: number, focusArea: string, notes: string, difficulty: string) {
+    const stmt = db.prepare(`
+      INSERT INTO practice_sessions (user_email, session_date, duration_minutes, focus_area, notes, difficulty)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+    const dateStr = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const info = stmt.run(email, dateStr, durationMinutes, focusArea, notes, difficulty);
+    return info.changes > 0;
+  },
+
+  getPracticeSessions(email: string) {
+    const stmt = db.prepare(`
+      SELECT * FROM practice_sessions
+      WHERE user_email = ?
+      ORDER BY id DESC
+    `);
+    return stmt.all(email) as any[];
+  },
+
+  getUserPerformanceSummary(email: string) {
+    // 1. Total lessons available & completed
+    const lessonsCountRow = db.prepare("SELECT COUNT(*) as count FROM lessons").get() as any;
+    const lessonsCount = lessonsCountRow ? lessonsCountRow.count : 0;
+    
+    const completedLessonsCountRow = db.prepare("SELECT COUNT(*) as count FROM lessons_completed WHERE user_email = ?").get() as any;
+    const completedLessonsCount = completedLessonsCountRow ? completedLessonsCountRow.count : 0;
+
+    // 2. Quiz performance
+    const quizResults = db.prepare("SELECT * FROM level_test_results WHERE user_email = ?").all(email) as any[];
+    let totalScore = 0;
+    let totalQuestions = 0;
+    let examsPassed = 0;
+    
+    quizResults.forEach(r => {
+      totalScore += r.score;
+      totalQuestions += r.total;
+      if (r.passed) examsPassed++;
+    });
+
+    const averageQuizScorePct = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
+
+    // 3. Completed challenges count
+    const challengesRow = db.prepare("SELECT COUNT(*) as count FROM completed_challenges WHERE user_email = ?").get() as any;
+    const completedChallengesCount = challengesRow ? challengesRow.count : 0;
+
+    // 4. Practice duration
+    const practiceStatsRow = db.prepare(`
+      SELECT 
+        SUM(duration_minutes) as total_min,
+        COUNT(DISTINCT session_date) as active_days
+      FROM practice_sessions
+      WHERE user_email = ?
+    `).get(email) as any;
+
+    const totalPracticeMinutes = (practiceStatsRow && practiceStatsRow.total_min) || 0;
+    const activePracticeDays = (practiceStatsRow && practiceStatsRow.active_days) || 0;
+
+    // 5. Group by focus area for stats chart
+    const focusStats = db.prepare(`
+      SELECT focus_area as focusArea, SUM(duration_minutes) as minutes
+      FROM practice_sessions
+      WHERE user_email = ?
+      GROUP BY focus_area
+    `).all(email) as any[];
+
+    // 6. Group by difficulty
+    const difficultyStats = db.prepare(`
+      SELECT difficulty, COUNT(*) as count
+      FROM practice_sessions
+      WHERE user_email = ?
+      GROUP BY difficulty
+    `).all(email) as any[];
+
+    // 7. Get last practice sessions
+    const recentSessions = db.prepare(`
+      SELECT * FROM practice_sessions
+      WHERE user_email = ?
+      ORDER BY id DESC
+      LIMIT 10
+    `).all(email) as any[];
+
+    // 8. Calculate a Practice Streak (simplificado)
+    let streak = 0;
+    try {
+      const datesRow = db.prepare(`
+        SELECT DISTINCT session_date 
+        FROM practice_sessions 
+        WHERE user_email = ? 
+        ORDER BY session_date DESC
+      `).all(email) as any[];
+      
+      const dates = datesRow.map((d: any) => d.session_date);
+      if (dates.length > 0) {
+        let currentRef = new Date();
+        const formatDateStr = (d: Date) => d.toISOString().split("T")[0];
+        
+        // Se treinou hoje ou ontem, começa o streak
+        const todayStr = formatDateStr(currentRef);
+        currentRef.setDate(currentRef.getDate() - 1);
+        const yesterdayStr = formatDateStr(currentRef);
+        
+        if (dates.includes(todayStr) || dates.includes(yesterdayStr)) {
+          streak = 1;
+          let checkDate = new Date();
+          if (!dates.includes(todayStr)) {
+            checkDate.setDate(checkDate.getDate() - 1); // se treinou ontem, começa a checar de ontem para trás
+          }
+          
+          while (true) {
+            checkDate.setDate(checkDate.getDate() - 1);
+            const checkingStr = formatDateStr(checkDate);
+            if (dates.includes(checkingStr)) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao calcular streak de estudos:", e);
+    }
+
+    return {
+      lessonsCount,
+      completedLessonsCount,
+      completedChallengesCount,
+      totalPracticeMinutes,
+      activePracticeDays,
+      averageQuizScorePct,
+      examsPassed,
+      streak,
+      focusStats,
+      difficultyStats,
+      recentSessions
+    };
+  },
+
+  getVideoLessons(level: string) {
+    const stmt = db.prepare(`
+      SELECT * FROM video_lessons
+      WHERE level = ?
+      ORDER BY id ASC
+    `);
+    return stmt.all(level) as any[];
+  },
+
+  getAllVideoLessons() {
+    const stmt = db.prepare(`
+      SELECT * FROM video_lessons
+      ORDER BY level, id ASC
+    `);
+    return stmt.all() as any[];
   }
 };
 

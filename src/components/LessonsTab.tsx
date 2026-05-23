@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Lesson, UserSession } from "../types";
-import { Check, BookOpen, Music, Shield, Award, Sparkles, CheckCircle2, Circle, Edit3, Save, Lock, Target, Activity, Trophy } from "lucide-react";
+import { Check, BookOpen, Music, Shield, Award, Sparkles, CheckCircle2, Circle, Edit3, Save, Lock, Target, Activity, Trophy, Video, Play, Tv, Clock } from "lucide-react";
 
 interface LevelChallenge {
   id: string;
@@ -109,6 +109,88 @@ const LEVEL_CHALLENGES: LevelChallenge[] = [
   }
 ];
 
+function VideoNoteSection({ userEmail, activeVideo }: { userEmail: string; activeVideo: any }) {
+  const [note, setNote] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!activeVideo) return;
+    setSaveSuccess(false);
+    fetch(`/api/notes?email=${encodeURIComponent(userEmail)}&itemId=${encodeURIComponent("video-" + activeVideo.id)}&itemType=lesson`)
+      .then((res) => res.json())
+      .then((data) => {
+        setNote(data.content || "");
+      })
+      .catch((err) => console.error("Erro ao carregar anotação do vídeo:", err));
+  }, [userEmail, activeVideo?.id]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+    try {
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          itemId: "video-" + activeVideo.id,
+          itemType: "lesson",
+          content: note,
+        }),
+      });
+      if (response.ok) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Erro ao salvar anotação do vídeo:", err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-850 p-5 rounded-2xl text-left shadow-sm flex flex-col justify-between h-full min-h-[220px]">
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Edit3 className="w-4 h-4 text-rose-500" />
+          <h5 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
+            Minhas Anotações de Vídeo
+          </h5>
+        </div>
+        <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-3 leading-relaxed">
+          Escreva licks de cifras, dúvidas harmônicas ou insights para revisar mais tarde. Estão salvos localmente!
+        </p>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Ex: C7M usa o shape X-12-11-13-10-X. Lembrar de praticar transição pro G7M..."
+          className="w-full h-28 p-3 rounded-xl border border-slate-200 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500/50 focus:outline-none transition resize-none"
+        />
+      </div>
+
+      <div className="mt-3 flex justify-between items-center">
+        {saveSuccess ? (
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold animate-pulse">
+            ✓ Salvo no SQLite!
+          </span>
+        ) : (
+          <span />
+        )}
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-4 py-1.5 bg-rose-505 hover:bg-rose-600 bg-rose-500 text-white font-extrabold rounded-xl text-xs transition shadow flex items-center gap-1.5 cursor-pointer border-0"
+        >
+          <Save className="w-3.5 h-3.5" />
+          {isSaving ? "Salvando..." : "Salvar Notas"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 interface LessonsTabProps {
   currentUser: UserSession | null;
   onUserLevelUpdate?: (newLevel: string) => void;
@@ -139,6 +221,9 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
   const [quizError, setQuizError] = useState<string | null>(null);
   const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
   const [timeLeftStr, setTimeLeftStr] = useState("");
+  const [studyMode, setStudyMode] = useState<"written" | "video">("written");
+  const [videoLessons, setVideoLessons] = useState<any[]>([]);
+  const [activeVideo, setActiveVideo] = useState<any | null>(null);
 
   const userEmail = currentUser?.email || "convidado@violao.com";
 
@@ -304,6 +389,22 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
       .catch((err) => {
         console.error("Erro ao carregar lições do SQLite:", err);
         setIsLoading(false);
+      });
+  }, [selectedLevel]);
+
+  // Fetch video lessons list from database based on selectedLevel
+  useEffect(() => {
+    fetch(`/api/video-lessons?level=${encodeURIComponent(selectedLevel)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.videos) {
+          setVideoLessons(data.videos);
+        } else {
+          setVideoLessons([]);
+        }
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar videoaulas do nível:", err);
       });
   }, [selectedLevel]);
 
@@ -1047,8 +1148,46 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
 
           </div>
 
-          {/* Desafios de Nível Interativos */}
-          <div className="bg-slate-50 dark:bg-stone-900 border border-slate-205 dark:border-stone-850 p-6 rounded-3xl text-left shadow-sm">
+          {/* Seletor do Modo de Estudo (Aulas Escritas ou Vídeos) */}
+          <div className="flex border-b border-slate-205 dark:border-stone-800 pb-0.5 justify-start gap-6 mb-4">
+            <button
+              onClick={() => setStudyMode("written")}
+              className={`pb-3 px-1 text-xs font-black tracking-wide transition relative cursor-pointer border-0 bg-transparent ${
+                studyMode === "written"
+                  ? "text-amber-805 dark:text-amber-450 border-b-2 border-amber-600 dark:border-amber-500 font-extrabold"
+                  : "text-slate-400 dark:text-stone-500 hover:text-slate-650 dark:hover:text-stone-300"
+              }`}
+            >
+              <span className="flex items-center gap-2 select-none">
+                <BookOpen className="w-4 h-4" />
+                1. Aulas Escritas & Desafios
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                setStudyMode("video");
+                setActiveVideo(null);
+              }}
+              className={`pb-3 px-1 text-xs font-black tracking-wide transition relative cursor-pointer border-0 bg-transparent ${
+                studyMode === "video"
+                  ? "text-amber-805 dark:text-amber-450 border-b-2 border-amber-600 dark:border-amber-500 font-extrabold"
+                  : "text-slate-400 dark:text-stone-500 hover:text-slate-650 dark:hover:text-stone-300"
+              }`}
+            >
+              <span className="flex items-center gap-2 select-none">
+                <Video className="w-4 h-4 text-rose-500" />
+                2. Videoaulas Práticas de Apoio
+                <span className="bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-1 animate-pulse">
+                  Novo
+                </span>
+              </span>
+            </button>
+          </div>
+
+          {studyMode === "written" && (
+            <>
+              {/* Desafios de Nível Interativos */}
+              <div className="bg-slate-50 dark:bg-stone-905 border border-slate-205 dark:border-stone-850/60 p-6 rounded-3xl text-left shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-250/60 dark:border-stone-800 pb-4 mb-5">
               <div>
                 <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
@@ -1232,6 +1371,146 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
               )}
             </div>
           </div>
+          </>
+          )}
+
+          {studyMode === "video" && (
+            <div className="space-y-6">
+              {activeVideo ? (
+                /* Player de vídeo integrado no app */
+                <div className="bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 rounded-3xl p-6 shadow-sm overflow-hidden animate-fade-in space-y-5">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-stone-800 pb-4">
+                    <div className="text-left">
+                      <span className="text-[10px] font-mono font-black text-rose-600 dark:text-rose-450 uppercase tracking-widest block mb-1">
+                        Assistindo Videoaula • Nível {selectedLevel}
+                      </span>
+                      <h4 className="text-lg font-black text-slate-900 dark:text-white">
+                        {activeVideo.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
+                        Instrutor: <strong className="text-slate-700 dark:text-stone-300">{activeVideo.instructor}</strong> • Duração: <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{activeVideo.duration}</span>
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setActiveVideo(null)}
+                      className="px-4 py-2 text-xs font-bold text-slate-705 dark:text-stone-100 bg-slate-100 dark:bg-stone-800 hover:bg-slate-200 dark:hover:bg-stone-750 border-0 transition rounded-xl cursor-pointer"
+                    >
+                      ← Voltar para Lista
+                    </button>
+                  </div>
+
+                  {/* Player iFrame responsivo */}
+                  <div className="relative w-full aspect-video rounded-2xl bg-black overflow-hidden shadow-md border border-slate-950/20">
+                    <iframe
+                      src={activeVideo.video_url}
+                      title={activeVideo.title}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="no-referrer"
+                      className="absolute inset-0 w-full h-full"
+                    ></iframe>
+                  </div>
+
+                  {/* Descrição e anotações integradas */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+                    <div className="lg:col-span-7 space-y-4 text-left">
+                      <div className="bg-slate-50 dark:bg-stone-950 p-5 rounded-2xl border border-slate-202 dark:border-stone-850">
+                        <h5 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-2">Sobre esta aula:</h5>
+                        <p className="text-xs text-slate-650 dark:text-stone-300 leading-relaxed font-sans">
+                          {activeVideo.description}
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-amber-50/50 dark:bg-amber-955/10 rounded-2xl border border-dashed border-amber-250/50 dark:border-amber-900/40 flex items-start gap-3 text-left">
+                        <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-550 shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[11px] font-black text-amber-850 dark:text-amber-400 block">Dica de Prática Ativa:</span>
+                          <span className="text-[10px] text-slate-650 dark:text-stone-300 leading-snug block mt-1">
+                            Assista ao vídeo mantendo seu violão no colo. Sempre que o instrutor demonstrar uma digitação ou exercício rítmico, pause o vídeo e tente repeti-lo ao menos 5 vezes antes de prosseguir!
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bloco de notas vinculada à videoaula do SQLite */}
+                    <div className="lg:col-span-5">
+                      <VideoNoteSection userEmail={userEmail} activeVideo={activeVideo} />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Grid de videoaulas disponíveis */
+                <div className="space-y-4 text-left">
+                  <div className="border-b border-slate-200 dark:border-stone-850 pb-3 text-left">
+                    <h4 className="text-base font-black text-slate-905 dark:text-stone-100 uppercase tracking-wide flex items-center gap-2">
+                      <Tv className="w-5 h-5 text-rose-500" />
+                      Aulas Práticas Assistidas ({videoLessons.length})
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
+                      Assista ao conteúdo multimídia gravado para o nível {selectedLevel} para acelerar sua compreensão tonal e técnica.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {videoLessons.length === 0 ? (
+                      <div className="col-span-full text-center py-20 bg-white dark:bg-stone-900/20 border border-dashed border-slate-200 dark:border-stone-800 rounded-3xl">
+                        <Tv className="w-10 h-10 text-slate-350 dark:text-stone-750 mx-auto mb-2" />
+                        <p className="text-xs text-slate-500 dark:text-stone-400">Nenhuma videoaula semeada para o nível {selectedLevel}.</p>
+                      </div>
+                    ) : (
+                      videoLessons.map((vid) => (
+                        <div
+                          key={vid.id}
+                          className="group bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 rounded-3xl overflow-hidden hover:shadow-lg hover:border-rose-500/50 dark:hover:border-rose-500/30 transition-all flex flex-col justify-between text-left h-full"
+                        >
+                          <div className="p-5 space-y-4">
+                            {/* Visual Thumbnail Simulator */}
+                            <div className="relative aspect-video w-full rounded-2xl bg-gradient-to-br from-stone-900 via-stone-950 to-rose-955 flex items-center justify-center overflow-hidden border border-stone-850">
+                              <span className="absolute top-3 left-3 bg-red-600 text-[9px] font-mono font-bold text-white px-2 py-0.5 rounded uppercase tracking-wider">
+                                Videoaula
+                              </span>
+                              <span className="absolute bottom-3 right-3 bg-stone-950/80 text-[10px] font-mono font-bold text-white px-2 py-0.5 rounded flex items-center gap-1">
+                                <Clock className="w-3 h-3 text-rose-450" /> {vid.duration}
+                              </span>
+                              
+                              <div className="w-12 h-12 rounded-full bg-rose-600 group-hover:bg-rose-500 group-hover:scale-110 shadow-lg flex items-center justify-center transition-all cursor-pointer">
+                                <Play className="w-5 h-5 text-white fill-white translate-x-0.5" />
+                              </div>
+                            </div>
+
+                            <div className="space-y-2">
+                              <h5 className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
+                                {vid.title}
+                              </h5>
+                              <p className="text-xs text-slate-500 dark:text-stone-400 line-clamp-2 leading-relaxed">
+                                {vid.description}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="px-5 pb-5 pt-3 border-t border-slate-100 dark:border-stone-850/60 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400 dark:text-stone-500 font-bold">
+                              Instrutor: <strong className="text-slate-605 dark:text-stone-300">{vid.instructor}</strong>
+                            </span>
+                            <button
+                              onClick={() => {
+                                setActiveVideo(vid);
+                                window.scrollTo({ top: 300, behavior: "smooth" });
+                              }}
+                              className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-wide border-0 transition rounded-xl shadow cursor-pointer"
+                            >
+                              Assistir Aula
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
         </div>
       )}
