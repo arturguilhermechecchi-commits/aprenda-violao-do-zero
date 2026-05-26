@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Song, SongLine, UserSession } from "../types";
-import { playGuitarChord } from "./AcousticAudio";
-import { Music, Play, Disc, ArrowRight, Video, FileText, CheckCircle, Edit3, Save } from "lucide-react";
+import { playGuitarChord, playGuitarNote } from "./AcousticAudio";
+import { Music, Play, Disc, ArrowRight, Video, FileText, CheckCircle, Edit3, Save, Sparkles, Pause, RotateCcw, Volume2, Info, GraduationCap, Flame, FileDown, BookOpen } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 const SONG_DATABASE: Song[] = [
   {
@@ -1077,11 +1078,334 @@ const CHORD_FRETS: Record<string, (number | "x")[]> = {
   B7: ["x", 2, 1, 2, 0, 2]
 };
 
+export interface RiffStep {
+  // Key is stringIndex (0 to 5), Value is fret number
+  notes: { [stringIndex: number]: number };
+  label?: string;
+}
+
+export interface Riff {
+  id: string;
+  title: string;
+  artist: string;
+  bpm: number;
+  difficulty: "Iniciante" | "Intermediário" | "Avançado";
+  description: string;
+  rhythmTip: string;
+  steps: RiffStep[];
+}
+
+const RIFF_DATABASE: Riff[] = [
+  {
+    id: "riff-smoke",
+    title: "Smoke on the Water",
+    artist: "Deep Purple",
+    bpm: 112,
+    difficulty: "Iniciante",
+    description: "O riff de rock supremo. Originalmente gravado tocando duas cordas (quartas justas dedilhadas simultaneamente). Pratique no andamento do compasso.",
+    rhythmTip: "Toque as duas cordas (D e G) juntas com o indicador e o dedo médio puxando-as para cima, ou use uma palheta rápida pegando as duas.",
+    steps: [
+      { notes: { 2: 0, 3: 0 }, label: "G" },
+      { notes: {} },
+      { notes: { 2: 3, 3: 3 }, label: "Bb" },
+      { notes: {} },
+      { notes: { 2: 5, 3: 5 }, label: "C" },
+      { notes: {} },
+      { notes: {} },
+      { notes: { 2: 0, 3: 0 }, label: "G" },
+      { notes: {} },
+      { notes: { 2: 3, 3: 3 }, label: "Bb" },
+      { notes: {} },
+      { notes: { 2: 6, 3: 6 }, label: "Db" },
+      { notes: { 2: 5, 3: 5 }, label: "C" },
+      { notes: {} },
+      { notes: {} },
+      { notes: { 2: 0, 3: 0 }, label: "G" },
+      { notes: {} },
+      { notes: { 2: 3, 3: 3 }, label: "Bb" },
+      { notes: {} },
+      { notes: { 2: 5, 3: 5 }, label: "C" },
+      { notes: { 2: 3, 3: 3 }, label: "Bb" },
+      { notes: {} },
+      { notes: { 2: 0, 3: 0 }, label: "G" },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-come",
+    title: "Come As You Are",
+    artist: "Nirvana",
+    bpm: 120,
+    difficulty: "Iniciante",
+    description: "Grande marco do Grunge! Este riff hipnotizante usa o Mi grave aberto e notas de passagem subindo e descendo de tom no braço.",
+    rhythmTip: "Mantenha o ritmo constante. Siga as marcas: traste 0, 1 e 2. O polegar toca o Mi grave (corda 6) e o indicador cuida do Lá (corda 5).",
+    steps: [
+      { notes: { 0: 0 }, label: "Mi" },
+      { notes: { 0: 0 } },
+      { notes: { 0: 1 }, label: "Fá" },
+      { notes: { 0: 2 }, label: "Fá#" },
+      { notes: { 1: 0 }, label: "Lá" },
+      { notes: { 0: 2 } },
+      { notes: { 1: 0 }, label: "Lá" },
+      { notes: { 0: 2 } },
+      { notes: { 0: 2 } },
+      { notes: { 0: 1 } },
+      { notes: { 0: 0 } },
+      { notes: { 1: 2 }, label: "Si" },
+      { notes: { 0: 0 } },
+      { notes: { 1: 2 }, label: "Si" },
+      { notes: { 0: 0 } },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-seven",
+    title: "Seven Nation Army",
+    artist: "The White Stripes",
+    bpm: 124,
+    difficulty: "Iniciante",
+    description: "Um dos riffs mais cantados de estádio de futebol e extremamente simples de tocar por ser feito inteiramente na 5ª corda (Lá).",
+    rhythmTip: "Dica: Na guitarra o riff usa um pedal octaver para soar encorpado. Faça a transição esticando os dedos indicador e anelar entre as notas.",
+    steps: [
+      { notes: { 1: 7 }, label: "Mi" },
+      { notes: {} },
+      { notes: { 1: 7 } },
+      { notes: { 1: 10 }, label: "Sol" },
+      { notes: { 1: 7 }, label: "Mi" },
+      { notes: {} },
+      { notes: { 1: 5 }, label: "Ré" },
+      { notes: {} },
+      { notes: { 1: 3 }, label: "Dó" },
+      { notes: {} },
+      { notes: { 1: 2 }, label: "Si" },
+      { notes: {} },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-beatit",
+    title: "Beat It",
+    artist: "Michael Jackson",
+    bpm: 138,
+    difficulty: "Intermediário",
+    description: "Riff enérgico e saltitante. Uma joia pop-rock gravada pelo lendário guitarrista Steve Lukather. Une cordas soltas com saltos rápidos para o Ré.",
+    rhythmTip: "Mantenha a mão esquerda leve para pular da 6ª corda solta diretamente para os trastes da 4ª corda de forma precisa.",
+    steps: [
+      { notes: { 0: 0 }, label: "Mi" },
+      { notes: {} },
+      { notes: { 0: 3 }, label: "Sol" },
+      { notes: { 2: 2 }, label: "Mi" },
+      { notes: { 2: 5 }, label: "Sol" },
+      { notes: { 2: 2 }, label: "Mi" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 2: 2 }, label: "Mi" },
+      { notes: { 2: 0 }, label: "Ré" },
+      { notes: {} },
+      { notes: { 2: 0 }, label: "Ré" },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-sweetchild",
+    title: "Sweet Child O' Mine",
+    artist: "Guns N' Roses",
+    bpm: 128,
+    difficulty: "Avançado",
+    description: "A linha melódica mais famosa dos anos 80. Slash criou esse riff como um mero exercício de aquecimento, mas se tornou lenda global.",
+    rhythmTip: "Treine bem lento antes de acelerar! Use palhetada alternada (baixo/cima) para ganhar velocidade e manter o som de cada nota bem limpo.",
+    steps: [
+      { notes: { 2: 12 }, label: "D12" },
+      { notes: { 4: 15 }, label: "B15" },
+      { notes: { 3: 14 }, label: "G14" },
+      { notes: { 3: 12 }, label: "G12" },
+      { notes: { 5: 15 }, label: "e15" },
+      { notes: { 3: 14 }, label: "G14" },
+      { notes: { 5: 14 }, label: "e14" },
+      { notes: { 3: 14 }, label: "G14" },
+      { notes: { 2: 12 }, label: "D12" },
+      { notes: { 4: 15 }, label: "B15" },
+      { notes: { 3: 14 }, label: "G14" },
+      { notes: { 3: 12 }, label: "G12" },
+      { notes: { 5: 15 }, label: "e15" },
+      { notes: { 3: 14 }, label: "G14" },
+      { notes: { 5: 14 }, label: "e14" },
+      { notes: { 3: 14 }, label: "G14" }
+    ]
+  },
+  {
+    id: "riff-ironman",
+    title: "Iron Man",
+    artist: "Black Sabbath",
+    bpm: 80,
+    difficulty: "Intermediário",
+    description: "O riff primordial do metal! Tony Iommi tocando com afinação pesada e andamento solene.",
+    rhythmTip: "As notas na casa 10 e 9 têm um balanço rápido. Tente fazer um pequeno vibrato (tremer levemente o dedo da nota) para dar riqueza ao som.",
+    steps: [
+      { notes: { 0: 2 }, label: "Fá#" },
+      { notes: {} },
+      { notes: { 0: 5 }, label: "Lá" },
+      { notes: {} },
+      { notes: { 0: 5 } },
+      { notes: { 0: 7 }, label: "Si" },
+      { notes: {} },
+      { notes: { 0: 7 } },
+      { notes: { 0: 10 }, label: "Ré" },
+      { notes: { 0: 9 }, label: "Dó#" },
+      { notes: { 0: 10 } },
+      { notes: { 0: 9 } },
+      { notes: { 0: 10 } },
+      { notes: { 0: 5 }, label: "Lá" },
+      { notes: {} },
+      { notes: { 0: 5 } },
+      { notes: { 0: 7 }, label: "Si" },
+      { notes: {} },
+      { notes: { 0: 7 } },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-one",
+    title: "One (Intro)",
+    artist: "Metallica",
+    bpm: 78,
+    difficulty: "Intermediário",
+    description: "O dedilhado melancólico mais famoso do heavy metal. A introdução limpa de One combina um baixo pedal e um padrão clássico de arpejo nas cordas superiores.",
+    rhythmTip: "Deixe cada nota soar (let ring)! Mantenha o dedo indicador fixo na 2ª casa da 5ª corda e o dedo anelar na 4ª casa da 4ª corda, soltando apenas para tocar a corda solta.",
+    steps: [
+      { notes: { 1: 2 }, label: "Si" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 1: 2 }, label: "Si" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 1: 0 }, label: "Lá" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 1: 0 }, label: "Lá" },
+      { notes: { 2: 4 }, label: "Fá#" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 2: 4 }, label: "Fá#" }
+    ]
+  },
+  {
+    id: "riff-puppets",
+    title: "Master of Puppets (Intro)",
+    artist: "Metallica",
+    bpm: 110,
+    difficulty: "Avançado",
+    description: "A clássica e agressiva descida cromática do Thrash Metal. Tocada originalmente toda com palhetada para baixo (downpicking) extremamente rápida.",
+    rhythmTip: "Toque todas as notas com palhetadas rígidas voltadas exclusivamente para baixo (downstrokes). Use o polegar e indicador firmes e abafe levemente as cordas com a palma da mão direita (palm muting).",
+    steps: [
+      { notes: { 0: 0 }, label: "E" },
+      { notes: { 0: 0 } },
+      { notes: { 1: 7 }, label: "B" },
+      { notes: { 0: 0 } },
+      { notes: { 0: 0 } },
+      { notes: { 1: 6 }, label: "Bb" },
+      { notes: { 0: 0 } },
+      { notes: { 0: 0 } },
+      { notes: { 1: 5 }, label: "A" },
+      { notes: { 0: 0 } },
+      { notes: { 1: 4 }, label: "Ab" },
+      { notes: { 0: 0 } },
+      { notes: { 1: 3 }, label: "G" },
+      { notes: {} }
+    ]
+  },
+  {
+    id: "riff-nothing",
+    title: "Nothing Else Matters (Intro)",
+    artist: "Metallica",
+    bpm: 92,
+    difficulty: "Iniciante",
+    description: "A introdução de dedilhado mais procurada por iniciantes no violão. É inteiramente tocada com cordas soltas no compasso 6/8.",
+    rhythmTip: "Toque a 6ª corda (Mi grave) com o polegar, depois a 3ª corda (Sol) com o indicador, a 2ª corda (Si) com o médio e a 1ª corda (Mi agudo) com o anelar. Puxe as cordas de forma suave.",
+    steps: [
+      { notes: { 0: 0 }, label: "Mi" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 4: 0 }, label: "Si" },
+      { notes: { 5: 0 }, label: "mi" },
+      { notes: { 4: 0 }, label: "Si" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 0: 0 }, label: "Mi" },
+      { notes: { 3: 0 }, label: "Sol" },
+      { notes: { 4: 0 }, label: "Si" },
+      { notes: { 5: 0 }, label: "mi" },
+      { notes: { 4: 0 }, label: "Si" },
+      { notes: { 3: 0 }, label: "Sol" }
+    ]
+  }
+];
+
 export default function SongsTab({ currentUser }: { currentUser: UserSession | null }) {
   const [selectedSong, setSelectedSong] = useState<Song>(SONG_DATABASE[0]);
   const [noteText, setNoteText] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // States for Riffs Tab
+  const [subTab, setSubTab] = useState<"repertorio" | "riffs">("repertorio");
+  const [selectedRiff, setSelectedRiff] = useState<Riff>(RIFF_DATABASE[0]);
+  const [isPlayingRiff, setIsPlayingRiff] = useState(false);
+  const [currentPlayingStep, setCurrentPlayingStep] = useState<number | null>(null);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(1.0);
+
+  // Auto playback of riff notes
+  useEffect(() => {
+    if (!isPlayingRiff) {
+      setCurrentPlayingStep(null);
+      return;
+    }
+
+    let step = 0;
+    setCurrentPlayingStep(0);
+    
+    const playRiffStep = (stepObj: RiffStep) => {
+      Object.entries(stepObj.notes || {}).forEach(([stringIdxStr, fret]) => {
+        const stringIdx = parseInt(stringIdxStr, 10);
+        playGuitarNote(stringIdx, fret, 0, 1.2);
+      });
+    };
+
+    playRiffStep(selectedRiff.steps[0]);
+
+    const beatDurationMs = (60000 / selectedRiff.bpm);
+    const stepDurationMs = (beatDurationMs * 0.5) / playbackSpeed;
+
+    const intervalId = setInterval(() => {
+      step++;
+      if (step >= selectedRiff.steps.length) {
+        clearInterval(intervalId);
+        setIsPlayingRiff(false);
+        setCurrentPlayingStep(null);
+      } else {
+        setCurrentPlayingStep(step);
+        playRiffStep(selectedRiff.steps[step]);
+      }
+    }, stepDurationMs);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isPlayingRiff, selectedRiff, playbackSpeed]);
+
+  const handleSelectRiff = (riff: Riff) => {
+    setIsPlayingRiff(false);
+    setCurrentPlayingStep(null);
+    setSelectedRiff(riff);
+  };
+
+  const handleStopRiff = () => {
+    setIsPlayingRiff(false);
+    setCurrentPlayingStep(null);
+  };
+
+  const handlePlayRiff = () => {
+    setIsPlayingRiff(true);
+  };
 
   const userEmail = currentUser?.email || "convidado@violao.com";
 
@@ -1118,6 +1442,286 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
       console.error("Erro ao salvar anotação da música:", err);
     } finally {
       setIsSavingNote(false);
+    }
+  };
+
+  const [downloadingSongbook, setDownloadingSongbook] = useState(false);
+  const [downloadingSingle, setDownloadingSingle] = useState(false);
+
+  const handleDownloadSingleSongPDF = async (song: Song) => {
+    setDownloadingSingle(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Theme colors
+      const primaryColor = [30, 41, 59]; // Slate (dark background / titles)
+      const accentColor = [217, 119, 6];  // Amber (primary contrast)
+      
+      // Page setup & title banner
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 36, "F");
+      
+      // Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.text(song.title.toUpperCase(), 15, 16);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Cifra de Violao - Artista: ${song.artist}`, 15, 24);
+      
+      const today = new Date().toLocaleDateString("pt-BR");
+      doc.text(`Guitar Studio - ${today}`, 150, 16);
+      
+      // Info board
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("INFORMACOES DE EXECUCAO", 15, 48);
+      
+      doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.setLineWidth(0.5);
+      doc.line(15, 51, 195, 51);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(75, 85, 99);
+      doc.text(`Ritmo/Levada: ${song.rhythm}`, 15, 58);
+      doc.text(`BPM: ${song.bpm}`, 15, 63);
+      doc.text(`Acordes Utilizados: ${song.chordsUsed.join(", ")}`, 110, 58);
+      doc.text(`Padrao de Batida: ${song.strummingPattern.join(" ")}`, 110, 63);
+      
+      if (song.videoTip) {
+        doc.setFont("helvetica", "italic");
+        doc.text(`Dica de Treino: ${song.videoTip}`, 15, 69);
+      }
+      
+      // Lyrics + Chords board
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("CIFRA DA MUSICA", 15, 82);
+      doc.line(15, 85, 195, 85);
+      
+      let currentY = 94;
+      
+      song.lines.forEach((line) => {
+        // If there are chords, we render them above the lyric text
+        if (line.chords && line.chords.length > 0) {
+          doc.setFont("courier", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+          
+          let chordLine = "";
+          let lastPos = 0;
+          line.chords.forEach((c) => {
+            const spaces = Math.max(1, Math.floor(c.position / 1.5) - lastPos);
+            chordLine += " ".repeat(spaces) + c.chord;
+            lastPos = Math.floor(c.position / 1.5) + c.chord.length;
+          });
+          
+          doc.text(chordLine, 18, currentY);
+          currentY += 5.5;
+        }
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text(line.text, 18, currentY);
+        currentY += 8.5;
+        
+        // Multi-page check
+        if (currentY > 270) {
+          doc.addPage();
+          currentY = 20;
+        }
+      });
+      
+      // Save
+      const filename = `Cifra_${song.title.replace(/\s+/g, "_")}.pdf`;
+      doc.save(filename);
+      
+      // Log to SQLite!
+      if (currentUser?.email) {
+        await fetch("/api/pdf-download/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            downloadType: `Cifra: ${song.title}`
+          })
+        });
+      }
+    } catch (e) {
+      console.error("Erro ao gerar PDF da música único:", e);
+    } finally {
+      setDownloadingSingle(false);
+    }
+  };
+
+  const handleDownloadSongbookPDF = async () => {
+    setDownloadingSongbook(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Theme colors
+      const primaryColor = [30, 41, 59];
+      const accentColor = [217, 119, 6];
+      
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 297, "F");
+      
+      // Cover logo decoration
+      doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.setLineWidth(1.5);
+      doc.rect(15, 15, 180, 267);
+      
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(32);
+      doc.text("GUITAR STUDIO", 105, 90, { align: "center" });
+      
+      doc.setFontSize(22);
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.text("SONGBOOK OFICIAL", 105, 115, { align: "center" });
+      
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(200, 203, 210);
+      doc.setFontSize(13);
+      doc.text("O repertório completo com cifras fáceis, ritmos,", 105, 140, { align: "center" });
+      doc.text("batidas detalhadas e dicas de execução de violão.", 105, 148, { align: "center" });
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(255, 255, 255);
+      doc.text(`Total de Músicas: ${SONG_DATABASE.length}`, 105, 195, { align: "center" });
+      
+      const studentName = currentUser?.username || "Estudante Dedicado";
+      doc.text(`Compilado Especialmente para: ${studentName}`, 105, 210, { align: "center" });
+      
+      const today = new Date().toLocaleDateString("pt-BR");
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(10);
+      doc.setTextColor(150, 153, 160);
+      doc.text(`Gerado em: ${today}`, 105, 260, { align: "center" });
+      
+      const addHeaderFooter = (pDoc: typeof doc, pTitle: string, pArtist: string, pPageNum: number) => {
+        pDoc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        pDoc.rect(0, 0, 210, 22, "F");
+        
+        pDoc.setTextColor(255, 255, 255);
+        pDoc.setFont("helvetica", "bold");
+        pDoc.setFontSize(11);
+        pDoc.text("GUITAR STUDIO SONGBOOK", 15, 12);
+        
+        pDoc.setFont("helvetica", "italic");
+        pDoc.setFontSize(9);
+        pDoc.setTextColor(230, 235, 245);
+        pDoc.text(`${pTitle} (${pArtist})`, 110, 12);
+        
+        // Footer line
+        pDoc.setDrawColor(226, 232, 240);
+        pDoc.setLineWidth(0.4);
+        pDoc.line(15, 280, 195, 280);
+        
+        pDoc.setTextColor(150, 150, 150);
+        pDoc.setFont("helvetica", "normal");
+        pDoc.setFontSize(8);
+        pDoc.text("Studio de Violão Guitar Studio - Todos os direitos reservados.", 15, 285);
+        pDoc.text(`Página ${pPageNum}`, 180, 285);
+      };
+      
+      let pageNum = 1;
+      
+      SONG_DATABASE.forEach((song) => {
+        doc.addPage();
+        pageNum++;
+        
+        addHeaderFooter(doc, song.title, song.artist, pageNum);
+        
+        doc.setFillColor(248, 250, 252);
+        doc.rect(15, 30, 180, 32, "F");
+        
+        doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.text(song.title, 20, 42);
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(100, 110, 125);
+        doc.text(`Artista: ${song.artist} | BPM: ${song.bpm} | Ritmo: ${song.rhythm}`, 20, 48);
+        doc.text(`Acordes: ${song.chordsUsed.join(", ")} | Batida: ${song.strummingPattern.join(" ")}`, 20, 54);
+        
+        doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+        doc.setLineWidth(0.5);
+        doc.line(15, 68, 195, 68);
+        
+        let currentY = 78;
+        
+        song.lines.forEach((line) => {
+          if (line.chords && line.chords.length > 0) {
+            doc.setFont("courier", "bold");
+            doc.setFontSize(9.5);
+            doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+            
+            let chordLine = "";
+            let lastPos = 0;
+            line.chords.forEach((c) => {
+              const spaces = Math.max(1, Math.floor(c.position / 1.5) - lastPos);
+              chordLine += " ".repeat(spaces) + c.chord;
+              lastPos = Math.floor(c.position / 1.5) + c.chord.length;
+            });
+            
+            doc.text(chordLine, 18, currentY);
+            currentY += 5.5;
+          }
+          
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(9.5);
+          doc.setTextColor(15, 23, 42);
+          doc.text(line.text, 18, currentY);
+          currentY += 8.5;
+          
+          if (currentY > 265) {
+            doc.addPage();
+            pageNum++;
+            addHeaderFooter(doc, song.title, song.artist, pageNum);
+            currentY = 32;
+          }
+        });
+        
+        if (song.videoTip && currentY < 240) {
+          currentY += 5;
+          doc.setFillColor(254, 243, 199);
+          doc.rect(15, currentY, 180, 16, "F");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(8.5);
+          doc.setTextColor(146, 64, 14);
+          doc.text("Dica de Execução:", 18, currentY + 6);
+          doc.setFont("helvetica", "italic");
+          const truncatedTip = song.videoTip.length > 95 ? song.videoTip.substring(0, 92) + "..." : song.videoTip;
+          doc.text(truncatedTip, 18, currentY + 11);
+        }
+      });
+      
+      doc.save("Songbook_Guitar_Studio_Completo.pdf");
+      
+      if (currentUser?.email) {
+        await fetch("/api/pdf-download/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            downloadType: "Songbook Completo"
+          })
+        });
+      }
+    } catch (e) {
+      console.error("Erro ao gerar Songbook em PDF:", e);
+    } finally {
+      setDownloadingSongbook(false);
     }
   };
 
@@ -1166,211 +1770,592 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
   };
 
   return (
-    <div id="songs-tab-container" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      {/* Song selector column / Left */}
-      <div className="lg:col-span-4 flex flex-col gap-4">
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-900 dark:to-stone-950 p-4 rounded-xl border border-amber-100 dark:border-stone-800">
-          <h3 className="font-bold text-xs text-amber-900 dark:text-amber-100 uppercase tracking-widest flex items-center gap-2">
-            <Disc className="w-4 h-4 animate-spin text-amber-500" />
-            Repertório de Treino Do Zero
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-stone-400 mt-1 leading-normal">
-            Toque canções clássicas usando os ritmos e acordes que você aprendeu. Clique nos acordes azuis/laranjas no texto para ouvir como montá-los.
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {SONG_DATABASE.map((song) => {
-            const isSelected = selectedSong.id === song.id;
-            return (
-              <button
-                key={song.id}
-                onClick={() => setSelectedSong(song)}
-                id={`song-select-btn-${song.id}`}
-                className={`p-4 rounded-2xl border text-left transition relative overflow-hidden group ${
-                  isSelected
-                    ? "bg-white dark:bg-stone-900 border-amber-700 dark:border-amber-600 shadow"
-                    : "bg-white dark:bg-stone-900 border-slate-200 dark:border-stone-800 hover:border-slate-350 dark:hover:border-stone-700"
-                }`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-stone-100 block">
-                      {song.title}
-                    </h4>
-                    <span className="text-xs text-slate-400 dark:text-stone-500 block">
-                      {song.artist}
-                    </span>
-                  </div>
-
-                  <span className="text-[10px] font-mono bg-stone-100 dark:bg-stone-950 font-bold px-2 py-1 rounded text-amber-800 dark:text-amber-400 shrink-0">
-                    {song.bpm} BPM
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {song.chordsUsed.map((chord) => (
-                    <span
-                      key={chord}
-                      className="text-[10px] font-bold font-mono px-2 py-0.5 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 rounded-md border border-amber-100/50 dark:border-stone-800"
-                    >
-                      {chord}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Arrow indicator on hover */}
-                <ArrowRight className="w-4 h-4 text-amber-700 absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0" />
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="bg-amber-500/5 dark:bg-stone-900 p-4 rounded-xl border border-amber-250/20 text-xs text-slate-500 leading-normal">
-          <span className="font-semibold text-slate-800 dark:text-stone-200 block mb-1">💡 Regra de Ouro do Treino:</span>
-          Memorize as trocas de acordes antes de começar a agitar o ritmo com a mão direita. Se preciso, toque uma única vez para baixo a cada acorde trocado.
-        </div>
+    <div className="space-y-6">
+      {/* Sub-tab selection toggle */}
+      <div className="flex gap-2 bg-slate-100 dark:bg-stone-900/60 p-1.5 rounded-2xl border border-slate-200/50 dark:border-stone-800/80 max-w-md">
+        <button
+          onClick={() => {
+            handleStopRiff();
+            setSubTab("repertorio");
+          }}
+          className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 border-0 cursor-pointer ${
+            subTab === "repertorio"
+              ? "bg-slate-900 text-white dark:bg-amber-600 dark:text-stone-950 shadow-sm"
+              : "text-slate-500 dark:text-stone-400 hover:text-slate-800 dark:hover:text-stone-200 hover:bg-slate-200/45 dark:hover:bg-stone-800/40"
+          }`}
+        >
+          <Music className="w-4 h-4" />
+          Músicas Cifradas
+        </button>
+        <button
+          onClick={() => setSubTab("riffs")}
+          className={`flex-1 py-2 px-4 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 border-0 cursor-pointer ${
+            subTab === "riffs"
+              ? "bg-slate-900 text-white dark:bg-amber-600 dark:text-stone-950 shadow-sm"
+              : "text-slate-500 dark:text-stone-400 hover:text-slate-800 dark:hover:text-stone-200 hover:bg-slate-200/45 dark:hover:bg-stone-800/40"
+          }`}
+        >
+          <Sparkles className="w-4 h-4" />
+          Riffs Famosos ✨
+        </button>
       </div>
 
-      {/* Sheet Music Board / Right */}
-      <div className="lg:col-span-8 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 p-6 flex flex-col justify-between shadow-sm">
-        <div>
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-slate-200 dark:border-stone-800 pb-5 mb-5 w-full">
-            <div>
-              <div className="flex items-center gap-1.5">
-                <FileText className="w-4 h-4 text-amber-700" />
-                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-stone-500 font-mono">
-                  Guia Cifrado Interativo
-                </span>
-              </div>
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                {selectedSong.title}
-              </h2>
-              <p className="text-xs text-slate-400 dark:text-stone-400">
-                Artista: <strong className="text-slate-650 dark:text-stone-300 font-medium">{selectedSong.artist}</strong>
+      {subTab === "repertorio" ? (
+        <div id="songs-tab-container" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Song selector column / Left */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-900 dark:to-stone-950 p-4 rounded-xl border border-amber-100 dark:border-stone-800">
+              <h3 className="font-bold text-xs text-amber-900 dark:text-amber-100 uppercase tracking-widest flex items-center gap-2">
+                <Disc className="w-4 h-4 animate-spin text-amber-500" />
+                Repertório de Treino Do Zero
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-stone-400 mt-1 leading-normal">
+                Toque canções clássicas usando os ritmos e acordes que você aprendeu. Clique nos acordes azuis/laranjas no texto para ouvir como montá-los.
               </p>
             </div>
 
-            {/* Quick stats board */}
-            <div className="flex gap-2.5">
-              <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
-                <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-500 block">Levada</span>
-                <span className="text-xs font-bold text-slate-750 dark:text-stone-350">{selectedSong.rhythm}</span>
-              </div>
+            <button
+              onClick={handleDownloadSongbookPDF}
+              disabled={downloadingSongbook}
+              id="download-songbook-pdf-btn"
+              className="py-3 px-4 bg-amber-600 hover:bg-amber-500 font-extrabold text-xs text-white rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-pointer border-0 disabled:opacity-50"
+            >
+              {downloadingSongbook ? (
+                <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <BookOpen className="w-4 h-4 text-white" />
+              )}
+              <span>Baixar Songbook PDF (Repertório)</span>
+            </button>
 
-              <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
-                <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-550 block">Mão Esquerda</span>
-                <span className="text-xs font-bold text-amber-800 dark:text-amber-400 font-mono">
-                  {selectedSong.chordsUsed.length} Acordes
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Strum sequence board */}
-          <div className="bg-amber-500/5 dark:bg-stone-950/40 p-4 rounded-2xl border border-amber-100 dark:border-stone-850 flex flex-wrap gap-4 items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-slate-700 dark:text-stone-300 whitespace-nowrap">Levada de Ritmo:</span>
-              <div className="flex gap-1.5">
-                {selectedSong.strummingPattern.map((strum, sIdx) => {
-                  const isDown = strum === "↓";
-                  return (
-                    <span
-                      key={sIdx}
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm ${
-                        isDown
-                          ? "bg-amber-800 text-stone-50"
-                          : "bg-yellow-500 text-stone-900"
-                      }`}
-                    >
-                      {strum}
-                    </span>
-                  );
-                })}
-              </div>
-            </div>
-
-            {selectedSong.videoTip && (
-              <div className="text-[11px] text-slate-500 dark:text-stone-400 flex gap-1.5 items-center max-w-sm">
-                <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
-                <span>{selectedSong.videoTip}</span>
-              </div>
-            )}
-          </div>
-
-          {/* Sheet body */}
-          <div className="bg-slate-50/50 dark:bg-stone-950/20 p-6 md:p-8 rounded-3xl border border-slate-205 dark:border-stone-850 font-sans shadow-inner overflow-hidden min-h-[280px]">
-            <div className="max-w-md mx-auto space-y-2">
-              {selectedSong.lines.map((line, idx) => renderLyricLineWithChords(line, idx))}
-            </div>
-          </div>
-
-          {/* Diário de Treino de Música - SQLite backend */}
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-stone-800 text-left">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-stone-100 flex items-center gap-2 mb-1.5">
-              <Edit3 className="w-4 h-4 text-amber-600" />
-              Diário de Treino de Música (Salvo no SQLite)
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-3 leading-relaxed">
-              Anote quais partes desta música você acha mais difíceis (ex: transição rápida de <strong>G</strong> para <strong>D</strong>), onde deve focar a levada ou seus tempos de andamento. Suas notas ficam vinculadas eternamente a esta música no SQLite!
-            </p>
-            <div className="space-y-2">
-              <textarea
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                placeholder="Exemplo: Praticar a transição rápida do acorde D para o G de modo mais limpo. Focar bem nas duas batidas para cima da levada..."
-                className="w-full min-h-[90px] p-3 text-xs bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-850 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-stone-200"
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-[10px] text-slate-400 dark:text-stone-500">
-                  {saveSuccess ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Suas anotações de música foram gravadas no SQLite!</span>
-                  ) : "Anotação correspondente vinculada"}
-                </span>
-                <button
-                  onClick={handleSaveNote}
-                  disabled={isSavingNote}
-                  id="save-song-note-btn"
-                  className="px-4 py-1.5 bg-stone-900 hover:bg-stone-850 dark:bg-amber-600 dark:hover:bg-amber-500 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-40"
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  {isSavingNote ? "Salvando..." : "Gravar no Banco"}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Dicionário Visual de Acordes da Música no final da página */}
-          <div className="mt-8 pt-6 border-t border-slate-100 dark:border-stone-800 text-left">
-            <h4 className="text-sm font-bold text-slate-900 dark:text-stone-100 flex items-center gap-2 mb-1.5">
-              <Disc className="w-4 h-4 text-amber-600 animate-pulse" />
-              Acordes Utilizados nesta Música (Clique para ouvir)
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-4 leading-relaxed">
-              Estude as posições ideais e clique em qualquer diagrama para ouvir a afinação acústica exata do acorde:
-            </p>
-            <div className="flex flex-wrap gap-4 pt-1">
-              {selectedSong.chordsUsed.map((chordName) => {
-                const frets = CHORD_FRETS[chordName] || ["x", "x", 0, 2, 3, 2];
+            <div className="flex flex-col gap-3">
+              {SONG_DATABASE.map((song) => {
+                const isSelected = selectedSong.id === song.id;
                 return (
-                  <SongChordCard key={chordName} name={chordName} frets={frets} />
+                  <button
+                    key={song.id}
+                    onClick={() => setSelectedSong(song)}
+                    id={`song-select-btn-${song.id}`}
+                    className={`p-4 rounded-2xl border text-left transition relative overflow-hidden group ${
+                      isSelected
+                        ? "bg-white dark:bg-stone-900 border-amber-700 dark:border-amber-600 shadow"
+                        : "bg-white dark:bg-stone-900 border-slate-200 dark:border-stone-800 hover:border-slate-350 dark:hover:border-stone-700"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-stone-100 block">
+                          {song.title}
+                        </h4>
+                        <span className="text-xs text-slate-400 dark:text-stone-500 block">
+                          {song.artist}
+                        </span>
+                      </div>
+
+                      <span className="text-[10px] font-mono bg-stone-100 dark:bg-stone-950 font-bold px-2 py-1 rounded text-amber-800 dark:text-amber-400 shrink-0">
+                        {song.bpm} BPM
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 mt-3">
+                      {song.chordsUsed.map((chord) => (
+                        <span
+                          key={chord}
+                          className="text-[10px] font-bold font-mono px-2 py-0.5 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 rounded-md border border-amber-100/50 dark:border-stone-800"
+                        >
+                          {chord}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Arrow indicator on hover */}
+                    <ArrowRight className="w-4 h-4 text-amber-700 absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0" />
+                  </button>
                 );
               })}
             </div>
+
+            <div className="bg-amber-500/5 dark:bg-stone-900 p-4 rounded-xl border border-amber-250/20 text-xs text-slate-500 leading-normal">
+              <span className="font-semibold text-slate-800 dark:text-stone-200 block mb-1">💡 Regra de Ouro do Treino:</span>
+              Memorize as trocas de acordes antes de começar a agitar o ritmo com a mão direita. Se preciso, toque uma única vez para baixo a cada acorde trocado.
+            </div>
+          </div>
+
+          {/* Sheet Music Board / Right */}
+          <div className="lg:col-span-8 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 p-6 flex flex-col justify-between shadow-sm">
+            <div>
+              {/* Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-slate-200 dark:border-stone-800 pb-5 mb-5 w-full">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <FileText className="w-4 h-4 text-amber-700" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-stone-500 font-mono">
+                      Guia Cifrado Interativo
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    {selectedSong.title}
+                  </h2>
+                  <p className="text-xs text-slate-400 dark:text-stone-400">
+                    Artista: <strong className="text-slate-650 dark:text-stone-300 font-medium">{selectedSong.artist}</strong>
+                  </p>
+                </div>
+
+                {/* Quick stats board */}
+                <div className="flex gap-2.5 flex-wrap md:flex-nowrap">
+                  <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-500 block">Levada</span>
+                    <span className="text-xs font-bold text-slate-750 dark:text-stone-350">{selectedSong.rhythm}</span>
+                  </div>
+
+                  <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-550 block">Mão Esquerda</span>
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-400 font-mono">
+                      {selectedSong.chordsUsed.length} Acordes
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => handleDownloadSingleSongPDF(selectedSong)}
+                    disabled={downloadingSingle}
+                    id="download-single-pdf-btn"
+                    className="px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 active:scale-95 text-amber-900 dark:text-amber-400 font-extrabold text-xs rounded-2xl border border-amber-200/50 dark:border-stone-850 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {downloadingSingle ? (
+                      <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <FileDown className="w-4 h-4 text-amber-700 dark:text-amber-500" />
+                    )}
+                    <span>Baixar Cifra (PDF)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Strum sequence board */}
+              <div className="bg-amber-500/5 dark:bg-stone-950/40 p-4 rounded-2xl border border-amber-100 dark:border-stone-850 flex flex-col gap-3 mb-6">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-700 dark:text-stone-300 whitespace-nowrap">Levada de Ritmo:</span>
+                  <div className="flex gap-1.5">
+                    {selectedSong.strummingPattern.map((strum, sIdx) => {
+                      const isDown = strum === "↓";
+                      return (
+                        <span
+                          key={sIdx}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm ${
+                            isDown
+                              ? "bg-amber-800 text-stone-50"
+                              : "bg-yellow-500 text-stone-900"
+                          }`}
+                        >
+                          {strum}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {selectedSong.videoTip && (
+                  <div className="text-[11px] text-slate-600 dark:text-stone-300 flex gap-1.5 items-center w-full pt-2.5 border-t border-amber-100/40 dark:border-stone-850/60 leading-relaxed">
+                    <CheckCircle className="w-4 h-4 text-green-500 shrink-0" />
+                    <span><strong>Dica:</strong> {selectedSong.videoTip}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Sheet body */}
+              <div className="bg-slate-50/50 dark:bg-stone-950/20 p-6 md:p-8 rounded-3xl border border-slate-205 dark:border-stone-850 font-sans shadow-inner overflow-hidden min-h-[280px]">
+                <div className="max-w-md mx-auto space-y-2">
+                  {selectedSong.lines.map((line, idx) => renderLyricLineWithChords(line, idx))}
+                </div>
+              </div>
+
+              {/* Diário de Treino de Música - SQLite backend */}
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-stone-800 text-left">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-stone-100 flex items-center gap-2 mb-1.5">
+                  <Edit3 className="w-4 h-4 text-amber-605" />
+                  Diário de Treino de Música (Salvo no SQLite)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-3 leading-relaxed">
+                  Anote quais partes desta música você acha mais difíceis (ex: transição rápida de <strong>G</strong> para <strong>D</strong>), onde deve focar a levada ou seus tempos de andamento. Suas notas ficam vinculadas eternamente a esta música no SQLite!
+                </p>
+                <div className="space-y-2">
+                  <textarea
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    placeholder="Exemplo: Praticar a transição rápida do acorde D para o G de modo mais limpo. Focar bem nas duas batidas para cima da levada..."
+                    className="w-full min-h-[90px] p-3 text-xs bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-850 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 text-slate-800 dark:text-stone-200"
+                  />
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-slate-400 dark:text-stone-500">
+                      {saveSuccess ? (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-bold">✓ Suas anotações de música foram gravadas no SQLite!</span>
+                      ) : (
+                        "Anotação correspondente vinculada"
+                      )}
+                    </span>
+                    <button
+                      onClick={handleSaveNote}
+                      disabled={isSavingNote}
+                      id="save-song-note-btn"
+                      className="px-4 py-1.5 bg-stone-900 hover:bg-stone-850 dark:bg-amber-600 dark:hover:bg-amber-500 text-white dark:text-slate-950 rounded-xl text-xs font-bold transition flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      {isSavingNote ? "Salvando..." : "Gravar no Banco"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dicionário Visual de Acordes da Música */}
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-stone-800 text-left">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-stone-100 flex items-center gap-2 mb-1.5">
+                  <Disc className="w-4 h-4 text-amber-600 animate-pulse" />
+                  Acordes Utilizados nesta Música (Clique para ouvir)
+                </h4>
+                <p className="text-[11px] text-slate-500 dark:text-stone-400 mb-4 leading-relaxed">
+                  Estude as posições ideais e clique em qualquer diagrama para ouvir a afinação acústica exata do acorde:
+                </p>
+                <div className="flex flex-wrap gap-4 pt-1">
+                  {selectedSong.chordsUsed.map((chordName) => {
+                    const frets = CHORD_FRETS[chordName] || ["x", "x", 0, 2, 3, 2];
+                    return (
+                      <SongChordCard key={chordName} name={chordName} frets={frets} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Action guidelines */}
+            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-stone-800 flex flex-col md:flex-row gap-4 justify-between items-center text-xs text-slate-400 dark:text-stone-500 text-center md:text-left">
+              <span>
+                Clique em qualquer cifra acima para ouvir a montagem do acorde!
+              </span>
+              <span className="font-bold text-amber-700 dark:text-amber-500 font-mono animate-pulse">
+                ♪ Toque acompanhando no seu violão real
+              </span>
+            </div>
           </div>
         </div>
+      ) : (
+        <div id="riffs-tab-container" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Riffs list - Left Side */}
+          <div className="lg:col-span-4 flex flex-col gap-4">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-stone-900 dark:to-stone-950 p-4 rounded-xl border border-amber-100 dark:border-stone-800">
+              <h3 className="font-bold text-xs text-amber-900 dark:text-amber-100 uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Treino de Riffs Interativos
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-stone-400 mt-1 leading-normal">
+                Aprenda os trechos de guitarra e violão mais influentes da história da música! Clique e ouça as notas individuais na Tablatura interativa de 6 cordas.
+              </p>
+            </div>
 
-        {/* Action guidelines */}
-        <div className="mt-8 pt-4 border-t border-slate-100 dark:border-stone-800 flex flex-col md:flex-row gap-4 justify-between items-center text-xs text-slate-400 dark:text-stone-500 text-center md:text-left">
-          <span>
-            Clique em qualquer cifra acima para ouvir a montagem do acorde!
-          </span>
-          <span className="font-bold text-amber-700 dark:text-amber-500 font-mono animate-pulse">
-            ♪ Toque acompanhando no seu violão real
-          </span>
+            <div className="flex flex-col gap-3">
+              {RIFF_DATABASE.map((riff) => {
+                const isSelected = selectedRiff.id === riff.id;
+                const diffColor = 
+                  riff.difficulty === "Iniciante" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
+                  riff.difficulty === "Intermediário" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" :
+                  "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20";
+                
+                return (
+                  <button
+                    key={riff.id}
+                    onClick={() => handleSelectRiff(riff)}
+                    className={`p-4 rounded-2xl border text-left transition relative overflow-hidden group cursor-pointer ${
+                      isSelected
+                        ? "bg-white dark:bg-stone-900 border-2 border-amber-750 dark:border-amber-600 shadow-md"
+                        : "bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 hover:border-slate-350 dark:hover:border-stone-700"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-stone-100 block">
+                          {riff.title}
+                        </h4>
+                        <span className="text-xs text-slate-400 dark:text-stone-500 block">
+                          {riff.artist}
+                        </span>
+                      </div>
+
+                      <span className="text-[10px] font-mono bg-stone-100 dark:bg-stone-950 font-bold px-2 py-1 rounded text-amber-800 dark:text-amber-400 shrink-0">
+                        {riff.bpm} BPM
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-center mt-3">
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded border uppercase ${diffColor}`}>
+                        {riff.difficulty}
+                      </span>
+                      <span className="text-[10px] text-slate-400 dark:text-stone-500 font-mono">
+                        {riff.steps.filter(s => Object.getOwnPropertyNames(s.notes).length > 0).length} notas
+                      </span>
+                    </div>
+
+                    {/* Arrow indicator on hover */}
+                    <ArrowRight className="w-4 h-4 text-amber-700 absolute right-4 bottom-4 opacity-0 group-hover:opacity-100 transition translate-x-2 group-hover:translate-x-0" />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="bg-amber-500/5 dark:bg-stone-900 p-4 rounded-xl border border-amber-250/20 text-xs text-slate-500 leading-normal">
+              <span className="font-semibold text-slate-800 dark:text-stone-200 block mb-1">📐 Como Funciona:</span>
+              O player reproduz o riff nota por nota marcando o compasso exato na tablatura horizontal. Sintonize a velocidade ideal para treinar devagar!
+            </div>
+          </div>
+
+          {/* Tab Viewer Panel - Right Side */}
+          <div className="lg:col-span-8 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 p-6 flex flex-col justify-between shadow-sm">
+            <div>
+              {/* Header */}
+              <div className="flex flex-col md:flex-row justify-between items-start gap-4 border-b border-slate-200 dark:border-stone-800 pb-5 mb-5 w-full">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4 text-amber-700" />
+                    <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-stone-500 font-mono">
+                      PRODUTOR DE RIFFS INTERATIVOS (TABS)
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    {selectedRiff.title}
+                  </h2>
+                  <p className="text-xs text-slate-400 dark:text-stone-400">
+                    Artista original: <strong className="text-slate-650 dark:text-stone-300 font-medium">{selectedRiff.artist}</strong>
+                  </p>
+                </div>
+
+                {/* Riff difficulty marker */}
+                <div className="flex gap-2.5">
+                  <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-550 block">Dificuldade</span>
+                    <span className={`text-xs font-black uppercase ${
+                      selectedRiff.difficulty === "Iniciante" ? "text-emerald-600 dark:text-emerald-400" :
+                      selectedRiff.difficulty === "Intermediário" ? "text-amber-700 dark:text-amber-400" :
+                      "text-rose-600 dark:text-rose-450"
+                    }`}>{selectedRiff.difficulty}</span>
+                  </div>
+
+                  <div className="px-3.5 py-2 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-2xl text-center">
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400 dark:text-stone-550 block">Andamento</span>
+                    <span className="text-xs font-bold text-amber-800 dark:text-amber-400 font-mono">
+                      {selectedRiff.bpm} BPM
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description block */}
+              <p className="text-xs text-slate-600 dark:text-stone-300 mb-6 leading-relaxed">
+                {selectedRiff.description}
+              </p>
+
+              {/* Sub-header and Player Controls for Riff */}
+              <div className="bg-slate-50 dark:bg-stone-950/45 p-4 rounded-2xl border border-slate-200 dark:border-stone-850/60 flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  {isPlayingRiff ? (
+                    <button
+                      onClick={handleStopRiff}
+                      id="stop-riff-btn"
+                      className="flex items-center justify-center gap-1.5 py-2 px-4 bg-amber-800 hover:bg-amber-900 text-white rounded-xl text-xs font-bold transition border-0 cursor-pointer shadow-sm"
+                    >
+                      <Pause className="w-4 h-4" />
+                      Pausar
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handlePlayRiff}
+                      id="play-riff-btn"
+                      className="flex items-center justify-center gap-1.5 py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition border-0 cursor-pointer shadow-sm"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      Tocar Riff
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={() => {
+                      handleStopRiff();
+                      setTimeout(() => handlePlayRiff(), 50);
+                    }}
+                    id="reset-riff-btn"
+                    className="p-2 bg-slate-200 hover:bg-slate-300 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-350 rounded-xl transition cursor-pointer border-0"
+                    title="Reiniciar Execução"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Training Speed Toggle */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-wider font-mono">
+                    Velocidade:
+                  </span>
+                  <div className="flex gap-1 bg-slate-200 dark:bg-stone-900 p-0.5 rounded-lg border border-slate-300/40 dark:border-stone-800">
+                    {([0.5, 0.75, 1.0, 1.25] as number[]).map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => setPlaybackSpeed(speed)}
+                        className={`px-2 py-1 rounded text-[10px] font-bold font-mono transition border-0 cursor-pointer ${
+                          playbackSpeed === speed
+                            ? "bg-stone-900 text-white dark:bg-amber-500 dark:text-stone-950"
+                            : "text-slate-600 hover:text-slate-900 dark:text-stone-400 hover:dark:text-stone-250 bg-transparent"
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* TAB EDITOR SHEET VIEW */}
+              <div className="bg-stone-950 border border-slate-200 dark:border-stone-850 rounded-2xl p-6 shadow-inner relative overflow-hidden">
+                <div className="absolute top-2 right-3 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-[8px] font-bold text-slate-500 dark:text-stone-600 font-mono uppercase tracking-widest">
+                    Live TAB Synthesizer
+                  </span>
+                </div>
+
+                {/* Horizontal Scroll wrapper */}
+                <div className="overflow-x-auto scroller-elegant pb-2 pt-4">
+                  <div className="min-w-[500px] flex flex-col gap-1">
+                    
+                    {/* Step headers showing numbering */}
+                    <div className="flex items-center h-4 relative mb-1">
+                      <span className="w-5" />
+                      <div className="flex-1 flex gap-2 pl-6">
+                        {selectedRiff.steps.map((_, sIdx) => {
+                          const isActive = currentPlayingStep === sIdx;
+                          return (
+                            <div
+                              key={sIdx}
+                              className={`w-9 text-center font-mono text-[9px] font-bold shrink-0 ${
+                                isActive ? "text-amber-500" : "text-stone-600"
+                              }`}
+                            >
+                              {(sIdx + 1).toString().padStart(2, "0")}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Draw 6 string rows */}
+                    {[
+                      { label: "e", index: 5 },
+                      { label: "B", index: 4 },
+                      { label: "G", index: 3 },
+                      { label: "D", index: 2 },
+                      { label: "A", index: 1 },
+                      { label: "E", index: 0 }
+                    ].map((stringObj) => (
+                      <div key={stringObj.index} className="flex items-center h-7 relative group">
+                        {/* String label indicator */}
+                        <span className="w-5 font-mono font-black text-xs text-stone-500 shrink-0 text-left">
+                          {stringObj.label}
+                        </span>
+
+                        {/* Line vector line drawing standard TAB line */}
+                        <div className="absolute left-6 right-0 h-[1.5px] bg-stone-800 dark:bg-stone-850 z-0" />
+
+                        {/* Column blocks container */}
+                        <div className="flex-1 flex gap-2 pl-6 z-10">
+                          {selectedRiff.steps.map((step, sIdx) => {
+                            const fret = step.notes[stringObj.index];
+                            const hasNote = fret !== undefined;
+                            const isActive = currentPlayingStep === sIdx;
+
+                            return (
+                              <button
+                                key={sIdx}
+                                onClick={() => {
+                                  if (hasNote) {
+                                    playGuitarNote(stringObj.index, fret, 0, 1.2);
+                                  }
+                                }}
+                                className={`w-9 h-6.5 rounded flex items-center justify-center font-mono font-bold text-xs shrink-0 border-0 transition-all cursor-pointer ${
+                                  isActive && hasNote
+                                    ? "bg-amber-500 text-stone-950 scale-110 shadow-lg ring-2 ring-amber-400 font-black"
+                                    : isActive
+                                    ? "bg-amber-500/20 text-amber-505 border border-amber-500/20 font-black animate-pulse"
+                                    : hasNote
+                                    ? "bg-stone-900 hover:bg-stone-850 hover:scale-105 active:scale-95 border border-amber-500/30 text-amber-400 dark:text-amber-500"
+                                    : "bg-transparent text-stone-700 hover:bg-white/5"
+                                }`}
+                                title={hasNote ? `Corda ${stringObj.label} (casa ${fret}) - Clique para ouvir` : "Silêncio"}
+                              >
+                                {hasNote ? fret : "-"}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Bottom labels showing optional chord markers */}
+                    <div className="flex items-center h-5 relative mt-1.5">
+                      <span className="w-5" />
+                      <div className="flex-1 flex gap-2 pl-6">
+                        {selectedRiff.steps.map((step, sIdx) => {
+                          const isActive = currentPlayingStep === sIdx;
+                          return (
+                            <div
+                              key={sIdx}
+                              className={`w-9 text-center font-mono text-[9px] font-black shrink-0 uppercase tracking-tight ${
+                                isActive ? "text-amber-400" : "text-stone-500"
+                              }`}
+                            >
+                              {step.label || ""}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Micro instructions prompt */}
+                <div className="mt-4 flex justify-between items-center text-[10px] text-stone-500 font-mono border-t border-stone-900 pt-3">
+                  <span>💡 Dica: Clique em qualquer número para ouvir a nota individual</span>
+                  <span>Corda 'e' = mais aguda | Corda 'E' = mais grave</span>
+                </div>
+              </div>
+
+              {/* Performance tip section */}
+              <div className="mt-6 p-4 bg-amber-500/5 dark:bg-stone-950/25 rounded-2xl border border-amber-500/10 dark:border-stone-850/80">
+                <span className="text-[10px] font-bold text-amber-700 dark:text-amber-450 uppercase tracking-wider block mb-1.5 flex items-center gap-1 font-mono">
+                  <Flame className="w-4 h-4 text-amber-600 shrink-0 animate-pulse" />
+                  DICA DE EXECUÇÃO ESPECIALIZADA
+                </span>
+                <p className="text-xs text-slate-700 dark:text-stone-300 leading-relaxed font-sans">
+                  {selectedRiff.rhythmTip}
+                </p>
+              </div>
+
+              {/* Mini tab teaching manual */}
+              <div className="mt-6 p-4 bg-slate-50 dark:bg-stone-950/10 rounded-2xl border border-slate-200 dark:border-stone-850 text-left">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-stone-400 uppercase tracking-widest block mb-1.5 font-mono">
+                  COMO LER ESTE DIAGRAMA DE TABLATURA (TAB):
+                </span>
+                <div className="text-[11px] text-slate-500 dark:text-stone-400 leading-relaxed space-y-1">
+                  • Cada uma das 6 linhas representa uma corda da guitarra/violão. A linha de cima <strong>(e)</strong> representa a corda mais fina, e a de baixo <strong>(E)</strong> a mais grossa.<br />
+                  • Os números escritos nas linhas representam os <strong>trastes</strong> (as casas do braço do instrumento) nos quais você pressiona a corda correspondente antes de tocá-la.<br />
+                  • O número <strong>0</strong> representa que a corda é tocada solta (sem pressionar nenhuma casa).<br />
+                  • O símbolo <strong>-</strong> (traço) de silêncio denota pausa ou ausência de digitação naquele momento rítmico do riff.
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-4 border-t border-slate-100 dark:border-stone-800 text-center font-bold text-amber-700 dark:text-amber-500 text-xs font-mono animate-pulse">
+              ★ Pratique diariamente repetindo o Loop até sintonizar a perfeição!
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

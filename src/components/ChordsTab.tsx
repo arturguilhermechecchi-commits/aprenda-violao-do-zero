@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Chord, ChordVariation } from "../types";
+import { useState, useEffect } from "react";
+import { Chord, ChordVariation, UserSession } from "../types";
 import { playGuitarChord } from "./AcousticAudio";
-import { Volume2, HelpCircle, Check, Info, Sparkles, Award, BookOpen } from "lucide-react";
+import { Volume2, HelpCircle, Check, Info, Sparkles, Award, BookOpen, Lock, Music, Zap, Link } from "lucide-react";
 import { motion } from "motion/react";
 
 const CHORD_DATABASE: Chord[] = [
@@ -591,6 +591,347 @@ const CHORD_VARIATIONS: Record<string, ChordVariation[]> = {
       baseFret: 1,
       usageTip: "Perfeito para iniciantes tocarem de forma mais tranquila."
     }
+  ],
+  "C7M": [
+    {
+      name: "C7M Aberto",
+      difficulty: "Intermediário",
+      frets: ["x", 3, 2, 0, 0, 0],
+      fingers: [null, 3, 2, null, null, null],
+      baseFret: 1,
+      usageTip: "Shape básico de bossa nova e MPB. Traz uma atmosfera suave, sofisticada e relaxante."
+    },
+    {
+      name: "C7M com Pestana (3ª casa)",
+      difficulty: "Avançado",
+      frets: ["x", 3, 5, 4, 5, 3],
+      fingers: [null, 1, 3, 2, 4, 1],
+      baseFret: 3,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Formato de Jazz (Drop 2) muito versátil para passagens cromáticas de meio de braço."
+    },
+    {
+      name: "C7M Bossa Nova (8ª casa)",
+      difficulty: "Avançado",
+      frets: [8, "x", 9, 9, 8, "x"],
+      fingers: [1, null, 3, 4, 2, null],
+      baseFret: 8,
+      usageTip: "Clássico encadeamento de Bossa Nova com o polegar marcando o baixo em Dó na 6ª corda."
+    }
+  ],
+  "D9": [
+    {
+      name: "Ré com Nona Aberto (D9)",
+      difficulty: "Iniciante",
+      frets: ["x", "x", 0, 2, 3, 0],
+      fingers: [null, null, null, 1, 3, null],
+      baseFret: 1,
+      usageTip: "Substituto moderno e rico para o Ré maior convencional com bastante brilho de violão folk."
+    },
+    {
+      name: "D9 Sofisticado (Bossa Nova)",
+      difficulty: "Avançado",
+      frets: ["x", 5, 4, 5, 5, "x"],
+      fingers: [null, 2, 1, 3, 4, null],
+      baseFret: 4,
+      usageTip: "Excelente fôrma de Samba e Jazz com o polegar de apoio nas cordas centrais."
+    }
+  ],
+  "G7": [
+    {
+      name: "Sol Dominante com Sétima (G7) Aberto",
+      difficulty: "Iniciante",
+      frets: [3, 2, 0, 0, 0, 1],
+      fingers: [3, 2, null, null, null, 1],
+      baseFret: 1,
+      usageTip: "Gera a tensão harmônica natural do acorde de Sol Maior antes de repousar em Dó."
+    },
+    {
+      name: "G7 com Pestana (3ª casa)",
+      difficulty: "Intermediário",
+      frets: [3, 5, 3, 4, 3, 3],
+      fingers: [1, 3, 1, 2, 1, 1],
+      baseFret: 3,
+      barre: { fret: 1, startString: 0, endString: 5 },
+      usageTip: "Clássico formato de E7 com pestana na 3ª casa, muito comum em blues."
+    },
+    {
+      name: "G7 Moderno (Bossa / Jazz)",
+      difficulty: "Avançado",
+      frets: [3, "x", 3, 4, 3, "x"],
+      fingers: [1, null, 2, 3, 1, null],
+      baseFret: 3,
+      usageTip: "Elegante fôrma com notas limpas e baixo abafado nas cordas internas."
+    }
+  ],
+  "Bm7": [
+    {
+      name: "Si Menor com Sétima (Bm7)",
+      difficulty: "Intermediário",
+      frets: ["x", 2, 4, 2, 3, 2],
+      fingers: [null, 1, 3, 1, 2, 1],
+      baseFret: 2,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Pestana leve e muito confortável no violão, ótima para condução acústica."
+    },
+    {
+      name: "Bm7 Bossa Nova de 6ª Corda",
+      difficulty: "Avançado",
+      frets: [7, "x", 7, 7, 7, "x"],
+      fingers: [1, null, 2, 3, 4, null],
+      baseFret: 7,
+      usageTip: "Shape exclusivo para puxar o dedilhado no samba com baixo forte no Si."
+    }
+  ],
+  "F#m7": [
+    {
+      name: "Fá Sost. Menor com Sétima (F#m7)",
+      difficulty: "Intermediário",
+      frets: [2, 4, 2, 2, 2, 2],
+      fingers: [1, 3, 1, 1, 1, 1],
+      baseFret: 2,
+      barre: { fret: 1, startString: 0, endString: 5 },
+      usageTip: "Base de praticamente todos os sambas e canções clássicas de Bossa Nova."
+    },
+    {
+      name: "F#m7 Bossa Nova (9ª casa)",
+      difficulty: "Avançado",
+      frets: ["x", 9, 11, 9, 10, 9],
+      fingers: [null, 1, 3, 1, 2, 1],
+      baseFret: 9,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Formato agudo com pestana na 9ª casa, excelente tom agudo harmônico."
+    }
+  ],
+  "E7(9)": [
+    {
+      name: "E7(9) Bossa Nova",
+      difficulty: "Avançado",
+      frets: ["x", 7, 6, 7, 7, "x"],
+      fingers: [null, 2, 1, 3, 4, null],
+      baseFret: 6,
+      usageTip: "O supremo balanço da Bossa Nova e do Jazz. Fricciona a sétima menor com a nona maior."
+    },
+    {
+      name: "E7(9) Aberto (Blues)",
+      difficulty: "Intermediário",
+      frets: [0, 2, 0, 1, 0, 2],
+      fingers: [null, 2, null, 1, null, 4],
+      baseFret: 1,
+      usageTip: "Combina o brilho do Mi grave aberto com a fôrma de blues acústico e swing."
+    }
+  ],
+  "C9": [
+    {
+      name: "Dó com Nona (C9) Aberto",
+      difficulty: "Iniciante",
+      frets: ["x", 3, 2, 0, 3, 0],
+      fingers: [null, 2, 1, null, 3, null],
+      baseFret: 1,
+      usageTip: "Sonoridade moderna e brilhante para substituir o C clássico folk."
+    },
+    {
+      name: "C9 Groove (Pestana na 3ª casa)",
+      difficulty: "Avançado",
+      frets: ["x", 3, 2, 3, 3, 3],
+      fingers: [null, 2, 1, 3, 4, 4],
+      baseFret: 2,
+      usageTip: "Traz a energia do Funk e Soul com pegada rítmica nas cordas agudas."
+    }
+  ],
+  "A7": [
+    {
+      name: "Lá com Sétima (A7) Aberto",
+      difficulty: "Iniciante",
+      frets: ["x", 0, 2, 0, 2, 0],
+      fingers: [null, null, 1, null, 2, null],
+      baseFret: 1,
+      usageTip: "Gera tensão com apenas 2 dedos, indispensável para blues e samba de raiz."
+    },
+    {
+      name: "A7 com Pestana (5ª casa)",
+      difficulty: "Intermediário",
+      frets: [5, 7, 5, 6, 5, 5],
+      fingers: [1, 3, 1, 2, 1, 1],
+      baseFret: 5,
+      barre: { fret: 1, startString: 0, endString: 5 },
+      usageTip: "Clássica pestana na 5ª casa e pegada percussiva marcante de guitarra blues."
+    },
+    {
+      name: "A7 Bossa Nova sem Pestana",
+      difficulty: "Avançado",
+      frets: ["x", 12, 11, 12, 10, "x"],
+      fingers: [null, 3, 2, 4, 1, null],
+      baseFret: 10,
+      usageTip: "Selecione esta elegante fôrma alta para solos e arranjos jazzísticos agudos."
+    }
+  ],
+  "B7": [
+    {
+      name: "Si com Sétima (B7) Aberto",
+      difficulty: "Intermediário",
+      frets: ["x", 2, 1, 2, 0, 2],
+      fingers: [null, 2, 1, 3, null, 4],
+      baseFret: 1,
+      usageTip: "Acorde de preparação espetacular, rico para as modulações na música popular."
+    },
+    {
+      name: "B7 com Pestana (2ª casa)",
+      difficulty: "Avançado",
+      frets: ["x", 2, 4, 2, 4, 2],
+      fingers: [null, 1, 3, 1, 4, 1],
+      baseFret: 2,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Usa fôrma móvel com pestana esticada para dinâmicas mais ágeis."
+    }
+  ],
+  "D7M": [
+    {
+      name: "Ré com Sétima Maior (D7M) Aberto",
+      difficulty: "Iniciante",
+      frets: ["x", "x", 0, 2, 2, 2],
+      fingers: [null, null, null, 1, 2, 3],
+      baseFret: 1,
+      usageTip: "Sua doçura e nostalgia fazem dele um dos acorde mais amados da MPB."
+    },
+    {
+      name: "D7M Moderno (5ª casa)",
+      difficulty: "Avançado",
+      frets: ["x", 5, 7, 6, 7, 5],
+      fingers: [null, 1, 3, 2, 4, 1],
+      baseFret: 5,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Oferece um ar extremamente sofisticado e moderno para andamentos lentos de jazz."
+    }
+  ],
+  "A7M": [
+    {
+      name: "Lá com Sétima Maior (A7M) Aberto",
+      difficulty: "Iniciante",
+      frets: ["x", 0, 2, 1, 2, 0],
+      fingers: [null, null, 2, 1, 3, null],
+      baseFret: 1,
+      usageTip: "Uma maravilhosa e calmo fôrma introspectiva com apenas 3 dedos."
+    },
+    {
+      name: "A7M Bossa Nova (5ª casa)",
+      difficulty: "Avançado",
+      frets: [5, "x", 6, 6, 5, "x"],
+      fingers: [1, null, 3, 4, 2, null],
+      baseFret: 5,
+      usageTip: "Clássico encadeamento brasileiro sem pestana com notas cheias no baixo da 6ª corda."
+    }
+  ],
+  "G7M": [
+    {
+      name: "Sol com Sétima Maior (G7M) Bossa Nova",
+      difficulty: "Avançado",
+      frets: [3, "x", 4, 4, 3, "x"],
+      fingers: [1, null, 3, 4, 2, null],
+      baseFret: 3,
+      usageTip: "Usa o polegar de forma leve na 6ª corda para conduzir as marcantes levadas sincopadas."
+    },
+    {
+      name: "G7M com Pestana na 10ª casa",
+      difficulty: "Avançado",
+      frets: ["x", 10, 12, 11, 12, 10],
+      fingers: [null, 1, 3, 2, 4, 1],
+      baseFret: 10,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Brilhante sonoridade de jazz no registro alto do braço do violão."
+    }
+  ],
+  "Dm9": [
+    {
+      name: "Ré Menor com Nona (Dm9) Bossa Nova",
+      difficulty: "Avançado",
+      frets: ["x", 5, 3, 5, 5, "x"],
+      fingers: [null, 2, 1, 3, 4, null],
+      baseFret: 3,
+      usageTip: "Clássica fôrma sofisticada e romântica da bossa nova e do piano acústico."
+    },
+    {
+      name: "Dm9 Simplificado Estilo Lofi",
+      difficulty: "Intermediário",
+      frets: ["x", "x", 0, 2, 1, 0],
+      fingers: [null, null, null, 2, 1, null],
+      baseFret: 1,
+      usageTip: "Excepcional fôrma que se beneficia da corda Mi aguda solta para gerar tensão Lofi."
+    }
+  ],
+  "G7(13)": [
+    {
+      name: "Sol com Sétima e Décima Terceira G7(13)",
+      difficulty: "Avançado",
+      frets: [3, "x", 3, 4, 5, "x"],
+      fingers: [1, null, 2, 3, 4, null],
+      baseFret: 3,
+      usageTip: "Fricção jazzística mítica combinando o baixo, a sétima menor e o brilho da 13ª."
+    },
+    {
+      name: "G7(13) Aberto",
+      difficulty: "Avançado",
+      frets: [3, 2, 0, 0, 0, 0],
+      fingers: [2, 1, null, null, null, null],
+      baseFret: 1,
+      usageTip: "A tática de deixar a 1ª e 2ª cordas soltas cria um preenchimento surpreendência."
+    }
+  ],
+  "Am9": [
+    {
+      name: "Lá Menor com Nona (Am9) Aberto",
+      difficulty: "Intermediário",
+      frets: ["x", 0, 2, 4, 1, 0],
+      fingers: [null, null, 2, 4, 1, null],
+      baseFret: 1,
+      usageTip: "Abstrato e misterioso, ideal para dedilhados lentos e reflexivos."
+    },
+    {
+      name: "Am9 Bossa Nova (5ª casa)",
+      difficulty: "Avançado",
+      frets: [5, "x", 5, 5, 5, 7],
+      fingers: [1, null, 1, 1, 1, 3],
+      baseFret: 5,
+      barre: { fret: 1, startString: 0, endString: 4 },
+      usageTip: "Mini-pestana prendendo a 5ª casa e esticando o dedo mínimo na 7ª casa."
+    }
+  ],
+  "B7M": [
+    {
+      name: "Si com Sétima Maior (B7M) Padrão",
+      difficulty: "Intermediário",
+      frets: ["x", 2, 4, 3, 4, 2],
+      fingers: [null, 1, 3, 2, 4, 1],
+      baseFret: 2,
+      barre: { fret: 1, startString: 1, endString: 5 },
+      usageTip: "Fôrma clássica e doce que cria uma introdução romântica fantástica em Mi Maior."
+    },
+    {
+      name: "B7M Bossa Novo Puxado (7ª casa)",
+      difficulty: "Avançado",
+      frets: [7, "x", 8, 8, 7, "x"],
+      fingers: [1, null, 3, 4, 2, null],
+      baseFret: 7,
+      usageTip: "Une o marcante grave da 6ª corda com as elegantes puxadas de MPB."
+    }
+  ],
+  "Bm7(b5)": [
+    {
+      name: "Si Meio-Diminuto Bm7(b5) MPB",
+      difficulty: "Avançado",
+      frets: ["x", 2, 3, 2, 3, "x"],
+      fingers: [null, 1, 3, 2, 4, null],
+      baseFret: 2,
+      usageTip: "O acorde fundamental de passagem harmônica menor (II-V-I). Traz o clima dramático de jazz."
+    },
+    {
+      name: "Bm7(b5) Baixo na 6ª Corda",
+      difficulty: "Avançado",
+      frets: [7, "x", 7, 7, 6, "x"],
+      fingers: [2, null, 3, 4, 1, null],
+      baseFret: 6,
+      usageTip: "Excelente shape com inversão para preencher o baixo de samba e bossas."
+    }
   ]
 };
 
@@ -615,15 +956,438 @@ function getChordVariations(chord: Chord): ChordVariation[] {
   ];
 }
 
+interface HarmonicFieldMember {
+  degree: string;
+  chordName: string;
+  role: "Tônica" | "Subdominante" | "Dominante" | "Dominante Pas." | "Dominante Natural" | "Dominante Harmônico" | "Tônica (Atuante)";
+  description: string;
+}
+
+interface HarmonicField {
+  key: string;
+  mainChord: string;
+  description: string;
+  chords: HarmonicFieldMember[];
+}
+
+const HARMONIC_FIELDS: HarmonicField[] = [
+  {
+    key: "Dó Maior (C)",
+    mainChord: "C",
+    description: "O campo mais básico e brilhante do violão. Não possui nenhum sustenido (#) ou bemol (b). Perfeito para baladas doces e pop acústico.",
+    chords: [
+      { degree: "I", chordName: "C", role: "Tônica", description: "Acorde de repouso e resolução principal." },
+      { degree: "I7M", chordName: "C7M", role: "Tônica", description: "Variação sofisticada do primeiro grau (Bossa Nova)." },
+      { degree: "IIm", chordName: "Dm", role: "Subdominante", description: "Prepara o caminho, gerando um som suave de transição." },
+      { degree: "IIIm", chordName: "Em", role: "Tônica (Atuante)", description: "Grau melancólico subordinado ao repouso." },
+      { degree: "IV", chordName: "F", role: "Subdominante", description: "Gera sensação de suspensão e afastamento da tônica." },
+      { degree: "V", chordName: "G", role: "Dominante", description: "Acorde de tensionamento forte que exige resolução voltando ao C." },
+      { degree: "V7", chordName: "G7", role: "Dominante", description: "Tensão máxima com trítono clássico de preparação dominante." },
+      { degree: "VIm", chordName: "Am", role: "Tônica (Atuante)", description: "Relativo menor oficial. Excelente para pontes reflexivas." },
+      { degree: "VIIm7(b5)", chordName: "Bm7(b5)", role: "Dominante Pas.", description: "Meio-diminuto que adiciona dramaticidade jazzística." }
+    ]
+  },
+  {
+    key: "Dó Sustenido Maior (C#)",
+    mainChord: "C#",
+    description: "Tonalidade com sonorizaçao brilhante e cheia, rica em sustenidos. Possui 7 sustenidos.",
+    chords: [
+      { degree: "I", chordName: "C#", role: "Tônica", description: "Grau de estabilidade e repouso principal." },
+      { degree: "IIm", chordName: "D#m", role: "Subdominante", description: "Excelente para caminhos de passagem suave." },
+      { degree: "IIIm", chordName: "Fm", role: "Tônica", description: "Grau que serve como substituto suave da tônica." },
+      { degree: "IV", chordName: "F#", role: "Subdominante", description: "Gera afastamento e sensação de amplitude." },
+      { degree: "V", chordName: "G#", role: "Dominante", description: "Tensão clássica para preparar o repouso absoluto no C#." },
+      { degree: "V7", chordName: "G#7", role: "Dominante", description: "Tensão máxima que puxa fortemente para a tônica." },
+      { degree: "VIm", chordName: "A#m", role: "Tônica", description: "Relativo menor que acrescenta sobriedade." }
+    ]
+  },
+  {
+    key: "Ré Maior (D)",
+    mainChord: "D",
+    description: "Excelente para ritmos rápidos, pop nacional e rock. Possui 2 sustenidos (Fá# e Dó#).",
+    chords: [
+      { degree: "I", chordName: "D", role: "Tônica", description: "Alegre e extremamente vibrante." },
+      { degree: "I7M", chordName: "D7M", role: "Tônica", description: "Textura aveludada romântica." },
+      { degree: "IIm", chordName: "Em", role: "Subdominante", description: "Passagem fácil e de som redondo de dedilhado." },
+      { degree: "IIIm", chordName: "F#m", role: "Tônica", description: "Contraste sereno e nostálgico." },
+      { degree: "IV", chordName: "G", role: "Subdominante", description: "Contrapeso robusto e aberto." },
+      { degree: "V", chordName: "A", role: "Dominante", description: "Encaminhamento direto e tenso rumo ao repouso." },
+      { degree: "V7", chordName: "A7", role: "Dominante", description: "Tensão clássica indispensável de blues acústico." },
+      { degree: "VIm", chordName: "Bm", role: "Tônica", description: "Relativo menor dramático que fecha bem estrofes." }
+    ]
+  },
+  {
+    key: "Mi Bemol Maior (Eb)",
+    mainChord: "Eb",
+    description: "Tonalidade com sonoridade aveludada e profunda, bastante usada em metais e arranjos sofisticados.",
+    chords: [
+      { degree: "I", chordName: "Eb", role: "Tônica", description: "Estabilidade principal da tonalidade com som encorpado." },
+      { degree: "IIm", chordName: "Fm", role: "Subdominante", description: "Preparador melancólico de harmonia." },
+      { degree: "IIIm", chordName: "Gm", role: "Tônica", description: "Sabor reflexivo com menor estável." },
+      { degree: "IV", chordName: "Ab", role: "Subdominante", description: "Abertura aberta e cheia de ar." },
+      { degree: "V", chordName: "Bb", role: "Dominante", description: "Empurrão de tensão harmônica." },
+      { degree: "V7", chordName: "Bb7", role: "Dominante", description: "Preparador essencial para resolver no Eb." },
+      { degree: "VIm", chordName: "Cm", role: "Tônica", description: "Relativo menor expressivo e nostálgico." }
+    ]
+  },
+  {
+    key: "Mi Maior (E)",
+    mainChord: "E",
+    description: "A tonalidade preferida dos tocadores de blues de Chicago, folk e modas de viola. 4 sustenidos (Fá#, Dó#, Sol# e Ré#).",
+    chords: [
+      { degree: "I", chordName: "E", role: "Tônica", description: "Som poderoso aproveitando todos os graves do violão de 6 cordas." },
+      { degree: "IIm", chordName: "F#m", role: "Subdominante", description: "Acorde de suporte indispensável." },
+      { degree: "IIIm", chordName: "C#m", role: "Tônica", description: "Nostalgias de menor relativo." },
+      { degree: "IV", chordName: "A", role: "Subdominante", description: "Mudança aberta com os agudos livres." },
+      { degree: "V", chordName: "B", role: "Dominante", description: "Tensão com abertura rítmica." },
+      { degree: "V7", chordName: "B7", role: "Dominante", description: "A fôrma aberta de B7 gera uma das tensões mais ricas do violão." }
+    ]
+  },
+  {
+    key: "Fá Maior (F)",
+    mainChord: "F",
+    description: "Uma tonalidade robusta que exige pestana forte no violão, proporcionando canções encorpadas e expressivas.",
+    chords: [
+      { degree: "I", chordName: "F", role: "Tônica", description: "Base tônica com peso e sustentação na pestana." },
+      { degree: "IIm", chordName: "Gm", role: "Subdominante", description: "Sonoridade suavemente sombria de preparação." },
+      { degree: "IIIm", chordName: "Am", role: "Tônica", description: "Alternativa melancólica e levemente estável." },
+      { degree: "IV", chordName: "Bb", role: "Subdominante", description: "Abertura de espaço e frescor melódico de passagem." },
+      { degree: "V", chordName: "C", role: "Dominante", description: "Tensão luminosa de encaminhamento." },
+      { degree: "V7", chordName: "C7", role: "Dominante", description: "Preparação dominante perfeita para voltar ao repouso no F." },
+      { degree: "VIm", chordName: "Dm", role: "Tônica", description: "Relativo menor oficial que confere drama e emoção." }
+    ]
+  },
+  {
+    key: "Fá Sustenido Maior (F#)",
+    mainChord: "F#",
+    description: "Tonalidade ultra vibrante e complexa, com pestanas e timbres brilhantes no violão.",
+    chords: [
+      { degree: "I", chordName: "F#", role: "Tônica", description: "Grande brilho e estabilidade harmônica." },
+      { degree: "IIm", chordName: "G#m", role: "Subdominante", description: "Gesto clássico de avanço e suspensão." },
+      { degree: "IIIm", chordName: "A#m", role: "Tônica", description: "Contraponto estável romântico menor." },
+      { degree: "IV", chordName: "B", role: "Subdominante", description: "Abertura cheia e limpa." },
+      { degree: "V", chordName: "C#", role: "Dominante", description: "Tensão de impulsão clássica." },
+      { degree: "V7", chordName: "C#7", role: "Dominante", description: "Tensão total para retorno glorioso à tônica F#." },
+      { degree: "VIm", chordName: "D#m", role: "Tônica", description: "Relativo de extrema melancolia." }
+    ]
+  },
+  {
+    key: "Sol Maior (G)",
+    mainChord: "G",
+    description: "Um dos campos harmônicos mais populares no violão folk e sertanejo universitário. Contém 1 sustenido (Fá#).",
+    chords: [
+      { degree: "I", chordName: "G", role: "Tônica", description: "Base feliz e sólida da tonalidade." },
+      { degree: "I7M", chordName: "G7M", role: "Tônica", description: "Som ultra-relaxante de fim de tarde." },
+      { degree: "IIm", chordName: "Am", role: "Subdominante", description: "Transição suave e melancólica." },
+      { degree: "IIIm", chordName: "Bm", role: "Tônica", description: "Ponto triste de estabilidade harmônica menor." },
+      { degree: "IV", chordName: "C", role: "Subdominante", description: "Abertura de espaço e frescor melódico." },
+      { degree: "V", chordName: "D", role: "Dominante", description: "Arremates de tensão brilhantes." },
+      { degree: "V7", chordName: "D9", role: "Dominante", description: "A nona adiciona luxo resolvendo de volta no Sol." },
+      { degree: "VIm", chordName: "Em", role: "Tônica", description: "Relativo melancólico de peso extremo." }
+    ]
+  },
+  {
+    key: "Lá Bemol Maior (Ab)",
+    mainChord: "Ab",
+    description: "Tonalidade doce e calorosa, de timbre fechado e aveludado.",
+    chords: [
+      { degree: "I", chordName: "Ab", role: "Tônica", description: "Tonalidade principal com timbre encorpado." },
+      { degree: "IIm", chordName: "Bbm", role: "Subdominante", description: "Passagem melindrosa e intimista." },
+      { degree: "IIIm", chordName: "Cm", role: "Tônica", description: "Tonalidade menor melancólica de estabilidade." },
+      { degree: "IV", chordName: "Db", role: "Subdominante", description: "Efeito amplo de abertura de ar." },
+      { degree: "V", chordName: "Eb", role: "Dominante", description: "Vigor com tensão que empurra de volta." },
+      { degree: "V7", chordName: "Eb7", role: "Dominante", description: "Preparador mestre para resolução suave." },
+      { degree: "VIm", chordName: "Fm", role: "Tônica", description: "Relativo apaixonado e melancólico menor." }
+    ]
+  },
+  {
+    key: "Lá Maior (A)",
+    mainChord: "A",
+    description: "Muito utilizado no blues, rock clássico e na Bossa Nova tradicional. Possui 3 sustenidos (Fá#, Dó# e Sol#).",
+    chords: [
+      { degree: "I", chordName: "A", role: "Tônica", description: "Acorde encorpado com os baixos na 5ª corda solta." },
+      { degree: "I7M", chordName: "A7M", role: "Tônica", description: "Chave harmônica favorita dos amantes de Bossa Nova." },
+      { degree: "IIm", chordName: "Bm", role: "Subdominante", description: "Pestana refinada de preparação." },
+      { degree: "IIIm", chordName: "C#m", role: "Tônica", description: "Sensação reflexiva e intimista." },
+      { degree: "IV", chordName: "D", role: "Subdominante", description: "Aperto vibrante de expansão." },
+      { degree: "V", chordName: "E", role: "Dominante", description: "Preparador fundamental carregado de brilho." },
+      { degree: "V7", chordName: "E7(9)", role: "Dominante", description: "Tensão com sabor de lounge jazz e brasilidade." },
+      { degree: "VIm", chordName: "F#m", role: "Tônica", description: "Balanço melódico suave e elegante." }
+    ]
+  },
+  {
+    key: "Si Bemol Maior (Bb)",
+    mainChord: "Bb",
+    description: "Excelente para canções de MPB, Bossa Nova e jazz acústico. Possui 2 bemóis.",
+    chords: [
+      { degree: "I", chordName: "Bb", role: "Tônica", description: "Grande profundidade, muito macio e elegante." },
+      { degree: "IIm", chordName: "Cm", role: "Subdominante", description: "Ponto de passagem redondo menor." },
+      { degree: "IIIm", chordName: "Dm", role: "Tônica", description: "Melancolia reconfortante de suporte estável." },
+      { degree: "IV", chordName: "Eb", role: "Subdominante", description: "Contrabalanço de ar que amplia a harmonia." },
+      { degree: "V", chordName: "F", role: "Dominante", description: "Tensão luminosa clássica." },
+      { degree: "V7", chordName: "F7", role: "Dominante", description: "Tensão com tritono perfeito de retorno para Bb." },
+      { degree: "VIm", chordName: "Gm", role: "Tônica", description: "Relativo menor oficial forte e solene." }
+    ]
+  },
+  {
+    key: "Si Maior (B)",
+    mainChord: "B",
+    description: "Possui brilho penetrante e timbre muito vivo no violão. 5 sustenidos.",
+    chords: [
+      { degree: "I", chordName: "B", role: "Tônica", description: "Base brilhante e cheia de energy harmônica." },
+      { degree: "IIm", chordName: "C#m", role: "Subdominante", description: "Ponto clássico menor de suporte rítmico." },
+      { degree: "IIIm", chordName: "D#m", role: "Tônica", description: "Grau melancólico com afinação rica." },
+      { degree: "IV", chordName: "E", role: "Subdominante", description: "Abertura limpa de grande amplitude." },
+      { degree: "V", chordName: "F#", role: "Dominante", description: "Preparação brilhante e incisiva." },
+      { degree: "V7", chordName: "F#7", role: "Dominante", description: "Tensão dominante irresistível puxando para o si." },
+      { degree: "VIm", chordName: "G#m", role: "Tônica", description: "Relativo que confere drama denso." }
+    ]
+  },
+  {
+    key: "Dó Menor (Cm)",
+    mainChord: "Cm",
+    description: "Sonoridade dramática e densa, excelente para expressar sentimentos misteriosos ou solenes.",
+    chords: [
+      { degree: "Im", chordName: "Cm", role: "Tônica", description: "Fundação escura de enorme dramaticidade." },
+      { degree: "IIm7(b5)", chordName: "Dm7(b5)", role: "Subdominante", description: "Prepara com angústia de meio-diminuto." },
+      { degree: "bIII", chordName: "Eb", role: "Tônica", description: "O refúgio tônico maior brilhante e alegre." },
+      { degree: "IVm", chordName: "Fm", role: "Subdominante", description: "Suporte melancólico clássico e sombrio." },
+      { degree: "Vm", chordName: "Gm", role: "Dominante Natural", description: "Transição suave de clima nórdico." },
+      { degree: "V7", chordName: "G7", role: "Dominante Harmônico", description: "Força dramática imperativa de retorno ao repouso." },
+      { degree: "bVI", chordName: "Ab", role: "Subdominante", description: "Aumento de dinâmica épica e inspiradora." },
+      { degree: "bVII", chordName: "Bb", role: "Dominante", description: "Caminho natural de glória maior." }
+    ]
+  },
+  {
+    key: "Dó Sustenido Menor (C#m)",
+    mainChord: "C#m",
+    description: "Um dos tons menores favoritos para violão acústico e pop rock. Muito expressivo e fácil encaixe harmônico.",
+    chords: [
+      { degree: "Im", chordName: "C#m", role: "Tônica", description: "Melancolia robusta, linda dedilhada de passagem." },
+      { degree: "IIm7(b5)", chordName: "D#m7(b5)", role: "Subdominante", description: "Tensão meio-diminuta elegante." },
+      { degree: "bIII", chordName: "E", role: "Tônica", description: "Passagem aberta e iluminada de tônica maior." },
+      { degree: "IVm", chordName: "F#m", role: "Subdominante", description: "Cria atmosfera de recolhimento e profundidade." },
+      { degree: "Vm", chordName: "G#m", role: "Dominante Natural", description: "Base límpida e repousante suave menor." },
+      { degree: "V7", chordName: "G#7", role: "Dominante Harmônico", description: "Clássico preparador dominante de forte retorno." },
+      { degree: "bVI", chordName: "A", role: "Subdominante", description: "Abertura tônica com grande fôlego acústico." },
+      { degree: "bVII", chordName: "B", role: "Dominante", description: "Força de transição brilhante." }
+    ]
+  },
+  {
+    key: "Ré Menor (Dm)",
+    mainChord: "Dm",
+    description: "Tonalidade preferida para baladas profundas, canções renascentistas e músicas de clima misterioso.",
+    chords: [
+      { degree: "Im", chordName: "Dm", role: "Tônica", description: "O acorde mais triste possível, segundo cientistas harmônicos." },
+      { degree: "Im9", chordName: "Dm9", role: "Tônica", description: "Sublime para músicas acústicas modernas estilo lofi." },
+      { degree: "bIII", chordName: "F", role: "Tônica", description: "Abertura acolhedora de esperança." },
+      { degree: "IVm", chordName: "Gm", role: "Subdominante", description: "Dramático e clássico de canções românticas." },
+      { degree: "Vm", chordName: "Am", role: "Dominante Natural", description: "Clima limpo, nórdico ou medieval." },
+      { degree: "V7", chordName: "A7", role: "Dominante Harmônico", description: "Prepara de forma imponente a entrada do Re Menor." },
+      { degree: "bVI", chordName: "C", role: "Tônica", description: "Ponto suave de apoio." }
+    ]
+  },
+  {
+    key: "Mi Bemol Menor (Ebm)",
+    mainChord: "Ebm",
+    description: "Pesado, misterioso e profundo. Uma tonalidade carregada de sentimento de súplica ou introspecção profunda.",
+    chords: [
+      { degree: "Im", chordName: "D#m", role: "Tônica", description: "Tônica sombria mas infinitamente expressiva." },
+      { degree: "IIm7(b5)", chordName: "Fm7(b5)", role: "Subdominante", description: "Tensão meio-diminuta complexa." },
+      { degree: "bIII", chordName: "Gb", role: "Tônica", description: "Ponto maior de repouso refrescante." },
+      { degree: "IVm", chordName: "G#m", role: "Subdominante", description: "Suporte profundo de base." },
+      { degree: "Vm", chordName: "A#m", role: "Dominante Natural", description: "Contraste pacífico e suave menor." },
+      { degree: "V7", chordName: "A#7", role: "Dominante Harmônico", description: "Fecho tenso clássico rumo à tônica." },
+      { degree: "bVI", chordName: "B", role: "Subdominante", description: "Gera energia grandiosa de libertação." }
+    ]
+  },
+  {
+    key: "Mi Menor (Em)",
+    mainChord: "Em",
+    description: "Som de peso no rock nacional, folk nórdico e baladas acústicas intensas.",
+    chords: [
+      { degree: "Im", chordName: "Em", role: "Tônica", description: "O acorde menor mais fácil e encorpado do violão." },
+      { degree: "IIm7", chordName: "F#m7", role: "Subdominante", description: "Pestana com passagem ágil de ritmo." },
+      { degree: "bIII", chordName: "G", role: "Tônica", description: "Relativo alegre que contrasta a escuridão do Em." },
+      { degree: "bIII7M", chordName: "G7M", role: "Tônica", description: "Estética suave e aberta." },
+      { degree: "IVm", chordName: "Am", role: "Subdominante", description: "Sensação de profundidade no meio da música." },
+      { degree: "Vm", chordName: "Bm7", role: "Dominante Natural", description: "Base moderna e fresca de transição." },
+      { degree: "V7", chordName: "B7", role: "Dominante Harmônico", description: "Tensão clássica e forte de resolução para Em." },
+      { degree: "bVI", chordName: "C", role: "Tônica", description: "Brilho aberto e expansivo de esperança." },
+      { degree: "bVII", chordName: "D", role: "Dominante", description: "Ponto de partida clássico de retorno para Sol maior." }
+    ]
+  },
+  {
+    key: "Fá Menor (Fm)",
+    mainChord: "Fm",
+    description: "Tonalidade melancólica extrema, com som profundo e lamentos harmônicos requintados.",
+    chords: [
+      { degree: "Im", chordName: "Fm", role: "Tônica", description: "Sabor de extrema escuridão e seriedade de timbre." },
+      { degree: "IIm7(b5)", chordName: "Gm7(b5)", role: "Subdominante", description: "Sinalizador melancólico sofisticado." },
+      { degree: "bIII", chordName: "Ab", role: "Tônica", description: "O escape alegre tônico oficial." },
+      { degree: "IVm", chordName: "Bbm", role: "Subdominante", description: "Efeito nostálgico e comovente de fado." },
+      { degree: "Vm", chordName: "Cm", role: "Dominante Natural", description: "Grau que desacelera a tensão dramaticamente." },
+      { degree: "V7", chordName: "C7", role: "Dominante Harmônico", description: "Tensão majestosa e forte imperativa sobre Fm." },
+      { degree: "bVI", chordName: "Db", role: "Subdominante", description: "Abertura éopica cheia de esperança." }
+    ]
+  },
+  {
+    key: "Fá Sustenido Menor (F#m)",
+    mainChord: "F#m",
+    description: "Muito amada na música popular brasileira e pop rock de tons reflexivos e profundidade poética.",
+    chords: [
+      { degree: "Im", chordName: "F#m", role: "Tônica", description: "Postura elegante de timbre equilibrado nas pestanas." },
+      { degree: "IIm7(b5)", chordName: "G#m7(b5)", role: "Subdominante", description: "Preparador melancólico mestre." },
+      { degree: "bIII", chordName: "A", role: "Tônica", description: "Brilho relaxante e espaçoso de tônica amorosa maior." },
+      { degree: "IVm", chordName: "Bm", role: "Subdominante", description: "Suporte intimista excelente para rascunhos de compasso." },
+      { degree: "Vm", chordName: "C#m", role: "Dominante Natural", description: "Suavidade de passagem no meio de estrofes." },
+      { degree: "V7", chordName: "C#7", role: "Dominante Harmônico", description: "Gera forte empuxo espanhol direto ao repouso." },
+      { degree: "bVI", chordName: "D", role: "Subdominante", description: "Contraste bonito e expansivo aberto." }
+    ]
+  },
+  {
+    key: "Sol Menor (Gm)",
+    mainChord: "Gm",
+    description: "Elegante e melancólico, muito comum no samba antigo, choro e no jazz melancólico.",
+    chords: [
+      { degree: "Im", chordName: "Gm", role: "Tônica", description: "Repouso elegante de sabor tradicional e refinado." },
+      { degree: "IIm7(b5)", chordName: "Am7(b5)", role: "Subdominante", description: "Cadência meio-diminuta clássica brasileira." },
+      { degree: "bIII", chordName: "Bb", role: "Tônica", description: "Repouso tômico maior de brilho sofisticadamente macio." },
+      { degree: "IVm", chordName: "Cm", role: "Subdominante", description: "Delineador dramático de grande melancolia." },
+      { degree: "Vm", chordName: "Dm", role: "Dominante Natural", description: "Suave transmutação de tons." },
+      { degree: "V7", chordName: "D7", role: "Dominante Harmônico", description: "Alavanca de tensão clássica de re-resolução rápida." },
+      { degree: "bVI", chordName: "Eb", role: "Subdominante", description: "Amplitude de tom que areja as estrofes." }
+    ]
+  },
+  {
+    key: "Sol Sustenido Menor (G#m)",
+    mainChord: "G#m",
+    description: "Altamente emotiva, com timbre denso e afinação com grande coloração acústica.",
+    chords: [
+      { degree: "Im", chordName: "G#m", role: "Tônica", description: "Base escura de grande introspecção." },
+      { degree: "IIm7(b5)", chordName: "A#m7(b5)", role: "Subdominante", description: "Preparador sofisticado." },
+      { degree: "bIII", chordName: "B", role: "Tônica", description: "Teto luminoso de estabilidade maior." },
+      { degree: "IVm", chordName: "C#m", role: "Subdominante", description: "Contraste intimista menor excelente." },
+      { degree: "Vm", chordName: "D#m", role: "Dominante Natural", description: "Suave andamento melancólico." },
+      { degree: "V7", chordName: "D#7", role: "Dominante Harmônico", description: "Tensão imposta clássica." },
+      { degree: "bVI", chordName: "E", role: "Subdominante", description: "Contrapeso robusto de libertação emocional." }
+    ]
+  },
+  {
+    key: "Lá Menor (Am)",
+    mainChord: "Am",
+    description: "Tonalidade melancólica e introspectiva por excelência. Sem acidentes na armadura, mas usa acordes harmônicos ricos (como E7).",
+    chords: [
+      { degree: "Im", chordName: "Am", role: "Tônica", description: "Fundação sombria e linda das canções mais sentimentais." },
+      { degree: "Im9", chordName: "Am9", role: "Tônica", description: "Tensionado e elegante com a inclusão da nona." },
+      { degree: "IIm7(b5)", chordName: "Bm7(b5)", role: "Subdominante", description: "Acorde de desequilíbrio dramático usado na descida." },
+      { degree: "bIII", chordName: "C", role: "Tônica", description: "O repouso alternativo alegre da música." },
+      { degree: "bIII7M", chordName: "C7M", role: "Tônica", description: "Bossa nova melancólica." },
+      { degree: "IVm", chordName: "Dm", role: "Subdominante", description: "Nostalgia clássica do fado e canção popular." },
+      { degree: "Vm", chordName: "Em", role: "Dominante Natural", description: "Cria uma melancolia limpa medieval." },
+      { degree: "V7", chordName: "E7(9)", role: "Dominante Harmônico", description: "Aproximação espanhola flamenca e rítmica." },
+      { degree: "bVI", chordName: "F", role: "Subdominante", description: "Aumento emotivo épico." },
+      { degree: "bVII", chordName: "G", role: "Dominante", description: "Prepara o retorno à claridade." }
+    ]
+  },
+  {
+    key: "Si Bemol Menor (Bbm)",
+    mainChord: "Bbm",
+    description: "Uma tonalidade profunda, luxuosa e misteriosa, excelente para composições reflexivas lentas.",
+    chords: [
+      { degree: "Im", chordName: "Bbm", role: "Tônica", description: "Base tônica aveludada, escura e intimista." },
+      { degree: "IIm7(b5)", chordName: "Cm7(b5)", role: "Subdominante", description: "Cadência de passagem meio-diminuta elegante." },
+      { degree: "bIII", chordName: "Db", role: "Tônica", description: "Relativo alegre limpo de repouso." },
+      { degree: "IVm", chordName: "Ebm", role: "Subdominante", description: "Intensidade sentimental e melancólica clássica." },
+      { degree: "Vm", chordName: "Fm", role: "Dominante Natural", description: "Suavidade que acalma o drama." },
+      { degree: "V7", chordName: "F7", role: "Dominante Harmônico", description: "Tensão alta que puxa vigorosamente rumo à tônica." },
+      { degree: "bVI", chordName: "Gb", role: "Subdominante", description: "Amplitude que areja o sentimento melancólico." }
+    ]
+  },
+  {
+    key: "Si Menor (Bm)",
+    mainChord: "Bm",
+    description: "Umas das tonalidades menores mais belas no violão, extremamente usada em arranjos de violão dedilhado.",
+    chords: [
+      { degree: "Im", chordName: "Bm", role: "Tônica", description: "Sensação profunda de nostalgia e estabilidade." },
+      { degree: "IIm7(b5)", chordName: "C#m7(b5)", role: "Subdominante", description: "Prepara a cadência com toque doloroso jazzístico." },
+      { degree: "bIII", chordName: "D", role: "Tônica", description: "Equilíbrio feliz e tônico maior brilhante de passagem." },
+      { degree: "IVm", chordName: "Em", role: "Subdominante", description: "Grande suporte de graves encorpados de passagem." },
+      { degree: "Vm", chordName: "F#m", role: "Dominante Natural", description: "Conexão suave menor melancólica." },
+      { degree: "V7", chordName: "F#7", role: "Dominante Harmônico", description: "Tensão de preparação clássica indispensável." },
+      { degree: "bVI", chordName: "G", role: "Subdominante", description: "Contraste vibrante aberto de esperança." },
+      { degree: "bVII", chordName: "A", role: "Dominante", description: "Base brilhante e luminosa de transição." }
+    ]
+  }
+];
+
 const BASIC_CHORD_NAMES = ["C", "G", "D", "Am", "Em", "E", "A", "Dm"];
 
 type ChordFilter = "all" | "basic" | "pestana" | "advanced";
 
-export default function ChordsTab() {
+export default function ChordsTab({ currentUser }: { currentUser?: UserSession | null }) {
   const [filter, setFilter] = useState<ChordFilter>("all");
   const [selectedChord, setSelectedChord] = useState<Chord>(CHORD_DATABASE[0]);
   const [selectedVarIdx, setSelectedVarIdx] = useState<number>(0);
   const [lastPlayed, setLastPlayed] = useState<string | null>(null);
+
+  const [activeFieldIndex, setActiveFieldIndex] = useState<number>(0);
+
+  // Reset matched field index when chord changes
+  useEffect(() => {
+    setActiveFieldIndex(0);
+  }, [selectedChord]);
+
+  // States for database-backed harmonic fields
+  const [dbHarmonicFields, setDbHarmonicFields] = useState<HarmonicField[]>(HARMONIC_FIELDS);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/harmonic-fields")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted && data.fields && data.fields.length > 0) {
+          setDbHarmonicFields(data.fields);
+        }
+      })
+      .catch((err) => {
+        console.error("Erro ao carregar campos harmônicos do banco de dados:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // States for database-backed chord lock
+  const [isChordLockActive, setIsChordLockActive] = useState(true);
+  const [dbUserLevel, setDbUserLevel] = useState("Iniciante");
+
+  useEffect(() => {
+    let isMounted = true;
+    const emailParam = currentUser?.email ? `?email=${encodeURIComponent(currentUser.email)}` : "";
+    fetch(`/api/chords/lock-status${emailParam}`)
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        if (isMounted) {
+          setIsChordLockActive(data.globalLocked);
+          setDbUserLevel(data.userLevel);
+        }
+      })
+      .catch((err) => {
+        console.error("Erro ao puxar travas de acordes no SQLite:", err);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser]);
+
+  const isLockedForUser = isChordLockActive && dbUserLevel !== "Avançado";
 
   const handlePlayChordByFrets = (frets: (number | "x")[], name: string, speed: "strum" | "fast" | "plucked" = "strum") => {
     playGuitarChord(frets, speed);
@@ -651,6 +1415,58 @@ export default function ChordsTab() {
 
   const variations = getChordVariations(selectedChord);
   const activeVariation = variations[selectedVarIdx] || variations[0];
+
+  const matchedFields = dbHarmonicFields.filter((field) => 
+    field.mainChord === selectedChord.name || 
+    field.chords.some((member) => member.chordName === selectedChord.name)
+  );
+  const activeField = matchedFields[activeFieldIndex];
+
+  const userEmail = currentUser?.email || "convidado@violao.com";
+  const [hfNoteText, setHfNoteText] = useState<string>("");
+  const [isSavingHfNote, setIsSavingHfNote] = useState<boolean>(false);
+  const [hfNoteSaveSuccess, setHfNoteSaveSuccess] = useState<boolean>(false);
+
+  // Load notes for the current active harmonic field when active field changes
+  useEffect(() => {
+    if (!activeField) {
+      setHfNoteText("");
+      return;
+    }
+    setHfNoteSaveSuccess(false);
+    fetch(`/api/notes?email=${encodeURIComponent(userEmail)}&itemId=${encodeURIComponent("harmonic-field-" + activeField.key)}&itemType=harmonic_field`)
+      .then((res) => res.json())
+      .then((data) => {
+        setHfNoteText(data.content || "");
+      })
+      .catch((err) => console.error("Erro ao carregar anotações do campo harmônico:", err));
+  }, [userEmail, activeField?.key]);
+
+  const handleSaveHfNote = async () => {
+    if (!activeField) return;
+    setIsSavingHfNote(true);
+    setHfNoteSaveSuccess(false);
+    try {
+      const response = await fetch("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          itemId: "harmonic-field-" + activeField.key,
+          itemType: "harmonic_field",
+          content: hfNoteText,
+        }),
+      });
+      if (response.ok) {
+        setHfNoteSaveSuccess(true);
+        setTimeout(() => setHfNoteSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      console.error("Erro ao salvar anotação do campo harmônico:", err);
+    } finally {
+      setIsSavingHfNote(false);
+    }
+  };
 
   return (
     <div id="chords-tab-container" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -735,19 +1551,31 @@ export default function ChordsTab() {
             const isAdvanced = !BASIC_CHORD_NAMES.includes(chord.name) && chord.barre === undefined;
             const isPestana = chord.barre !== undefined;
             return (
-              <button
+              <div
                 key={chord.name}
+                role="button"
+                tabIndex={0}
                 onClick={() => handleSelectChord(chord)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    handleSelectChord(chord);
+                  }
+                }}
                 id={`chord-select-${chord.name}`}
-                className={`py-4 px-3 rounded-2xl border flex flex-col items-center justify-center transition-all relative overflow-hidden group ${
+                className={`py-4 px-3 rounded-2xl border flex flex-col items-center justify-center transition-all relative overflow-hidden group cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
                   isSelected
                     ? "bg-amber-900 border-amber-900 text-stone-100 shadow-md scale-102"
                     : "bg-white dark:bg-stone-900 border-slate-200 dark:border-stone-800 text-slate-800 dark:text-stone-200 hover:border-amber-500 dark:hover:border-stone-750"
                 }`}
               >
                 {isAdvanced && (
-                  <div className="absolute top-1 left-1.5">
-                    <Sparkles className="w-2.5 h-2.5 text-amber-500" title="Acorde Avançado / Com Extensão" />
+                  <div className="absolute top-1 left-1.5 flex items-center gap-0.5">
+                    {isLockedForUser ? (
+                      <Lock className="w-2.5 h-2.5 text-rose-500" title="Acorde Avançado Bloqueado" />
+                    ) : (
+                      <Sparkles className="w-2.5 h-2.5 text-amber-500" title="Acorde Avançado / Com Extensão" />
+                    )}
                   </div>
                 )}
                 {isPestana && (
@@ -762,19 +1590,26 @@ export default function ChordsTab() {
                 </span>
 
                 {/* Micro play button on hover */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePlayChordByFrets(chord.frets, chord.name, "strum");
-                  }}
-                  title="Ouvir Acorde"
-                  className={`absolute right-1 top-1 p-1 rounded-full transition opacity-0 group-hover:opacity-100 ${
-                    isSelected ? "bg-amber-800 hover:bg-amber-700 text-amber-200" : "bg-slate-100 dark:bg-stone-800 text-slate-500 dark:text-stone-400"
-                  }`}
-                >
-                  <Volume2 className="w-3.5 h-3.5" />
-                </button>
-              </button>
+                {!isLockedForUser && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlayChordByFrets(chord.frets, chord.name, "strum");
+                    }}
+                    title="Ouvir Acorde"
+                    className={`absolute right-1 top-1 p-1 rounded-full transition opacity-0 group-hover:opacity-100 ${
+                      isSelected ? "bg-amber-800 hover:bg-amber-700 text-amber-200" : "bg-slate-100 dark:bg-stone-800 text-slate-500 dark:text-stone-400"
+                    }`}
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {isAdvanced && isLockedForUser && (
+                  <div className="absolute right-1.5 top-1.5 opacity-40">
+                    <Lock className="w-3 h-3 text-slate-400 dark:text-stone-500" />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -791,142 +1626,346 @@ export default function ChordsTab() {
       </div>
 
       {/* Chord Detail Panel / Right panel */}
-      <div className="lg:col-span-7 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 shadow-sm p-6 flex flex-col md:flex-row gap-8 items-center md:items-stretch">
-        
-        {/* Dynamic Chord Diagram SVG rendering */}
-        <div className="flex-1 flex flex-col items-center justify-center bg-slate-50/50 dark:bg-stone-950/20 p-4 rounded-2xl border border-slate-200/50 dark:border-stone-850 w-full max-w-[280px] md:max-w-none">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-stone-500 mb-2 font-mono">
-            Diagrama Interativo (Diagram)
-          </span>
-          <GuitarChordDiagram chord={activeVariation} />
-          
-          <div className="flex gap-2 w-full mt-4">
-            <button
-              onClick={() => handlePlayChordByFrets(activeVariation.frets, selectedChord.name, "strum")}
-              id="play-chord-strum-btn"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-800 hover:bg-amber-900 dark:bg-amber-700 dark:hover:bg-amber-600 font-medium text-stone-50 rounded-xl transition text-xs cursor-pointer border-0 shadow"
-            >
-              <Volume2 className="w-4 h-4" />
-              Tocar Batida (Fast)
-            </button>
-            <button
-              onClick={() => handlePlayChordByFrets(activeVariation.frets, selectedChord.name, "plucked")}
-              id="play-chord-arpeggio-btn"
-              className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 font-medium text-slate-800 dark:text-stone-200 rounded-xl transition text-xs border border-slate-200/40 dark:border-stone-700 cursor-pointer shadow-sm"
-            >
-              <Volume2 className="w-4 h-4 text-amber-600" />
-              Dedilhado (Arpeggio)
-            </button>
-          </div>
-        </div>
-
-        {/* Chord Explanations */}
-        <div className="flex-1 flex flex-col justify-between py-2 text-left w-full">
-          <div>
-            <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-2">
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white font-mono">{selectedChord.name}</h2>
-                <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{selectedChord.altName}</span>
-              </div>
-              <div className="flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase text-amber-800 dark:text-amber-400 font-mono">
-                <BookOpen className="w-3 h-3 text-amber-600 dark:text-amber-400" />
-                {variations.length === 1 ? "1 Fôrma" : `${variations.length} Opções`}
-              </div>
+      <div className="lg:col-span-7 bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-800 shadow-sm p-6 flex flex-col gap-8 relative min-h-[460px]">
+        {activeVariation.difficulty === "Avançado" && isLockedForUser ? (
+          <div className="flex-1 w-full flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-stone-50 to-red-50/10 dark:from-stone-950 dark:to-stone-900 rounded-2xl border border-red-200/50 dark:border-red-950/20 my-auto">
+            <div className="p-4 bg-red-100 dark:bg-red-500/10 text-red-650 dark:text-red-400 rounded-full mb-4 animate-pulse">
+              <Lock className="w-10 h-10" />
             </div>
-
-            <p className="text-[11px] text-slate-400 dark:text-stone-500 font-semibold italic -mt-1 block">
-              Acorde em fôrma ativa: {activeVariation.name}
+            
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+              🔒 Acorde Avançado Bloqueado
+            </h3>
+            
+            <p className="text-xs text-slate-500 dark:text-stone-400 mt-2 max-w-sm leading-normal">
+              Esta variação harmônica possui extensões sofisticadas e dedilhados exclusivos reservados para alunos de nível <strong className="text-amber-600 uppercase">Avançado</strong>.
             </p>
 
-            <div className="h-px bg-slate-150 dark:bg-stone-800 my-4" />
-
-            {/* Variações de Forma & Níveis de Dificuldade */}
-            <div className="mb-4">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-2 font-mono">
-                Fôrmas Alternativas & Dificuldade
+            <div className="my-5 p-4 bg-white dark:bg-stone-950/90 rounded-xl border border-slate-200/60 dark:border-stone-850/80 text-left w-full max-w-md">
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-wider block mb-1.5 font-mono">
+                Como Desbloquear no Banco de Dados:
               </span>
-              <div className="flex flex-col gap-2 max-h-[175px] overflow-y-auto pr-1">
-                {variations.map((v, idx) => {
-                  const isVarSelected = selectedVarIdx === idx;
-                  const diffColor = 
-                    v.difficulty === "Iniciante" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
-                    v.difficulty === "Intermediário" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" :
-                    "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20";
+              <p className="text-xs text-slate-650 dark:text-stone-300 leading-relaxed space-y-1">
+                • Navegue até a aba <strong className="text-slate-800 dark:text-white">Lições</strong>.<br />
+                • Realize o <strong className="text-slate-800 dark:text-white">Exame Avançado</strong> para atualizar e gravar seu novo nível no banco de dados SQLite.<br />
+                • Ou peça para seu instrutor <strong className="text-slate-850 dark:text-white">Artur</strong> liberar o acesso nas configurações globais do Painel Admin!
+              </p>
+            </div>
 
-                  return (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedVarIdx(idx)}
-                      className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
-                        isVarSelected
-                          ? "bg-amber-50/50 border-amber-500 dark:bg-stone-950/60 dark:border-amber-500/50 shadow-sm"
-                          : "bg-slate-50/50 hover:bg-slate-100/70 border-slate-200/50 dark:bg-stone-950/10 dark:border-stone-850 hover:dark:bg-stone-900/40"
-                      }`}
-                    >
-                      <div className="flex flex-col min-w-0 pr-2">
-                        <span className={`text-[11px] font-extrabold truncate ${isVarSelected ? "text-amber-900 dark:text-amber-300" : "text-slate-700 dark:text-stone-300"}`}>
-                          {v.name}
-                        </span>
-                        <span className="text-[9px] text-slate-400 dark:text-stone-500 mt-0.5 line-clamp-1">
-                          {v.usageTip}
-                        </span>
-                      </div>
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase shrink-0 ${diffColor}`}>
-                        {v.difficulty}
-                      </span>
-                    </button>
-                  );
-                })}
+            <div className="text-[10px] text-slate-400 dark:text-stone-550 font-mono">
+              Seu Nível Atual: <span className="font-bold uppercase text-red-500">{dbUserLevel}</span> • Bloqueio Ativo: <span className="font-bold text-red-500">SIM</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Dynamic Chord Diagram SVG rendering */}
+            <div className="flex flex-col items-center justify-center bg-slate-50/50 dark:bg-stone-950/20 p-4 rounded-2xl border border-slate-200/50 dark:border-stone-850 w-full max-w-md mx-auto">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-stone-500 mb-2 font-mono">
+                Diagrama Interativo (Diagram)
+              </span>
+              <GuitarChordDiagram chord={activeVariation} />
+              
+              <div className="flex gap-2 w-full mt-4">
+                <button
+                  onClick={() => handlePlayChordByFrets(activeVariation.frets, selectedChord.name, "strum")}
+                  id="play-chord-strum-btn"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-800 hover:bg-amber-900 dark:bg-amber-700 dark:hover:bg-amber-600 font-medium text-stone-50 rounded-xl transition text-xs cursor-pointer border-0 shadow"
+                >
+                  <Volume2 className="w-4 h-4" />
+                  Tocar Batida (Fast)
+                </button>
+                <button
+                  onClick={() => handlePlayChordByFrets(activeVariation.frets, selectedChord.name, "plucked")}
+                  id="play-chord-arpeggio-btn"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 font-medium text-slate-800 dark:text-stone-200 rounded-xl transition text-xs border border-slate-200/40 dark:border-stone-700 cursor-pointer shadow-sm"
+                >
+                  <Volume2 className="w-4 h-4 text-amber-600" />
+                  Dedilhado (Arpeggio)
+                </button>
               </div>
             </div>
 
-            {/* Explanatory notes list */}
-            <div className="space-y-4">
+            {/* Chord Explanations */}
+            <div className="flex-1 flex flex-col justify-between py-2 text-left w-full">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-1 font-mono">
-                  Posicionamento das Cordas (Cordas 6 a 1)
-                </span>
-                <div className="flex gap-1.5 font-mono text-sm max-w-[280px]">
-                  {activeVariation.frets.map((f, idx) => (
-                    <div
-                      key={idx}
-                      className={`flex-1 aspect-square rounded flex flex-col items-center justify-center text-xs font-bold ${
-                        f === "x"
-                          ? "bg-stone-100 dark:bg-stone-950 text-red-500"
-                          : f === 0
-                          ? "bg-amber-50 dark:bg-amber-950/20 text-green-600 border border-green-500/30"
-                          : "bg-amber-900 text-amber-100"
-                      }`}
-                    >
-                      <span>{6 - idx}ª</span>
-                      <span className="text-[10px] opacity-80">{f === "x" ? "X" : f}</span>
-                    </div>
-                  ))}
+                <div className="flex flex-wrap items-baseline justify-between gap-y-2 mb-2">
+                  <div className="flex items-baseline gap-2">
+                    <h2 className="text-4xl font-extrabold text-slate-900 dark:text-white font-mono">{selectedChord.name}</h2>
+                    <span className="text-sm font-semibold text-amber-700 dark:text-amber-400">{selectedChord.altName}</span>
+                  </div>
+                  <div className="flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase text-amber-800 dark:text-amber-400 font-mono">
+                    <BookOpen className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                    {variations.length === 1 ? "1 Fôrma" : `${variations.length} Opções`}
+                  </div>
                 </div>
-                <span className="text-[10px] text-slate-400 dark:text-stone-500 block mt-1.5 italic">
-                  * 6=Mi grave (grossa), 1=Mi aguda (fina)
-                </span>
-              </div>
 
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-1 font-mono">
-                  Dica de Execução Especializada
-                </span>
-                <p className="text-xs text-slate-600 dark:text-stone-300 leading-relaxed bg-amber-50/45 dark:bg-stone-950/25 p-3 rounded-xl border border-amber-50/20 dark:border-stone-800">
-                  {activeVariation.usageTip}
+                <p className="text-[11px] text-slate-400 dark:text-stone-500 font-semibold italic -mt-1 block">
+                  Acorde em fôrma ativa: {activeVariation.name}
                 </p>
+
+                <div className="h-px bg-slate-150 dark:bg-stone-800 my-4" />
+
+                {/* Variações de Forma & Níveis de Dificuldade */}
+                <div className="mb-4">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-2 font-mono">
+                    Fôrmas Alternativas & Dificuldade
+                  </span>
+                  <div className="flex flex-col gap-2 max-h-[175px] overflow-y-auto pr-1">
+                    {variations.map((v, idx) => {
+                      const isVarSelected = selectedVarIdx === idx;
+                      const isVarLocked = v.difficulty === "Avançado" && isLockedForUser;
+                      const diffColor = 
+                        v.difficulty === "Iniciante" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20" :
+                        v.difficulty === "Intermediário" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" :
+                        "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20";
+
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => setSelectedVarIdx(idx)}
+                          className={`p-2.5 rounded-xl border text-left flex items-center justify-between transition-all cursor-pointer ${
+                            isVarSelected
+                              ? "bg-amber-50/50 border-amber-500 dark:bg-stone-950/60 dark:border-amber-500/50 shadow-sm"
+                              : "bg-slate-50/50 hover:bg-slate-100/70 border-slate-200/50 dark:bg-stone-950/10 dark:border-stone-850 hover:dark:bg-stone-900/40"
+                          }`}
+                        >
+                          <div className="flex flex-col min-w-0 pr-2">
+                            <span className={`text-[11px] font-extrabold truncate ${isVarSelected ? "text-amber-900 dark:text-amber-300" : "text-slate-700 dark:text-stone-300"}`}>
+                              {v.name}
+                            </span>
+                            <span className="text-[9px] text-slate-400 dark:text-stone-500 mt-0.5 line-clamp-1">
+                              {v.usageTip}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {isVarLocked && (
+                              <span className="flex items-center gap-0.5 bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/25 px-1 py-0.5 rounded text-[8px] font-bold font-mono">
+                                <Lock className="w-2 h-2" /> RESTRITO
+                              </span>
+                            )}
+                            <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase shrink-0 ${diffColor}`}>
+                              {v.difficulty}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Explanatory notes list */}
+                <div className="space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-1 font-mono">
+                      Posicionamento das Cordas (Cordas 6 a 1)
+                    </span>
+                    <div className="flex gap-1.5 font-mono text-sm max-w-[280px]">
+                      {activeVariation.frets.map((f, idx) => (
+                        <div
+                          key={idx}
+                          className={`flex-1 aspect-square rounded flex flex-col items-center justify-center text-xs font-bold ${
+                            f === "x"
+                              ? "bg-stone-100 dark:bg-stone-950 text-red-500"
+                              : f === 0
+                              ? "bg-amber-50 dark:bg-amber-950/20 text-green-600 border border-green-500/30"
+                              : "bg-amber-900 text-amber-100"
+                          }`}
+                        >
+                          <span>{6 - idx}ª</span>
+                          <span className="text-[10px] opacity-80">{f === "x" ? "X" : f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-slate-400 dark:text-stone-500 block mt-1.5 italic">
+                      * 6=Mi grave (grossa), 1=Mi aguda (fina)
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block mb-1 font-mono">
+                      Dica de Execução Especializada
+                    </span>
+                    <p className="text-xs text-slate-600 dark:text-stone-300 leading-relaxed bg-amber-50/45 dark:bg-stone-950/25 p-3 rounded-xl border border-amber-50/20 dark:border-stone-800">
+                      {activeVariation.usageTip}
+                    </p>
+                  </div>
+
+                  {/* Campo Harmônico Relativo Section */}
+                  <div className="border-t border-slate-100 dark:border-stone-800 pt-4">
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-stone-500 uppercase tracking-widest block font-mono">
+                          🎶 Campos Harmônicos Relacionados
+                        </span>
+                        {matchedFields.length > 1 && (
+                          <div className="flex gap-1 flex-wrap">
+                            {matchedFields.map((field, idx) => (
+                              <button
+                                key={field.key}
+                                onClick={() => setActiveFieldIndex(idx)}
+                                className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all border cursor-pointer ${
+                                  activeFieldIndex === idx
+                                    ? "bg-amber-100 border-amber-300 text-amber-900 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-200"
+                                    : "bg-stone-50 border-stone-200 text-slate-500 dark:bg-stone-900 dark:border-stone-800 hover:text-slate-800 dark:hover:text-stone-200"
+                                }`}
+                              >
+                                {field.key.split(" ")[0]} {field.key.includes("Menor") ? "m" : ""}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {activeField ? (
+                      <div className="bg-gradient-to-br from-slate-50 to-amber-50/20 dark:from-stone-950 dark:to-stone-950 p-4 rounded-2xl border border-slate-200/50 dark:border-stone-850">
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                          <span className="font-bold text-xs text-slate-800 dark:text-white">
+                            Campo de {activeField.key}
+                          </span>
+                          <span className="text-[9px] px-1.5 py-0.5 font-bold rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/25 dark:text-emerald-400 dark:bg-emerald-950/20 uppercase tracking-wider scale-95">
+                            Estudo de Escala
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 dark:text-stone-400 leading-normal mb-3">
+                          {activeField.description}
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {activeField.chords.map((m) => {
+                            const target = CHORD_DATABASE.find(c => c.name === m.chordName);
+                            const roleColor = 
+                              m.role === "Tônica" || m.role === "Tônica (Atuante)"
+                                ? "border-emerald-500/25 text-emerald-700 bg-emerald-500/5 dark:text-emerald-400 dark:border-emerald-500/15"
+                                : m.role.startsWith("Dominante")
+                                ? "border-red-500/25 text-red-700 bg-red-500/5 dark:text-red-400 dark:border-red-500/15"
+                                : "border-amber-500/25 text-amber-700 bg-amber-500/5 dark:text-amber-400 dark:border-amber-500/15";
+                            
+                            const isCurrent = m.chordName === selectedChord.name;
+
+                            return (
+                              <div
+                                key={m.degree}
+                                className={`group/member p-2 rounded-xl flex items-center justify-between gap-1.5 border transition-all text-left ${
+                                  isCurrent
+                                    ? "bg-amber-50 border-amber-400 dark:bg-amber-950/20 dark:border-amber-500/50"
+                                    : "bg-white dark:bg-stone-900 border-slate-100 dark:border-stone-800 hover:border-amber-400 dark:hover:border-stone-700"
+                                }`}
+                              >
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-mono text-[9px] opacity-60 font-bold">{m.degree}</span>
+                                    <button
+                                      onClick={() => {
+                                        if (target) {
+                                          handleSelectChord(target);
+                                        }
+                                      }}
+                                      className={`text-xs font-black tracking-tight hover:underline font-mono cursor-pointer ${
+                                        isCurrent ? "text-amber-950 dark:text-amber-300" : "text-slate-800 dark:text-stone-200"
+                                      }`}
+                                    >
+                                      {m.chordName}
+                                    </button>
+                                    <span className={`text-[8px] font-black uppercase px-1 py-0.1 border rounded leading-none shrink-0 scale-90 ${roleColor}`}>
+                                      {m.role}
+                                    </span>
+                                  </div>
+                                  <span className="text-[9px] text-slate-400 dark:text-stone-500 mt-0.5 truncate leading-tight block" title={m.description}>
+                                    {m.description}
+                                  </span>
+                                </div>
+
+                                <div className="flex gap-0.5 shrink-0">
+                                  {target ? (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handlePlayChordByFrets(target.frets, target.name, "strum");
+                                        }}
+                                        title={`Tocar ${m.chordName}`}
+                                        className="p-1 rounded bg-slate-100 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-amber-950/40 text-slate-500 hover:text-amber-700 dark:text-stone-400 dark:hover:text-amber-400 transition cursor-pointer"
+                                      >
+                                        <Volume2 className="w-3 h-3" />
+                                      </button>
+                                      {target.name !== selectedChord.name && (
+                                        <button
+                                          onClick={() => {
+                                            handleSelectChord(target);
+                                          }}
+                                          title="Visualizar no braço"
+                                          className="p-1 rounded bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-500 dark:text-stone-400 transition cursor-pointer"
+                                        >
+                                          <Link className="w-3 h-3" />
+                                        </button>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <span className="text-[8px] font-semibold text-slate-300 dark:text-stone-600">N/A</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Area de Anotações do Campo Harmônico */}
+                        <div className="mt-4 pt-4 border-t border-slate-200/60 dark:border-stone-850/60">
+                          <label className="flex items-center gap-1.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2 font-mono">
+                            📝 Bloco de Notas: Estudo Harmônico ({activeField.key.split(" ")[0]})
+                          </label>
+                          <textarea
+                            value={hfNoteText}
+                            onChange={(e) => setHfNoteText(e.target.value)}
+                            placeholder="Escreva aqui suas anotações para este campo harmônico (dicas de passagens de acordes, ideias de progressões de violão, rascunhos de composições...)"
+                            className="w-full h-20 p-2.5 text-[11px] leading-relaxed rounded-xl border border-slate-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-slate-800 dark:text-stone-200 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all resize-none placeholder-slate-400 dark:placeholder-stone-600 shadow-sm"
+                          />
+                          <div className="flex justify-end mt-1.5">
+                            <button
+                              onClick={handleSaveHfNote}
+                              disabled={isSavingHfNote}
+                              className={`flex items-center gap-1 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all shadow-sm cursor-pointer ${
+                                hfNoteSaveSuccess
+                                  ? "bg-emerald-500 text-white border border-emerald-600"
+                                  : "bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white border border-amber-600"
+                              }`}
+                            >
+                              {isSavingHfNote ? (
+                                <span>Salvando...</span>
+                              ) : hfNoteSaveSuccess ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>Salvo!</span>
+                                </>
+                              ) : (
+                                <span>Salvar Anotações</span>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50 dark:bg-stone-950 p-4 rounded-xl border border-slate-200/50 dark:border-stone-850 text-center text-[10px] text-slate-400 dark:text-stone-500 leading-normal">
+                        Nenhum campo harmônico padrão cadastrado para este acorde de extensão complexa.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-stone-800">
-            <div className="flex gap-2 items-center bg-green-50 dark:bg-emerald-950/10 text-green-800 dark:text-emerald-400 p-2.5 rounded-xl border border-green-100 dark:border-emerald-900/40 text-[11px]">
-              <Check className="w-4 h-4 text-green-600 shrink-0" />
-              <span>Dedo firme nas casas: Use a ponta dos dedos em pé (arquear) para o som da cordas soltas ressoar!</span>
-            </div>
-          </div>
+              <div className="mt-6 pt-4 border-t border-slate-100 dark:border-stone-800">
+                <div className="flex gap-2 items-center bg-green-50 dark:bg-emerald-950/10 text-green-800 dark:text-emerald-400 p-2.5 rounded-xl border border-green-100 dark:border-emerald-900/40 text-[11px]">
+                  <Check className="w-4 h-4 text-green-600 shrink-0" />
+                  <span>Dedo firme nas casas: Use a ponta dos dedos em pé (arquear) para o som da cordas soltas ressoar!</span>
+                </div>
+              </div>
 
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Lesson, UserSession } from "../types";
-import { Check, BookOpen, Music, Shield, Award, Sparkles, CheckCircle2, Circle, Edit3, Save, Lock, Target, Activity, Trophy, Video, Play, Tv, Clock } from "lucide-react";
+import { Check, BookOpen, Music, Shield, Award, Sparkles, CheckCircle2, Circle, Edit3, Save, Lock, Target, Activity, Trophy, Video, Play, Tv, Clock, HelpCircle, MessageSquare, Send } from "lucide-react";
 
 interface LevelChallenge {
   id: string;
@@ -13,7 +13,7 @@ interface LevelChallenge {
   tip: string;
 }
 
-const LEVEL_CHALLENGES: LevelChallenge[] = [
+const ALL_CHALLENGES_POOL: LevelChallenge[] = [
   // Iniciante
   {
     id: "ch-ini-1",
@@ -44,6 +44,56 @@ const LEVEL_CHALLENGES: LevelChallenge[] = [
     rewardXP: 200,
     icon: "activity",
     tip: "Configure o metrônomo para 65 BPM na aba Metrônomo para treinar com conforto e ritmo."
+  },
+  {
+    id: "ch-ini-4",
+    level: "Iniciante",
+    title: "Tônicas do CAGED Geral",
+    description: "Tente localizar a nota tônica (raiz) nas 5 formas abertas clássicas (C, A, G, E, D).",
+    objective: "Identifique e toque as tônicas de cada uma das 5 formas básicas abertas.",
+    rewardXP: 150,
+    icon: "sparkles",
+    tip: "As tônicas ficam na 5ª corda para C e A; na 6ª corda para G e E; e na 4ª corda para D."
+  },
+  {
+    id: "ch-ini-5",
+    level: "Iniciante",
+    title: "Treino de Pestana Curta",
+    description: "Aperte apenas as cordas 1 e 2 na Casa 1 com o dedo 1 (indicador) e toque ambas seguidas.",
+    objective: "Faça um mini-acorde sem zumbido em nenhuma das duas cordas pressionadas.",
+    rewardXP: 120,
+    icon: "award",
+    tip: "Pressione usando a lateral do dedo indicador, não a parte macia da frente."
+  },
+  {
+    id: "ch-ini-6",
+    level: "Iniciante",
+    title: "Dedilhado Básico de Arpejo",
+    description: "No acorde de Mi Maior (E), toque sequencialmente: Dedão (6ª corda), Indicador (3ª), Médio (2ª), Anelar (1ª).",
+    objective: "Mantenha um tempo uniforme entre as quatro notas sem embolar as cordas.",
+    rewardXP: 130,
+    icon: "music",
+    tip: "Deixe os dedos repousarem levemente nas cordas correspondentes antes de puxar."
+  },
+  {
+    id: "ch-ini-7",
+    level: "Iniciante",
+    title: "Afinar por Ouvido com Referência",
+    description: "Tente afinar as cordas mais finas usando a 5ª casa da corda anterior como referência.",
+    objective: "Ajuste os sons das cordas vizinhas até conseguir a mesma frequência tonal.",
+    rewardXP: 160,
+    icon: "target",
+    tip: "A 5ª casa da 6ª corda deve soar exatamente igual à 5ª corda solta!"
+  },
+  {
+    id: "ch-ini-8",
+    level: "Iniciante",
+    title: "Memorizar o Acorde D (Ré Maior)",
+    description: "Monte o desenho de D (Ré Maior), tocando apenas a partir da 4ª corda para baixo.",
+    objective: "Obtenha um acorde cintilante sem abafar a primeira corda com o anelar.",
+    rewardXP: 140,
+    icon: "sparkles",
+    tip: "Mantenha o polegar baixo no braço para dar amplitude extrema à pinça da mão esquerda."
   },
   // Intermediário
   {
@@ -76,6 +126,56 @@ const LEVEL_CHALLENGES: LevelChallenge[] = [
     icon: "award",
     tip: "Observe como as tétrades adicionam uma sonoridade nostálgica de bossa-nova ou MPB."
   },
+  {
+    id: "ch-int-4",
+    level: "Intermediário",
+    title: "Transposição de Am com CAGED",
+    description: "Monte a fôrma de Am transposta com pestana na 5ª casa para tocar o acorde de Rem (Dm).",
+    objective: "Faça soar de forma robusta e ritmada todas as cordas sem perder a afinação da pestana.",
+    rewardXP: 280,
+    icon: "target",
+    tip: "Na 5ª casa, a pestana requer menos pressão que na 1ª casa devido à tensão física."
+  },
+  {
+    id: "ch-int-5",
+    level: "Intermediário",
+    title: "Batida de Reggae com Abafamento",
+    description: "Execute uma batida rítmica acentuando apenas o contratempo (tempo fraco) e abafando com a palma.",
+    objective: "Toque 12 compassos sequenciais com o balanço 'staccato' típico do Marley.",
+    rewardXP: 260,
+    icon: "activity",
+    tip: "Alivie a pressão da mão esquerda logo após bater para conseguir o som seco instantâneo."
+  },
+  {
+    id: "ch-int-6",
+    level: "Intermediário",
+    title: "Escala Pentatônica Menor Básica",
+    description: "Toque o primeiro desenho da Pentatônica de Am na Casa 5 englobando todas as 6 cordas.",
+    objective: "Suba e desça a escala completa alternando palhetadas/dedos sem pestanejar.",
+    rewardXP: 270,
+    icon: "sparkles",
+    tip: "Use os dedos indicador (casa 5) e anelar/mínimo (casas 7/8) de forma firme apoiando o braço."
+  },
+  {
+    id: "ch-int-7",
+    level: "Intermediário",
+    title: "Dedilhado Amplo PIMA",
+    description: "Altere o dedilhado para P-I-M-A-I-M-A executando em compasso de 6/8 de forma fluida.",
+    objective: "Mantenha a rítmica idêntica do início ao fim por 1 minuto consecutivo.",
+    rewardXP: 260,
+    icon: "music",
+    tip: "Foque na independência total de movimentos do polegar (P) em relação aos dedos primas."
+  },
+  {
+    id: "ch-int-8",
+    level: "Intermediário",
+    title: "Slide e Ligados Intermediários",
+    description: "Tente fazer um Hammer-on seguido de Pull-off rápido na 3ª corda entre as casas 5 e 7.",
+    objective: "Faça as notas soarem apenas com o impacto e retirada rápida dos dedos da esquerda.",
+    rewardXP: 290,
+    icon: "target",
+    tip: "Seu dedo 3 deve cair como um martelo firme bem próximo do traste de metal."
+  },
   // Avançado
   {
     id: "ch-adv-1",
@@ -106,8 +206,92 @@ const LEVEL_CHALLENGES: LevelChallenge[] = [
     rewardXP: 500,
     icon: "award",
     tip: "O capotaste no traste 3 transforma a fôrma de Dó (C) no tom real de Ré sustenido (D#)."
+  },
+  {
+    id: "ch-adv-4",
+    level: "Avançado",
+    title: "CAGED Avançado: Licks com Sétima",
+    description: "Monte o arpejo de C7M usando a fôrma de Lá (A) na 3ª casa e solfeje as notas do acorde uma a uma.",
+    objective: "Conecte as notas do arpejo sem interrupção usando palhetada ou dedilhado firme.",
+    rewardXP: 460,
+    icon: "music",
+    tip: "O arpejo destaca a tônica na 5ª corda (Dó) e a sétima maior na 3ª corda (Si)."
+  },
+  {
+    id: "ch-adv-5",
+    level: "Avançado",
+    title: "Síncope de Bossa Nova Clássica",
+    description: "Toque o ritmo padrão de João Gilberto (síncope brasileira) por 2 minutos sem cair do tempo.",
+    objective: "Garante o silêncio entre as puxadas de acorde de forma perfeitamente sincopada.",
+    rewardXP: 480,
+    icon: "activity",
+    tip: "Substitua a batida de polegar para marcar apenas os tempos fortes 1 e 2 do compasso."
+  },
+  {
+    id: "ch-adv-6",
+    level: "Avançado",
+    title: "Escalas Maiores de 3 Notas por Corda",
+    description: "Execute a escala maior de Sol Maior (G) no braço inteiro usando o padrão de 3 notas por corda.",
+    objective: "Memorize o desenho conectando as cordas e execute de forma limpa a 80 BPM semicocheias.",
+    rewardXP: 450,
+    icon: "sparkles",
+    tip: "A abertura de dedos é maior, então mantenha o cotovelo esquerdo levemente para a frente."
+  },
+  {
+    id: "ch-adv-7",
+    level: "Avançado",
+    title: "Harmonia de Acordes Substitutos",
+    description: "Substitua um acorde dominante comum de G7 para Db7(9) (SubV7) resolvendo diretamente em C7M.",
+    objective: "Toque a progressão sentindo a aproximação cromática do baixo de Db para C.",
+    rewardXP: 470,
+    icon: "award",
+    tip: "O trítono presente em G7 (Si e Fá) é exatamente o mesmo presente em Db7 (Fá e B/Dó bemol)!"
+  },
+  {
+    id: "ch-adv-8",
+    level: "Avançado",
+    title: "Técnica de Sweep Picking Lento",
+    description: "Utilizando uma palheta, deslize pelas cordas de baixo para cima desenhando o acorde de Lá Menor em tríade.",
+    objective: "Faça as notas soarem isoladas mas em uma única varredura contínua e sem sobreposição de sustentação.",
+    rewardXP: 490,
+    icon: "target",
+    tip: "Abafe cada corda com a palma da mão direita (palm muting) logo após a palhetada."
   }
 ];
+
+// Deterministic dynamic selection based on calendar date
+function getDailyChallenges(): LevelChallenge[] {
+  const levels = ["Iniciante", "Intermediário", "Avançado"];
+  const selected: LevelChallenge[] = [];
+  
+  const d = new Date();
+  const seedStr = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+  
+  levels.forEach((level) => {
+    const levelPool = ALL_CHALLENGES_POOL.filter(c => c.level === level);
+    if (levelPool.length <= 3) {
+      selected.push(...levelPool);
+      return;
+    }
+    
+    let hash = 0;
+    const levelSeedStr = `${seedStr}-${level}`;
+    for (let i = 0; i < levelSeedStr.length; i++) {
+      hash = levelSeedStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    
+    const poolCopy = [...levelPool];
+    for (let i = 0; i < 3; i++) {
+      const index = Math.abs((hash + i * 223)) % poolCopy.length;
+      selected.push(poolCopy[index]);
+      poolCopy.splice(index, 1);
+    }
+  });
+  
+  return selected;
+}
+
+const LEVEL_CHALLENGES: LevelChallenge[] = getDailyChallenges();
 
 function VideoNoteSection({ userEmail, activeVideo }: { userEmail: string; activeVideo: any }) {
   const [note, setNote] = useState("");
@@ -221,9 +405,16 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
   const [quizError, setQuizError] = useState<string | null>(null);
   const [blockedUntil, setBlockedUntil] = useState<string | null>(null);
   const [timeLeftStr, setTimeLeftStr] = useState("");
-  const [studyMode, setStudyMode] = useState<"written" | "video">("written");
-  const [videoLessons, setVideoLessons] = useState<any[]>([]);
-  const [activeVideo, setActiveVideo] = useState<any | null>(null);
+  const [studyMode, setStudyMode] = useState<"written" | "questions">("written");
+
+  // States for student questions forum inside each level
+  const [studentQuestions, setStudentQuestions] = useState<any[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [questionTitle, setQuestionTitle] = useState("");
+  const [questionContent, setQuestionContent] = useState("");
+  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
+  const [questionSubmitSuccess, setQuestionSubmitSuccess] = useState(false);
+  const [questionSubmitError, setQuestionSubmitError] = useState<string | null>(null);
 
   const userEmail = currentUser?.email || "convidado@violao.com";
 
@@ -392,21 +583,71 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
       });
   }, [selectedLevel]);
 
-  // Fetch video lessons list from database based on selectedLevel
-  useEffect(() => {
-    fetch(`/api/video-lessons?level=${encodeURIComponent(selectedLevel)}`)
+
+
+  // Load student questions & doubts list for current level
+  const loadStudentQuestions = () => {
+    setIsLoadingQuestions(true);
+    fetch(`/api/student-questions?level=${encodeURIComponent(selectedLevel)}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.videos) {
-          setVideoLessons(data.videos);
+        if (data.questions) {
+          setStudentQuestions(data.questions);
         } else {
-          setVideoLessons([]);
+          setStudentQuestions([]);
         }
       })
       .catch((err) => {
-        console.error("Erro ao carregar videoaulas do nível:", err);
+        console.error("Erro ao carregar dúvidas do nível:", err);
+      })
+      .finally(() => {
+        setIsLoadingQuestions(false);
       });
+  };
+
+  useEffect(() => {
+    loadStudentQuestions();
   }, [selectedLevel]);
+
+  const handleQuestionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!questionTitle.trim() || !questionContent.trim()) {
+      setQuestionSubmitError("Por favor, preencha o assunto e os detalhes da sua dúvida.");
+      return;
+    }
+    setIsSubmittingQuestion(true);
+    setQuestionSubmitError(null);
+    setQuestionSubmitSuccess(false);
+
+    try {
+      const response = await fetch("/api/student-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          level: selectedLevel,
+          title: questionTitle.trim(),
+          question: questionContent.trim()
+        })
+      });
+
+      if (response.ok) {
+        setQuestionSubmitSuccess(true);
+        setQuestionTitle("");
+        setQuestionContent("");
+        loadStudentQuestions();
+        setTimeout(() => setQuestionSubmitSuccess(false), 5000);
+      } else {
+        const errData = await response.json();
+        setQuestionSubmitError(errData.error || "Erro ao registrar sua pergunta.");
+      }
+    } catch (err) {
+      console.error("Erro ao enviar dúvida:", err);
+      setQuestionSubmitError("Erro de comunicação com o servidor.");
+    } finally {
+      setIsSubmittingQuestion(false);
+    }
+  };
 
   // Fetch completed lessons list from SQLite
   useEffect(() => {
@@ -1165,19 +1406,18 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
             </button>
             <button
               onClick={() => {
-                setStudyMode("video");
-                setActiveVideo(null);
+                setStudyMode("questions");
               }}
               className={`pb-3 px-1 text-xs font-black tracking-wide transition relative cursor-pointer border-0 bg-transparent ${
-                studyMode === "video"
+                studyMode === "questions"
                   ? "text-amber-805 dark:text-amber-450 border-b-2 border-amber-600 dark:border-amber-500 font-extrabold"
                   : "text-slate-400 dark:text-stone-500 hover:text-slate-650 dark:hover:text-stone-300"
               }`}
             >
               <span className="flex items-center gap-2 select-none">
-                <Video className="w-4 h-4 text-rose-500" />
-                2. Videoaulas Práticas de Apoio
-                <span className="bg-rose-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-1 animate-pulse">
+                <HelpCircle className="w-4 h-4 text-emerald-500" />
+                2. Dúvidas do Nível & Explicações
+                <span className="bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold ml-1">
                   Novo
                 </span>
               </span>
@@ -1187,18 +1427,25 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
           {studyMode === "written" && (
             <>
               {/* Desafios de Nível Interativos */}
-              <div className="bg-slate-50 dark:bg-stone-905 border border-slate-205 dark:border-stone-850/60 p-6 rounded-3xl text-left shadow-sm">
+              <div style={{ backgroundColor: "#000000" }} className="bg-slate-50 dark:bg-stone-905 border border-slate-205 dark:border-stone-850/60 p-6 rounded-3xl text-left shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-250/60 dark:border-stone-800 pb-4 mb-5">
               <div>
                 <span className="text-[10px] font-mono font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
                   Gamificação & Treino Técnico
                 </span>
-                <h4 className="text-lg font-black text-slate-900 dark:text-stone-50">
-                  🎯 Desafios Práticos de Nível: {selectedLevel}
-                </h4>
-                <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
-                  Execute essas tarefas práticas no seu violão real para sedimentar o conhecimento e acumular XP.
-                </p>
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h4 className="text-lg font-black text-slate-900 dark:text-stone-50">
+                      🎯 Desafios Práticos de Nível: {selectedLevel}
+                    </h4>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/15 px-2 py-0.5 rounded-full border border-amber-500/20 shadow-sm">
+                      <Clock className="w-3 h-3 text-amber-500 shrink-0 animate-pulse" /> Desafios Diários
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
+                    Execute essas tarefas práticas no seu violão real para sedimentar o conhecimento e acumular XP. Novos desafios são <span className="font-bold text-amber-600 dark:text-amber-400">gerados automaticamente todo dia</span> às 00:00!
+                  </p>
+                </div>
               </div>
               <div className="bg-white dark:bg-stone-950 border border-slate-200 dark:border-stone-800 px-4 py-2.5 rounded-2xl flex flex-col items-center min-w-[150px] shrink-0">
                 <div className="flex items-center gap-2">
@@ -1374,141 +1621,187 @@ export default function LessonsTab({ currentUser, onUserLevelUpdate }: LessonsTa
           </>
           )}
 
-          {studyMode === "video" && (
-            <div className="space-y-6">
-              {activeVideo ? (
-                /* Player de vídeo integrado no app */
-                <div className="bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 rounded-3xl p-6 shadow-sm overflow-hidden animate-fade-in space-y-5">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-stone-800 pb-4">
-                    <div className="text-left">
-                      <span className="text-[10px] font-mono font-black text-rose-600 dark:text-rose-450 uppercase tracking-widest block mb-1">
-                        Assistindo Videoaula • Nível {selectedLevel}
+          {studyMode === "questions" && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in text-left">
+              
+              {/* Left Column: Form to submit your own doubts */}
+              <div className="lg:col-span-5 space-y-5">
+                <div className="bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 p-6 rounded-3xl shadow-sm space-y-4">
+                  <div className="border-b border-slate-100 dark:border-stone-800 pb-3">
+                    <div className="flex items-center gap-2 text-rose-500 mb-1">
+                      <HelpCircle className="w-5 h-5 animate-pulse" />
+                      <span className="text-[10px] font-mono font-black uppercase tracking-widest block">
+                        Dúvidas Rápidas • {selectedLevel}
                       </span>
-                      <h4 className="text-lg font-black text-slate-900 dark:text-white">
-                        {activeVideo.title}
-                      </h4>
-                      <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
-                        Instrutor: <strong className="text-slate-700 dark:text-stone-300">{activeVideo.instructor}</strong> • Duração: <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{activeVideo.duration}</span>
-                      </p>
                     </div>
-                    <button
-                      onClick={() => setActiveVideo(null)}
-                      className="px-4 py-2 text-xs font-bold text-slate-705 dark:text-stone-100 bg-slate-100 dark:bg-stone-800 hover:bg-slate-200 dark:hover:bg-stone-750 border-0 transition rounded-xl cursor-pointer"
-                    >
-                      ← Voltar para Lista
-                    </button>
-                  </div>
-
-                  {/* Player iFrame responsivo */}
-                  <div className="relative w-full aspect-video rounded-2xl bg-black overflow-hidden shadow-md border border-slate-950/20">
-                    <iframe
-                      src={activeVideo.video_url}
-                      title={activeVideo.title}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                      referrerPolicy="no-referrer"
-                      className="absolute inset-0 w-full h-full"
-                    ></iframe>
-                  </div>
-
-                  {/* Descrição e anotações integradas */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-                    <div className="lg:col-span-7 space-y-4 text-left">
-                      <div className="bg-slate-50 dark:bg-stone-950 p-5 rounded-2xl border border-slate-202 dark:border-stone-850">
-                        <h5 className="font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider mb-2">Sobre esta aula:</h5>
-                        <p className="text-xs text-slate-650 dark:text-stone-300 leading-relaxed font-sans">
-                          {activeVideo.description}
-                        </p>
-                      </div>
-
-                      <div className="p-4 bg-amber-50/50 dark:bg-amber-955/10 rounded-2xl border border-dashed border-amber-250/50 dark:border-amber-900/40 flex items-start gap-3 text-left">
-                        <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-550 shrink-0 mt-0.5" />
-                        <div>
-                          <span className="text-[11px] font-black text-amber-850 dark:text-amber-400 block">Dica de Prática Ativa:</span>
-                          <span className="text-[10px] text-slate-650 dark:text-stone-300 leading-snug block mt-1">
-                            Assista ao vídeo mantendo seu violão no colo. Sempre que o instrutor demonstrar uma digitação ou exercício rítmico, pause o vídeo e tente repeti-lo ao menos 5 vezes antes de prosseguir!
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bloco de notas vinculada à videoaula do SQLite */}
-                    <div className="lg:col-span-5">
-                      <VideoNoteSection userEmail={userEmail} activeVideo={activeVideo} />
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                /* Grid de videoaulas disponíveis */
-                <div className="space-y-4 text-left">
-                  <div className="border-b border-slate-200 dark:border-stone-850 pb-3 text-left">
-                    <h4 className="text-base font-black text-slate-905 dark:text-stone-100 uppercase tracking-wide flex items-center gap-2">
-                      <Tv className="w-5 h-5 text-rose-500" />
-                      Aulas Práticas Assistidas ({videoLessons.length})
+                    <h4 className="text-base font-black text-slate-900 dark:text-stone-100">
+                      O que você não entendeu?
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
-                      Assista ao conteúdo multimídia gravado para o nível {selectedLevel} para acelerar sua compreensão tonal e técnica.
+                    <p className="text-xs text-slate-500 dark:text-stone-400 mt-1 leading-relaxed">
+                      Se algum conceito, acorde ou ritmo desse nível ficou confuso, envie sua pergunta para os professores e comunidade!
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {videoLessons.length === 0 ? (
-                      <div className="col-span-full text-center py-20 bg-white dark:bg-stone-900/20 border border-dashed border-slate-200 dark:border-stone-800 rounded-3xl">
-                        <Tv className="w-10 h-10 text-slate-350 dark:text-stone-750 mx-auto mb-2" />
-                        <p className="text-xs text-slate-500 dark:text-stone-400">Nenhuma videoaula semeada para o nível {selectedLevel}.</p>
+                  <form onSubmit={handleQuestionSubmit} className="space-y-4 font-sans">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-black text-slate-700 dark:text-stone-300 uppercase tracking-wider block">
+                        Assunto / Título
+                      </label>
+                      <input
+                        type="text"
+                        value={questionTitle}
+                        onChange={(e) => setQuestionTitle(e.target.value)}
+                        placeholder="Ex: Não consigo soar a nota Sol na 3ª corda..."
+                        className="w-full p-3 rounded-xl border border-slate-205 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-105 placeholder-slate-400 dark:placeholder-stone-605 text-xs focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500/50 focus:outline-none transition"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-black text-slate-700 dark:text-stone-300 uppercase tracking-wider block">
+                        Detalhes da sua dúvida
+                      </label>
+                      <textarea
+                        value={questionContent}
+                        onChange={(e) => setQuestionContent(e.target.value)}
+                        placeholder="Descreva com detalhes o que está acontecendo ao praticar no seu violão..."
+                        className="w-full h-32 p-3 rounded-xl border border-slate-205 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-105 placeholder-slate-400 dark:placeholder-stone-605 text-xs focus:ring-1 focus:ring-rose-500/50 focus:border-rose-500/50 focus:outline-none transition resize-none"
+                      />
+                    </div>
+
+                    {questionSubmitError && (
+                      <p className="text-xs text-rose-600 dark:text-rose-400 font-bold block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                        {questionSubmitError}
+                      </p>
+                    )}
+
+                    {questionSubmitSuccess && (
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-bold block bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                        ✓ Dúvida enviada com sucesso! Ela foi cadastrada no SQLite e agora aparece na lista!
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingQuestion}
+                      className="w-full py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-extrabold rounded-xl text-xs transition shadow flex items-center justify-center gap-2 border-0 cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      {isSubmittingQuestion ? "Enviando para o SQLite..." : "Enviar Pergunta"}
+                    </button>
+                  </form>
+                </div>
+
+                <div className="p-5 bg-amber-50/50 dark:bg-amber-955/10 rounded-3xl border border-dashed border-amber-250/50 dark:border-amber-900/40 text-left text-xs leading-relaxed">
+                  <span className="font-extrabold text-amber-900 dark:text-amber-400 block mb-1">💡 Dica Prática de Aprendizado:</span>
+                  <p className="text-slate-650 dark:text-stone-300 text-[11px]">
+                    Não sinta vergonha de perguntar de forma descritiva! A comunidade de violonistas evolui mais rápido compartilhando licks, shapes de acordes e soluções para barreiras como a bendita pestana.
+                  </p>
+                </div>
+              </div>
+
+              {/* Right Column: Q&A List with video explanations */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="border-b border-slate-100 dark:border-stone-850 pb-3 flex justify-between items-center">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-905 dark:text-stone-100 uppercase tracking-wide flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-emerald-550" />
+                      Dúvidas da Comunidade ({studentQuestions.length})
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5">
+                      Perguntas respondidas em texto e em vídeos explicativos detalhados para o nível {selectedLevel}.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={loadStudentQuestions}
+                    className="p-1 px-3.5 text-[10px] bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-755 dark:text-stone-200 rounded-lg hover:text-slate-900 border-0 transition font-bold cursor-pointer"
+                  >
+                    Atualizar
+                  </button>
+                </div>
+
+                {isLoadingQuestions ? (
+                  <div className="text-center py-20 bg-white dark:bg-stone-900/20 border border-dashed border-slate-202 dark:border-stone-800 rounded-3xl">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-3" />
+                    <p className="text-xs text-slate-500 dark:text-stone-400 font-semibold font-mono">Buscando fórum no SQLite...</p>
+                  </div>
+                ) : studentQuestions.length === 0 ? (
+                  <div className="text-center py-16 bg-white dark:bg-stone-900/20 border border-dashed border-slate-202 dark:border-stone-800 rounded-3xl">
+                    <HelpCircle className="w-10 h-10 text-slate-350 dark:text-stone-750 mx-auto mb-2" />
+                    <p className="text-xs text-slate-500 dark:text-stone-400">Nenhuma dúvida enviada neste nível ainda. Seja o primeiro!</p>
+                  </div>
+                ) : (
+                  studentQuestions.map((q) => (
+                    <div
+                      key={q.id}
+                      className="bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-850 p-5 rounded-3xl shadow-sm text-left space-y-4 hover:border-emerald-500/30 transition-all font-sans"
+                    >
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap justify-between items-center gap-2">
+                          <span className="text-[10px] font-mono font-bold bg-slate-100 dark:bg-stone-950 text-slate-500 dark:text-stone-400 px-2.5 py-0.5 rounded border border-slate-200/50 dark:border-stone-850">
+                            ID #{q.id} • Por {q.user_email || "Aluno"}
+                          </span>
+                          <span className="text-[9px] font-mono text-slate-400 dark:text-stone-500">
+                            {q.created_at ? new Date(q.created_at).toLocaleDateString("pt-BR") : ""}
+                          </span>
+                        </div>
+                        <h5 className="font-extrabold text-sm text-slate-900 dark:text-white pt-1">
+                          {q.title}
+                        </h5>
+                        <p className="text-xs text-slate-650 dark:text-stone-300 leading-relaxed font-sans bg-slate-50/60 dark:bg-stone-950 p-3 rounded-xl border border-slate-105 dark:border-stone-850/60">
+                          {q.question}
+                        </p>
                       </div>
-                    ) : (
-                      videoLessons.map((vid) => (
-                        <div
-                          key={vid.id}
-                          className="group bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-800 rounded-3xl overflow-hidden hover:shadow-lg hover:border-rose-500/50 dark:hover:border-rose-500/30 transition-all flex flex-col justify-between text-left h-full"
-                        >
-                          <div className="p-5 space-y-4">
-                            {/* Visual Thumbnail Simulator */}
-                            <div className="relative aspect-video w-full rounded-2xl bg-gradient-to-br from-stone-900 via-stone-950 to-rose-955 flex items-center justify-center overflow-hidden border border-stone-850">
-                              <span className="absolute top-3 left-3 bg-red-600 text-[9px] font-mono font-bold text-white px-2 py-0.5 rounded uppercase tracking-wider">
-                                Videoaula
+
+                      {q.answer ? (
+                        /* Has response */
+                        <div className="pt-3 border-t border-slate-100 dark:border-stone-850 space-y-3.5">
+                          <div className="pl-3.5 border-l-2 border-emerald-500 space-y-1">
+                            <span className="text-[9px] font-mono font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">
+                              Resposta do Instrutor
+                            </span>
+                            <p className="text-xs text-slate-700 dark:text-stone-300 leading-relaxed">
+                              {q.answer}
+                            </p>
+                          </div>
+
+                          {q.video_url && (
+                            /* Has explanatory video */
+                            <div className="bg-slate-50 dark:bg-stone-955/30 p-3.5 border border-slate-202 dark:border-stone-850 rounded-2xl space-y-2.5">
+                              <span className="text-[10px] font-black text-rose-600 dark:text-rose-450 uppercase tracking-wider flex items-center gap-1">
+                                <Video className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                                Vídeo Explicativo Recomendado:
                               </span>
-                              <span className="absolute bottom-3 right-3 bg-stone-950/80 text-[10px] font-mono font-bold text-white px-2 py-0.5 rounded flex items-center gap-1">
-                                <Clock className="w-3 h-3 text-rose-450" /> {vid.duration}
-                              </span>
+                              <h6 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+                                {q.video_title || "Como praticar este tema"}
+                              </h6>
                               
-                              <div className="w-12 h-12 rounded-full bg-rose-600 group-hover:bg-rose-500 group-hover:scale-110 shadow-lg flex items-center justify-center transition-all cursor-pointer">
-                                <Play className="w-5 h-5 text-white fill-white translate-x-0.5" />
+                              <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-stone-800 shadow-sm">
+                                <iframe
+                                  src={q.video_url}
+                                  title={q.video_title}
+                                  frameBorder="0"
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                  allowFullScreen
+                                  referrerPolicy="no-referrer"
+                                  className="absolute inset-0 w-full h-full"
+                                ></iframe>
                               </div>
                             </div>
-
-                            <div className="space-y-2">
-                              <h5 className="font-extrabold text-sm text-slate-900 dark:text-white line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition">
-                                {vid.title}
-                              </h5>
-                              <p className="text-xs text-slate-500 dark:text-stone-400 line-clamp-2 leading-relaxed">
-                                {vid.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="px-5 pb-5 pt-3 border-t border-slate-100 dark:border-stone-850/60 flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400 dark:text-stone-500 font-bold">
-                              Instrutor: <strong className="text-slate-605 dark:text-stone-300">{vid.instructor}</strong>
-                            </span>
-                            <button
-                              onClick={() => {
-                                setActiveVideo(vid);
-                                window.scrollTo({ top: 300, behavior: "smooth" });
-                              }}
-                              className="px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-black uppercase tracking-wide border-0 transition rounded-xl shadow cursor-pointer"
-                            >
-                              Assistir Aula
-                            </button>
-                          </div>
+                          )}
                         </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
+                      ) : (
+                        /* No response yet */
+                        <div className="pt-3 border-t border-dashed border-slate-200 dark:border-stone-850/60 text-left">
+                          <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 bg-amber-500/10 dark:bg-amber-500/5 p-2 rounded-lg border border-amber-500/20">
+                            ⏳ Aguardando a conferência e resposta do professor...
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
             </div>
           )}
 

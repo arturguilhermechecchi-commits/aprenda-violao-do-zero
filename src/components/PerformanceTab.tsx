@@ -13,9 +13,13 @@ import {
   Sparkles,
   AlertCircle,
   ChevronRight,
-  Brain
+  Brain,
+  FileDown,
+  Download,
+  History
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { jsPDF } from "jspdf";
 
 interface PerformanceTabProps {
   currentUser: any;
@@ -52,6 +56,10 @@ export default function PerformanceTab({ currentUser }: PerformanceTabProps) {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
+  // PDF option states
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [pdfHistory, setPdfHistory] = useState<any[]>([]);
+
   // Form states
   const [duration, setDuration] = useState<number>(20);
   const [focusArea, setFocusArea] = useState<string>("Acordes");
@@ -60,7 +68,21 @@ export default function PerformanceTab({ currentUser }: PerformanceTabProps) {
 
   useEffect(() => {
     fetchPerformanceData();
+    fetchPdfHistory();
   }, [currentUser]);
+
+  const fetchPdfHistory = async () => {
+    if (!currentUser?.email) return;
+    try {
+      const res = await fetch(`/api/pdf-download/history?email=${encodeURIComponent(currentUser.email)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPdfHistory(data.history || []);
+      }
+    } catch (e) {
+      console.error("Erro ao buscar histórico de PDFs:", e);
+    }
+  };
 
   const fetchPerformanceData = async () => {
     if (!currentUser?.email) return;
@@ -78,6 +100,201 @@ export default function PerformanceTab({ currentUser }: PerformanceTabProps) {
       setErrorMessage("Erro de rede ao carregar evolução.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!currentUser?.email || !summary) return;
+    setDownloadingPdf(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Theme colors
+      const primaryColor = [30, 41, 59]; // Slate (dark background / titles)
+      const accentColor = [217, 119, 6];  // Amber (primary contrast)
+      
+      // Page setup & title
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 40, "F");
+      
+      // Studio Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(22);
+      doc.text("GUITAR STUDIO", 15, 18);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.text("Relatorio Oficial de Evolucao Musical e Pratica", 15, 26);
+      
+      const today = new Date().toLocaleDateString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+      doc.setFontSize(9);
+      doc.text(`Gerado em: ${today}`, 150, 18);
+      
+      // User Profile details
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("DADOS DO ESTUDANTE", 15, 52);
+      
+      doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.setLineWidth(0.5);
+      doc.line(15, 55, 195, 55);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(75, 85, 99);
+      
+      doc.text(`Nome do Aluno: ${currentUser.username || "Usuario"}`, 15, 62);
+      doc.text(`E-mail Registrado: ${currentUser.email}`, 15, 68);
+      
+      const levelLabel = summary.averageQuizScorePct >= 80 ? "Avancado" : summary.averageQuizScorePct >= 50 ? "Intermediario" : "Iniciante";
+      doc.text(`Nivel Teorico Atual: ${levelLabel}`, 115, 62);
+      doc.text(`Streak de Treino: ${summary.streak} dias seguidos`, 115, 68);
+      
+      // Key Performance metrics
+      doc.setFillColor(248, 250, 252); // soft slate bg
+      doc.rect(15, 75, 180, 28, "F");
+      
+      // Horizontal dividers for metrics
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      
+      doc.text("TEMPO TOTAL DE PRATICA", 20, 83);
+      doc.text("AULAS CONCLUIDAS", 85, 83);
+      doc.text("EXAMES CONCLUIDOS", 145, 83);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.text(`${summary.totalPracticeMinutes} min`, 20, 95);
+      doc.text(`${summary.completedLessonsCount} / ${summary.lessonsCount}`, 85, 95);
+      doc.text(`${summary.examsPassed} (${summary.averageQuizScorePct}% acertos)`, 145, 95);
+      
+      // Focus Distribution
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("DISTRIBUICAO DE FOCO DOS TREINOS (MINUTOS)", 15, 115);
+      doc.line(15, 118, 195, 118);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(75, 85, 99);
+      
+      let currentY = 125;
+      if (summary.focusStats.length === 0) {
+        doc.text("Nenhuma sessao de treino registrada ainda para visualizar graficos.", 15, currentY);
+        currentY += 10;
+      } else {
+        summary.focusStats.forEach((f) => {
+          const pct = Math.round((f.minutes / (summary.totalPracticeMinutes || 1)) * 100);
+          doc.text(`* ${f.focusArea}: ${f.minutes} minutos (${pct}%)`, 20, currentY);
+          currentY += 6;
+        });
+      }
+      
+      // Recent Practice Logs
+      currentY += 5;
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text("HISTORICO RECENTE DE SESSOES (REGISTRADAS NO SQLite)", 15, currentY);
+      doc.line(15, currentY + 3, 195, currentY + 3);
+      currentY += 10;
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(75, 85, 99);
+      
+      if (summary.recentSessions.length === 0) {
+        doc.text("Sem sessoes de pratica registradas no historico recente.", 15, currentY);
+        currentY += 8;
+      } else {
+        // Render headings
+        doc.setFont("helvetica", "bold");
+        doc.text("Data", 15, currentY);
+        doc.text("Foco Praticado", 45, currentY);
+        doc.text("Duracao", 100, currentY);
+        doc.text("Nivel", 125, currentY);
+        doc.text("Anotacoes do Aluno", 150, currentY);
+        
+        doc.setDrawColor(226, 232, 240);
+        doc.setLineWidth(0.2);
+        doc.line(15, currentY + 2, 195, currentY + 2);
+        currentY += 7;
+        
+        doc.setFont("helvetica", "normal");
+        summary.recentSessions.slice(0, 8).forEach((session) => {
+          doc.text(session.session_date, 15, currentY);
+          doc.text(session.focus_area, 45, currentY);
+          doc.text(`${session.duration_minutes}m`, 100, currentY);
+          doc.text(session.difficulty, 125, currentY);
+          
+          const truncatedNotes = session.notes && session.notes.length > 25 
+            ? session.notes.substring(0, 22) + "..."
+            : session.notes || "-";
+          doc.text(truncatedNotes, 150, currentY);
+          currentY += 6;
+        });
+      }
+      
+      // AI recommendations box
+      currentY += 5;
+      doc.setFillColor(245, 243, 255); // light purple
+      doc.rect(15, currentY, 180, 25, "F");
+      
+      doc.setTextColor(109, 40, 217); // purple
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text("RECOMENDACOES PERSONALIZADAS DOS PROFESSORES:", 20, currentY + 7);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(76, 29, 149);
+      
+      const recs = getAIRecommendations();
+      const firstRecText = recs.length > 0 ? `${recs[0].title}: ${recs[0].desc}` : "Continue praticando diariamente!";
+      const cleanRecText = firstRecText.length > 90 ? firstRecText.substring(0, 87) + "..." : firstRecText;
+      doc.text(cleanRecText, 20, currentY + 14);
+      
+      const secondRecText = recs.length > 1 ? `${recs[1].title}: ${recs[1].desc}` : "A constancia e a chave para obter precisao de timbre!";
+      const cleanSecondRecText = secondRecText.length > 90 ? secondRecText.substring(0, 87) + "..." : secondRecText;
+      doc.text(cleanSecondRecText, 20, currentY + 20);
+      
+      // Footer signature
+      doc.setFontSize(8);
+      doc.setTextColor(156, 163, 175);
+      const year = new Date().getFullYear();
+      doc.text(`Studio de Violao Guitar Studio ${year} - Todos os direitos reservados.`, 60, 285);
+      
+      // Save it locally
+      const cleanUsername = (currentUser?.username || "aluno").replace(/\s+/g, "_");
+      doc.save(`Evolucao_Guitar_Studio_${cleanUsername}.pdf`);
+      
+      // Record download audit in database
+      await fetch("/api/pdf-download/log", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: currentUser.email,
+          downloadType: "Relatório de Evolução"
+        })
+      });
+      
+      // Refresh download logs history list
+      fetchPdfHistory();
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+    } finally {
+      setDownloadingPdf(false);
     }
   };
 
@@ -220,18 +437,34 @@ export default function PerformanceTab({ currentUser }: PerformanceTabProps) {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setShowLogForm(!showLogForm);
-            setSuccessMessage("");
-            setErrorMessage("");
-          }}
-          id="toggle-log-practice-btn"
-          className="z-10 shrink-0 py-3 px-5 bg-white hover:bg-slate-50 dark:bg-stone-900 hover:dark:bg-stone-850 text-amber-900 dark:text-amber-400 font-extrabold text-xs rounded-2xl shadow transition duration-200 flex items-center gap-2 border-0 cursor-pointer"
-        >
-          <PlusCircle className="w-4 h-4 text-amber-600" />
-          Registrar Treino Diário
-        </button>
+        <div id="performance-actions" className="flex flex-wrap md:flex-nowrap gap-2.5 z-10 shrink-0">
+          <button
+            onClick={() => {
+              setShowLogForm(!showLogForm);
+              setSuccessMessage("");
+              setErrorMessage("");
+            }}
+            id="toggle-log-practice-btn"
+            className="py-3 px-5 bg-white hover:bg-slate-50 dark:bg-stone-900 hover:dark:bg-stone-850 text-amber-900 dark:text-amber-400 font-extrabold text-xs rounded-2xl shadow transition duration-200 flex items-center gap-2 border-0 cursor-pointer"
+          >
+            <PlusCircle className="w-4 h-4 text-amber-600" />
+            Registrar Treino Diário
+          </button>
+          
+          <button
+            onClick={handleDownloadPDF}
+            disabled={downloadingPdf || !summary}
+            id="download-progress-pdf-btn"
+            className="py-3 px-5 bg-amber-600 hover:bg-amber-500 text-white font-extrabold text-xs rounded-2xl shadow transition duration-200 flex items-center gap-2 border-0 cursor-pointer disabled:opacity-50"
+          >
+            {downloadingPdf ? (
+              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4 text-white" />
+            )}
+            Download PDF de Evolução
+          </button>
+        </div>
       </div>
 
       {/* New Practice Log Modal / Sub-section */}
@@ -715,6 +948,40 @@ export default function PerformanceTab({ currentUser }: PerformanceTabProps) {
                   })}
                 </div>
               )
+            )}
+          </div>
+
+          {/* History of PDF Downloads logged in SQLite DB */}
+          <div className="bg-white dark:bg-stone-900 border border-slate-205 dark:border-stone-850 p-6 rounded-3xl shadow-sm">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 dark:text-stone-500 block mb-3 font-mono flex items-center gap-1.5 font-bold">
+              <History className="w-3.5 h-3.5 text-amber-600" />
+              Histórico de Downloads de PDF (Salvo no Banco)
+            </span>
+
+            {pdfHistory.length === 0 ? (
+              <div className="py-6 text-center bg-slate-50 dark:bg-stone-950/20 border border-slate-150 dark:border-stone-850/65 rounded-xl text-[10px] text-slate-450 dark:text-stone-550 font-mono">
+                Nenhum download registrado no banco de dados ainda. Clique em "Download PDF" acima para iniciar.
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
+                {pdfHistory.map((item, i) => {
+                  const dateStr = new Date(item.downloaded_at).toLocaleString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  });
+                  return (
+                    <div key={item.id || i} className="p-2.5 bg-amber-500/5 border border-amber-500/10 rounded-xl flex items-center justify-between text-[11px] font-mono text-slate-650 dark:text-stone-300">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <FileDown className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span className="truncate font-sans font-bold">{item.download_type}</span>
+                      </div>
+                      <span className="text-[9px] text-slate-400 dark:text-stone-550 shrink-0">{dateStr}</span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 

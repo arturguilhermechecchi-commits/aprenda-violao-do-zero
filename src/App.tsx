@@ -628,7 +628,7 @@ export default function App() {
               }}
             />
           )}
-          {activeTab === "chords" && <ChordsTab />}
+          {activeTab === "chords" && <ChordsTab currentUser={currentUser} />}
           {activeTab === "songs" && <SongsTab currentUser={currentUser} />}
           {activeTab === "tuner" && <TunerTab />}
           {activeTab === "metronome" && <MetronomeTab />}

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { UserSession } from "../types";
-import { Users, BookOpen, FileText, MessageSquare, RefreshCw, ShieldAlert, Award, Calendar, Clock, Smartphone, Laptop, Activity, Trash2, Lock } from "lucide-react";
+import { Users, BookOpen, FileText, MessageSquare, RefreshCw, ShieldAlert, Award, Calendar, Clock, Smartphone, Laptop, Activity, Trash2, Lock, HelpCircle, CheckCircle, Play, Video, ExternalLink } from "lucide-react";
 
 interface AdminTabProps {
   currentUser: UserSession;
@@ -49,6 +49,44 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
   const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null);
   const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  // States for student questions/explanatory videos
+  const [adminQuestions, setAdminQuestions] = useState<any[]>([]);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [replyingToQuestion, setReplyingToQuestion] = useState<any | null>(null);
+  const [adminAnswer, setAdminAnswer] = useState("");
+  const [adminVideoUrl, setAdminVideoUrl] = useState("");
+  const [adminVideoTitle, setAdminVideoTitle] = useState("");
+  const [isSavingReply, setIsSavingReply] = useState(false);
+  const [replySuccessMessage, setReplySuccessMessage] = useState<string | null>(null);
+  const [replyErrorMessage, setReplyErrorMessage] = useState<string | null>(null);
+
+  // States for database-backed advanced chords lock
+  const [isChordLockActive, setIsChordLockActive] = useState(true);
+  const [isLoadingChordLock, setIsLoadingChordLock] = useState(false);
+  const [lockStatusMessage, setLockStatusMessage] = useState<string | null>(null);
+
+  // States for PDF download audit logging
+  const [adminPdfDownloads, setAdminPdfDownloads] = useState<any[]>([]);
+  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+
+  const fetchAdminPdfDownloads = () => {
+    setIsLoadingPdf(true);
+    fetch(`/api/admin/pdf-downloads?adminEmail=${encodeURIComponent(currentUser.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro ao carregar downloads.");
+        return res.json();
+      })
+      .then((data) => {
+        setAdminPdfDownloads(data.downloads || []);
+      })
+      .catch((err) => {
+        console.error("Erro ao puxar downloads de PDF para admin:", err);
+      })
+      .finally(() => {
+        setIsLoadingPdf(false);
+      });
+  };
 
   const executeDeleteUser = (targetEmail: string) => {
     setIsDeleting(targetEmail);
@@ -107,8 +145,139 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
       });
   };
 
+  const fetchAdminQuestions = () => {
+    setIsLoadingQuestions(true);
+    fetch(`/api/admin/student-questions?adminEmail=${encodeURIComponent(currentUser.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro ao carregar dúvidas dos alunos.");
+        return res.json();
+      })
+      .then((data) => {
+        setAdminQuestions(data.questions || []);
+      })
+      .catch((err) => {
+        console.error("Erro ao puxar as dúvidas para o administrador:", err);
+      })
+      .finally(() => {
+        setIsLoadingQuestions(false);
+      });
+  };
+
+  const handleReplySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!replyingToQuestion) return;
+    if (!adminAnswer.trim()) {
+      setReplyErrorMessage("A resposta em texto é obrigatória.");
+      return;
+    }
+    
+    setIsSavingReply(true);
+    setReplyErrorMessage(null);
+    setReplySuccessMessage(null);
+    
+    fetch("/api/admin/student-questions/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminEmail: currentUser.email,
+        questionId: replyingToQuestion.id,
+        answer: adminAnswer.trim(),
+        videoUrl: adminVideoUrl.trim() || undefined,
+        videoTitle: adminVideoTitle.trim() || undefined
+      })
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((data) => {
+            throw new Error(data.error || "Erro ao salvar sua resposta.");
+          });
+        }
+        return res.json();
+      })
+      .then(() => {
+        setReplySuccessMessage("Resposta e vídeo explicativo salvos no SQLite com sucesso!");
+        setAdminQuestions((prev) =>
+          prev.map((q) =>
+            q.id === replyingToQuestion.id
+              ? {
+                  ...q,
+                  answer: adminAnswer.trim(),
+                  video_url: adminVideoUrl.trim() || null,
+                  video_title: adminVideoTitle.trim() || null
+                }
+              : q
+          )
+        );
+        setTimeout(() => {
+          setReplyingToQuestion(null);
+          setAdminAnswer("");
+          setAdminVideoUrl("");
+          setAdminVideoTitle("");
+          setReplySuccessMessage(null);
+        }, 2200);
+      })
+      .catch((err: any) => {
+        console.error("Erro ao salvar resposta no banco:", err);
+        setReplyErrorMessage(err.message || "Erro de conexão.");
+      })
+      .finally(() => {
+        setIsSavingReply(false);
+      });
+  };
+
+  const fetchChordLockStatus = () => {
+    setIsLoadingChordLock(true);
+    fetch(`/api/chords/lock-status?email=${encodeURIComponent(currentUser.email)}`)
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        setIsChordLockActive(data.globalLocked);
+      })
+      .catch((err) => {
+        console.error("Erro ao puxar status de bloqueio dos acordes:", err);
+      })
+      .finally(() => {
+        setIsLoadingChordLock(false);
+      });
+  };
+
+  const handleToggleChordLock = (newVal: boolean) => {
+    setIsLoadingChordLock(true);
+    setLockStatusMessage(null);
+    fetch("/api/admin/chords/toggle-lock", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminEmail: currentUser.email,
+        isLocked: newVal
+      })
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Erro ao salvar sua alteração.");
+        return res.json();
+      })
+      .then((data) => {
+        setIsChordLockActive(data.globalLocked);
+        setLockStatusMessage(`Configuração sincronizada no SQLite! Lock de acordes avançados agora está ${data.globalLocked ? "ATIVO" : "DESATIVADO"}.`);
+        setTimeout(() => setLockStatusMessage(null), 3000);
+      })
+      .catch((err: any) => {
+        console.error("Erro ao salvar configuração de bloqueio:", err);
+        setLockStatusMessage("Erro ao modificar configuração de segurança do SQLite.");
+        setTimeout(() => setLockStatusMessage(null), 3000);
+      })
+      .finally(() => {
+        setIsLoadingChordLock(false);
+      });
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchAdminQuestions();
+    fetchChordLockStatus();
+    fetchAdminPdfDownloads();
   }, [currentUser.email]);
 
   if (errorText) {
@@ -414,6 +583,248 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
 
       </div>
 
+      {/* SECTION: Global Chord Protection Settings (SQLite Lock) */}
+      <div className="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-850 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2.5 bg-amber-500/10 rounded-xl">
+              <Lock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-base">Bloqueio Metódico de Acordes Avançados</h4>
+              <p className="text-xs text-slate-500 dark:text-stone-400 mt-0.5 mt-1 leading-relaxed">
+                Regra de Negócio: Quando ativo no SQLite, apenas alunos que atingirem o nível <strong className="text-amber-600">Avançado</strong> (passando no Exame Oficial) podem ver ou tocar os acordes especiais da seção Dicionário.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            {isLoadingChordLock && (
+              <span className="text-[10px] text-slate-400 font-mono animate-pulse">Sincronizando SQLite...</span>
+            )}
+            <button
+              onClick={() => handleToggleChordLock(!isChordLockActive)}
+              disabled={isLoadingChordLock}
+              className={`py-2.5 px-4.5 text-xs font-black rounded-xl transition-all shadow border-0 cursor-pointer ${
+                isChordLockActive
+                  ? "bg-red-600 hover:bg-red-700 text-stone-50"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-stone-50"
+              }`}
+            >
+              {isChordLockActive ? "🔐 Bloqueio Ativo no Banco" : "🔓 Liberado para Todos"}
+            </button>
+          </div>
+        </div>
+
+        {lockStatusMessage && (
+          <div className="p-3 text-xs bg-amber-500/10 text-amber-850 dark:text-amber-400 font-bold rounded-xl border border-amber-500/25 animate-fade-in">
+            {lockStatusMessage}
+          </div>
+        )}
+      </div>
+
+      {/* SECTION: Student Questions & Customized Explanatory Videos */}
+      <div className="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-850 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-stone-850 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-amber-600" />
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-base">Fórum de Dúvidas dos Alunos & Vídeos Explicativos</h4>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
+              Gere respostas personalizadas e asocie vídeos de explicações práticas do YouTube no banco de dados SQLite para cada dúvida enviada pelos estudantes.
+            </p>
+          </div>
+          <button
+            onClick={fetchAdminQuestions}
+            className="p-1.5 px-3.5 text-xs bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-200 rounded-xl transition font-bold border-0 cursor-pointer"
+          >
+            Sincronizar Dúvidas
+          </button>
+        </div>
+
+        {replyingToQuestion && (
+          <div className="bg-amber-500/5 border border-amber-500/30 rounded-3xl p-6 space-y-4 animate-fade-in">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-600 block">
+                  Respondendo à Pergunta #{replyingToQuestion.id} • Nível {replyingToQuestion.level}
+                </span>
+                <h5 className="text-sm font-black text-slate-950 dark:text-stone-100 mt-1">
+                  Aluno: {replyingToQuestion.user_email} • {replyingToQuestion.title}
+                </h5>
+                <p className="text-xs text-slate-655 dark:text-stone-300 bg-white dark:bg-stone-950 p-3 rounded-xl border border-slate-200/60 dark:border-stone-850 mt-2">
+                  &ldquo;{replyingToQuestion.question}&rdquo;
+                </p>
+              </div>
+              <button
+                onClick={() => setReplyingToQuestion(null)}
+                className="text-xs bg-slate-200 hover:bg-slate-300 dark:bg-stone-850 dark:hover:bg-stone-750 p-1 px-2.5 rounded text-slate-700 dark:text-stone-300 border-0 cursor-pointer"
+              >
+                Cancelar
+              </button>
+            </div>
+
+            <form onSubmit={handleReplySubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-black text-slate-700 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                    Sua Resposta Escrita (Explicação em Texto)
+                  </label>
+                  <textarea
+                    value={adminAnswer}
+                    onChange={(e) => setAdminAnswer(e.target.value)}
+                    placeholder="Escreva dicas e explicações detalhadas para resolver a dúvida do aluno..."
+                    required
+                    className="w-full h-36 p-3 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-[11px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                    Título do Vídeo Explicativo Personalizado
+                  </label>
+                  <input
+                    type="text"
+                    value={adminVideoTitle}
+                    onChange={(e) => setAdminVideoTitle(e.target.value)}
+                    placeholder="Ex: Correção de Pestana e Toque Limpo"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                    URL de Incorporação do Vídeo (YouTube Embed ou similar)
+                  </label>
+                  <input
+                    type="text"
+                    value={adminVideoUrl}
+                    onChange={(e) => setAdminVideoUrl(e.target.value)}
+                    placeholder="Ex: https://www.youtube.com/embed/n30D-Y5eU3c"
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition"
+                  />
+                  <span className="text-[9px] text-slate-400 mt-1 block">
+                    Utilize o link no formato <code className="bg-slate-100 dark:bg-stone-950 p-0.5 rounded">/embed/VIDEO_ID</code> para funcionar perfeitamente dentro do iframe da lição.
+                  </span>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSavingReply}
+                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl text-xs transition shadow flex items-center justify-center gap-2 border-0 cursor-pointer"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    {isSavingReply ? "Salvando no Banco..." : "Gravar Resposta & Vídeo no SQLite"}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            {replyErrorMessage && (
+              <p className="text-xs text-rose-600 font-bold block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                {replyErrorMessage}
+              </p>
+            )}
+
+            {replySuccessMessage && (
+              <p className="text-xs text-emerald-600 font-bold block bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                ✓ {replySuccessMessage}
+              </p>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {isLoadingQuestions ? (
+            <div className="col-span-full text-center py-10 bg-slate-50 dark:bg-stone-950/25 border border-dashed border-slate-200 dark:border-stone-850 rounded-2xl">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2" />
+              <p className="text-xs text-slate-500 font-mono">Buscando fórum completo no SQLite...</p>
+            </div>
+          ) : adminQuestions.length === 0 ? (
+            <div className="col-span-full text-center py-10 bg-slate-50 dark:bg-stone-950/25 border border-dashed border-slate-200 dark:border-stone-850 rounded-2xl">
+              <p className="text-xs text-slate-500">Nenhum aluno registrou dúvidas até o momento no SQLite master.</p>
+            </div>
+          ) : (
+            adminQuestions.map((q) => (
+              <div
+                key={q.id}
+                className="bg-slate-50 dark:bg-stone-950/50 p-4 rounded-2xl border border-slate-200 dark:border-stone-850 hover:border-amber-500/30 transition flex flex-col justify-between space-y-3"
+              >
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="font-bold text-slate-500 truncate max-w-[150px]" title={q.user_email}>
+                      ID #{q.id} • {q.user_email}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                      q.level === "Avançado"
+                        ? "bg-red-500/10 text-red-650"
+                        : q.level === "Intermediário"
+                        ? "bg-blue-500/10 text-blue-650"
+                        : "bg-emerald-500/10 text-emerald-650"
+                    }`}>
+                      {q.level}
+                    </span>
+                  </div>
+
+                  <h5 className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">
+                    {q.title}
+                  </h5>
+
+                  <p className="text-xs text-slate-600 dark:text-stone-300 italic bg-white dark:bg-stone-950 p-2.5 rounded-xl border border-slate-100 dark:border-stone-900 leading-normal line-clamp-3">
+                    &ldquo;{q.question}&rdquo;
+                  </p>
+
+                  {q.answer ? (
+                    <div className="pl-2 border-l-2 border-emerald-500 bg-emerald-550/5 dark:bg-emerald-555/2 p-2 rounded-r-lg">
+                      <span className="text-[9px] font-mono leading-none tracking-wider text-emerald-600 dark:text-emerald-400 block font-black uppercase">
+                        ✓ Respondido com Vídeo
+                      </span>
+                      <p className="text-[11px] text-slate-605 dark:text-stone-300 mt-1 line-clamp-2">
+                        {q.answer}
+                      </p>
+                      {q.video_url && (
+                        <div className="flex items-center gap-1 text-[10px] text-rose-500 font-bold mt-1.5">
+                          <Video className="w-3.5 h-3.5" />
+                          <span className="truncate max-w-[160px]">{q.video_title || "Vídeo recomendado"}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="bg-amber-500/10 p-2 rounded-xl text-[10px] text-amber-800 dark:text-amber-500 font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                      Aguardando Solução & Vídeo Aula
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 border-t border-slate-200/50 dark:border-stone-850/60 flex justify-between items-center">
+                  <span className="text-[9px] text-slate-400 dark:text-stone-550 font-mono">
+                    {q.created_at ? new Date(q.created_at).toLocaleDateString("pt-BR") : ""}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setReplyingToQuestion(q);
+                      setAdminAnswer(q.answer || "");
+                      setAdminVideoUrl(q.video_url || "");
+                      setAdminVideoTitle(q.video_title || "");
+                      setReplySuccessMessage(null);
+                      setReplyErrorMessage(null);
+                    }}
+                    className="p-1 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-extrabold rounded-lg transition border-0 cursor-pointer"
+                  >
+                    {q.answer ? "Editar Vídeo" : "Responder com Vídeo"}
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
       {/* Horários de Entrada / Login Access History Analysis */}
       <div className="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-850 p-6 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -587,6 +998,68 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* PDF Download Audit Logging Panel */}
+        <div className="bg-white dark:bg-stone-900 border border-slate-200/60 dark:border-stone-850 p-6 rounded-2xl shadow-sm mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h2 id="pdf-downloads-audit" className="text-sm font-extrabold text-slate-900 dark:text-stone-100 flex items-center gap-1.5 font-mono uppercase tracking-wide">
+                <FileText className="w-4 h-4 text-amber-600" />
+                Auditoria de Downloads de PDF (logs do SQLite)
+              </h2>
+              <p className="text-[11px] text-slate-455 dark:text-stone-400 max-w-xl">
+                Relatório em tempo real de todas as solicitações e exportações de relatórios em formato PDF efetuadas pelos alunos na plataforma.
+              </p>
+            </div>
+            <button
+              onClick={fetchAdminPdfDownloads}
+              className="p-1.5 bg-slate-50 hover:bg-slate-100 dark:bg-stone-950 dark:hover:bg-stone-850 rounded-lg text-slate-500 border-0 cursor-pointer"
+              title="Recarregar Logs de PDF"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          <div className="overflow-x-auto border border-slate-100 dark:border-stone-850 rounded-xl">
+            <table className="w-full text-left text-xs text-slate-755 dark:text-stone-300">
+              <thead>
+                <tr className="bg-stone-50 dark:bg-stone-950 border-b border-slate-200/65 dark:border-stone-850 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-stone-500">
+                  <th className="py-2.5 px-3">Estudante</th>
+                  <th className="py-2.5 px-3">E-mail</th>
+                  <th className="py-2.5 px-3">Tipo de PDF Exportado</th>
+                  <th className="py-2.5 px-3 text-center">Horário do Download</th>
+                  <th className="py-2.5 px-3 text-center">Data</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-stone-850">
+                {adminPdfDownloads.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-450 dark:text-stone-550 italic">
+                      Nenhum download de PDF registrado no SQLite ainda. Alunos verão a opção de "Download PDF de Evolução" na aba "Minha Evolução".
+                    </td>
+                  </tr>
+                ) : (
+                  adminPdfDownloads.map((dl, idx) => {
+                    const downloadTime = new Date(dl.downloaded_at);
+                    return (
+                      <tr key={dl.id || idx} className="hover:bg-amber-500/5 transition">
+                        <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-stone-100">{dl.username || "Demonstração"}</td>
+                        <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500 dark:text-stone-400">{dl.user_email}</td>
+                        <td className="py-2.5 px-3 text-amber-600 dark:text-amber-500 font-bold">{dl.download_type}</td>
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-500 dark:text-stone-400">
+                          {downloadTime.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-mono text-slate-500 dark:text-stone-400">
+                          {downloadTime.toLocaleDateString("pt-BR")}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 

@@ -127,6 +127,45 @@ db.exec(`
     instructor TEXT NOT NULL,
     thumbnail_url TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS student_questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    level TEXT NOT NULL,
+    title TEXT NOT NULL,
+    question TEXT NOT NULL,
+    answer TEXT,
+    video_url TEXT,
+    video_title TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS pdf_downloads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_email TEXT NOT NULL,
+    download_type TEXT NOT NULL,
+    downloaded_at TEXT NOT NULL,
+    FOREIGN KEY (user_email) REFERENCES users (email) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS harmonic_fields (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    field_key TEXT UNIQUE NOT NULL,
+    main_chord TEXT NOT NULL,
+    description TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS harmonic_field_chords (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    field_id INTEGER NOT NULL,
+    degree TEXT NOT NULL,
+    chord_name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    description TEXT NOT NULL,
+    FOREIGN KEY (field_id) REFERENCES harmonic_fields (id) ON DELETE CASCADE
+  );
+
 `);
 
 // Migrate existing databases to have 'guitar_level' column if they don't have it
@@ -145,9 +184,26 @@ try {
   // Column already exists, no problem
 }
 
+// Create and seed system_locks table for restricting features such as advanced chords
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS system_locks (
+      lock_name TEXT PRIMARY KEY,
+      is_locked INTEGER DEFAULT 1
+    )
+  `);
+  db.prepare("INSERT OR IGNORE INTO system_locks (lock_name, is_locked) VALUES ('advanced_chords', 1)").run();
+  console.log("[Database] Tabela 'system_locks' criada e semeada com sucesso.");
+} catch (e) {
+  console.error("Erro ao configurar system_locks no SQLite:", e);
+}
+
 // Seed all lessons (beginner, intermediate, advanced) in the database
 try {
   console.log("[Database] Semeando/atualizando tabela de lições no SQLite...");
+  
+  // Clear existing lessons to ensure no duplicate or dangling IDs exist
+  db.prepare("DELETE FROM lessons").run();
   
   const insertLesson = db.prepare(`
     INSERT OR REPLACE INTO lessons (id, title, category, description, lesson_order, content_markdown, level)
@@ -296,6 +352,76 @@ P -> I -> M -> A -> M -> I
 1. Monte apenas a pestana na **5ª casa** do violão (onde a tensão das cordas é mais maleável).
 2. Toque corda por corda assegurando que todas estão vibrando sem zumbido.
 3. Se soar limpo, arraste a pestana para a **4ª casa**, depois **3ª casa**, até chegar ao som cristalino no acorde de **F (Fá Maior)** na 1ª casa!`
+    },
+    {
+      id: "les-beg7",
+      title: "Desvendando o Sistema CAGED",
+      category: "theory",
+      description: "Aprenda o mapa definitivo do braço do violão para localizar e transportar acordes facilmente.",
+      order: 7,
+      contentMarkdown: `O **Sistema CAGED** (pronuncia-se "queibid") é possivelmente a ferramenta mais poderosa existente para desmistificar todo o braço do violão. Ele serve como uma bússola que permite que batesse o olho em qualquer casa e soubesse exatamente quais notas e acordes estão disponíveis.
+
+### 1. O Nome Enigmático: C - A - G - E - D
+O nome vem das 5 fôrmas de acordes maiores abertos (que aprendemos no início sem pestana):
+- **C** (Dó Maior)
+- **A** (Lá Maior)
+- **G** (Sol Maior)
+- **E** (Mi Maior)
+- **D** (Ré Maior)
+
+Essas cinco formas básicas de acordes conectam-se sequencialmente ao longo do braço do violão como um quebra-cabeça infinito!
+
+---
+
+### 2. O Conceito de Fôrma Móvel (Pestana como Capotraste)
+A mágica acontece quando percebemos que podemos **mover** qualquer um desses 5 desenhos comuns ao longo das casas do violão. 
+
+Para mover um acorde aberto, o metal do traste inicial (Nut) precisa ser substituído pelo nosso **dedo de pestana** (agindo como um capotraste móvel) ou deslocando os demais dedos.
+
+#### Exemplo Prático: Movendo a Fôrma de Lá (A)
+Pense no acorde de **Lá Maior (A)** comum, montado na casa 2:
+- Se você avançar todo o desenho do acorde duas casas para a frente e colocar uma pestana na **Casa 2** do braço, a fôrma de "Lá" se transforma no acorde real de **Si Maior (B)**!
+- Se você avançar mais uma casa (pestana na Casa 3) e mantiver o desenho/formato de Lá, você terá um **Dó Maior (C) com fôrma de Lá**.
+
+---
+
+### 3. O Mapa de Conexões de Tônicas (Root Notes)
+Para dominar o posicionamento, você precisa saber em qual corda reside a nota tônica (a raiz/nome do acorde) de cada fôrma. Memorize esse mapa simples:
+
+- **Fôrma de C (Dó)**: Tônica na **5ª corda** (e na 2ª corda)
+- **Fôrma de A (Lá)**: Tônica na **5ª corda** (e na 3ª corda)
+- **Fôrma de G (Sol)**: Tônica na **6ª corda** (e na 1ª e 3ª cordas)
+- **Fôrma de E (Mi)**: Tônica na **6ª corda** (e na 4ª e 1ª cordas)
+- **Fôrma de D (Ré)**: Tônica na **4ª corda** (e na 2ª corda)
+
+#### O Encaixe Perfeito (C-A-G-E-D):
+Os formatos vizinhos compartilham suas notas primárias. Veja como elas são unidas por suas tônicas comuns:
+\`\`\`text
+  [Fôrma C] --- (Compartilha Tônica na 5ª corda) --- [Fôrma A]
+  [Fôrma A] --- (Compartilha Tônica na 3ª corda) --- [Fôrma G]
+  [Fôrma G] --- (Compartilha Tônica na 6ª corda) --- [Fôrma E]
+  [Fôrma E] --- (Compartilha Tônica na 4ª corda) --- [Fôrma D]
+  [Fôrma D] --- (Compartilha Tônica na 2ª corda) --- [Fôrma C] ... (repete ciclo!)
+\`\`\`
+
+---
+
+### 4. A Ordem das Conexões (C-A-G-E-D) ao Longo do Braço
+Qualquer acorde maior do mundo pode ser tocado em 5 posições diferentes acompanhando a exata ordem da palavra **C-A-G-E-D**:
+
+Se você montou um **Dó Maior (C)** na posição aberta comum (fôrma de Dó), a próxima posição deste mesmo acorde é usando a fôrma de **Lá (A)** na casa 3. A próxima será a fôrma de **Sol (G)** na casa 5, depois a fôrma de **Mi (E)** na casa 8 e, finalmente, a fôrma de **Ré (D)** na casa 10!
+
+Essa regra se aplica a qualquer tom! Se você começa com a fôrma de **Mi (E)**, a sequência continua com a próxima letra da palavra: **Ré (D)**, depois volta para **Dó (C)**, **Lá (A)** e **Sol (G)**.
+
+---
+
+### 5. Exercício Prático de Fixação
+Para treinar a sua percepção espacial no braço do violão:
+1. Monte o acorde de **Dó Maior (C)** simples aberto.
+2. Agora, monte o mesmo **Dó Maior (C)** usando a fôrma de **Lá (A)**: faça uma pestana na **3ª casa** e use os dedos 2, 3 e 4 para fazer o desenho de Lá na 5ª casa.
+3. Alterne entre esses dois formatos sutilmente de 4 em 4 tempos. Sentiu como o som mais agudo ganha um brilho e preenchimento totalmente novos?
+
+*Dica de Prática IA:* O CAGED elimina a necessidade de decorar milhões de acordes soltos. Se você domina as 5 fôrmas iniciais, você domina o braço inteiro!`
     }
   ];
 
@@ -510,13 +636,68 @@ Toque este loop lento para treinar seu ouvido rítmico a discernir a mudança de
 **Dm7 (2 compassos) → G7 (2 compassos) → C7M (4 compassos)**
 
 Perceba como o som começa introspectivo no **Dm7**, ganha uma urgência ansiosa no **G7** e descansa incrivelmente pacífico ao pousar no **C7M**!`
+    },
+    {
+      id: "les-int9",
+      title: "CAGED Menor: Mapeando Acordes Menores",
+      category: "theory",
+      description: "Adapte as 5 fôrmas móveis do sistema CAGED para acordes menores de fôrma livre.",
+      order: 9,
+      contentMarkdown: `O sistema CAGED não serve apenas para acordes maiores! Quase todos os violonistas de nível intermediário dominam as pestanas maiores, mas travam ao tentar transportar acordes menores em outras regiões do braço. 
+
+Nesta lição, vamos aprender a transpor as correspondências menores das 5 fôrmas básicas.
+
+---
+
+### 1. As 5 Fôrmas Menores Abertas Equivalentas
+Embora a palavra "CAGED" utilize as letras dos acordes maiores, cada uma possui um formato menor aberto bem conhecido:
+- **C** (Dó maior) vira **Cm** (Dó menor - executado na 3ª casa na fôrma de Am)
+- **A** (Lá maior) vira **Am** (Lá menor)
+- **G** (Sol maior) vira **Gm** (Sol menor)
+- **E** (Mi maior) vira **Em** (Mi menor)
+- **D** (Ré maior) vira **Dm** (Ré menor)
+
+---
+
+### 2. Mapeamento das Fôrmas Menores mais Importantes
+
+#### A. A Fôrma de Am (Lá Menor Móvel) - Tônica na 5ª Corda
+É a fôrma menor móvel mais popular do mundo. 
+- Para fazer o acorde de **Dó Menor (Cm)**: monte uma pestana na **Casa 3** e faça o formato de Lá Menor à frente.
+- **Digitação**: \`X - 3 - 5 - 5 - 4 - 3\`
+
+#### B. A Fôrma de Em (Mi Menor Móvel) - Tônica na 6ª Corda
+É a segunda fôrma mais usada, ideal para canções de rock e MPB de peso.
+- Para fazer o acorde de **Sol Menor (Gm)**: monte uma pestana na **Casa 3** e faça o formato de Mi Menor (folgue o dedo 2).
+- **Digitação**: \`3 - 5 - 5 - 3 - 3 - 3\`
+
+#### C. A Fôrma de Dm (Ré Menor Móvel) - Tônica na 4ª Corda
+Excelente para sonoridades mais brilhantes nas três primeiras cordas, muito usada no flamenco e dedilhados jazzísticos.
+- Para fazer o acorde de **Fá Menor (Fm)** em fôrma de Dm: suba 3 casas e mude as notas.
+- **Digitação**: \`X - X - 3 - 5 - 6 - 4\` (Pestana curta nas primeiras cordas)
+
+#### D. A Fôrma de Gm e Cm Móveis
+Esses formatos inteiros são menos utilizados em pestanas completas por exigirem lances e aberturas de dedos muito desconfortáveis (como a fôrma de Gm aberta). 
+- **O Segredo Profissional**: Toque apenas partes (tríades) dessas fôrmas nas cordas do meio!
+- Exemplo de **Dó Menor (Cm)** na fôrma de **Gm**: toque apenas as cordas 4, 3 e 2 na Casa 5 (\`X - 5 - 5 - 5 - X - X\`). Isso soará limpo e poupará sua mão fisicamente!
+
+---
+
+### 3. Exercício Prático do CAGED Menor
+Para fixar esses desenhos, toque a seguinte progressão usando fôrmas móveis diferentes para o mesmo tom menor de **Am (Lá Menor)**:
+
+1. Toque **Am** aberto (Fôrma de Lá Menor comum).
+2. Toque **Am** na fôrma de **Em** (Pestana na Casa 5 e formato de Mi menor).
+3. Toque **Am** na fôrma de **Dm** (Formato de Ré Menor na Casa 7).
+
+*Dica IA:* Sentir o mesmo tom "andar" pelo braço em três oitavas e timbres variados abrirá seus ouvidos de forma definitiva!`
     }
   ];
 
   // Original advanced lessons
   const advancedLessons = [
     {
-      id: "les-7",
+      id: "les-adv1",
       title: "Síncope Brasileira e Harmonia de Bossa Nova",
       category: "technique",
       description: "Desvende acordes complexos com extensões e o marcante balanço de João Gilberto.",
@@ -541,7 +722,7 @@ Pratique a sequência rítmica abafando as cordas no início:
 *Conselho musical:* Pratique lentamente batendo o pé no chão no tempo de metrônomo 60 BPM para fixar o sincopado sem correr.`
     },
     {
-      id: "les-8",
+      id: "les-adv2",
       title: "Escala Pentatônica e Solarização",
       category: "theory",
       description: "Abra as asas da improvisação no braço inteiro com o mapa mais amado dos guitarristas.",
@@ -977,6 +1158,71 @@ Substitua uma cadência pop básica (\`A -> F#m -> D -> E\`) por tétrades e ext
 **A7M  →  F#m7(9)  →  Bm7(9)  →  E7(9,13)  →  A7M**
 
 Toque com o polegar tocando o baixo e os dedos I, M, A agindo como puxadas sincopadas nos contra-tempos. Sinta a incrível doçura e maturidade harmônica dessa sequência e incorpore esse conhecimento às suas composições!`
+    },
+    {
+      id: "les-adv11",
+      title: "CAGED Master: Tétrades e Arpejos do Sistema",
+      category: "theory",
+      description: "Integre as sétimas (tétrades) nas fôrmas móveis e mapeie os arpejos correspondentes ao longo de todo o braço.",
+      order: 11,
+      contentMarkdown: `Até o momento, vimos o sistema CAGED sob a perspectiva de tríades simples. Mas para arranjistas e improvisadores profissionais de Jazz, Fusion, MPB e Pop, o verdadeiro poder do CAGED desabrocha quando integramos **Tétrades** e seus **Arpejos de escala correspondentes**.
+
+---
+
+### 1. Transformando o Desenho em Tétrades (Sétimas)
+Ao invés de ver a fôrma apenas como acordes maiores comuns, podemos posicionar as Sétimas Maiores ou Menores de forma relacional.
+
+Observe como posicionar Sétimas Maiores (7M) nos dois shapes prediletos de pestana móvel:
+
+- **Na Fôrma de E (Mi Móvel) - Exemplo de Sol Maior com 7M (G7M)**:
+  - Tônica na 6ª corda, Casa 3.
+  - Sétima Maior (Fá#) adicionada na 4ª corda, Casa 4.
+  - **Digitação**: \`3 - X - 4 - 4 - 3 - X\` (Som de jazz, pulando cordas graves)
+
+- **Na Fôrma de A (Lá Móvel) - Exemplo de Dó Maior com 7M (C7M)**:
+  - Tônica na 5ª corda, Casa 3.
+  - Sétima Maior (Si) adicionada na 3ª corda, Casa 4.
+  - **Digitação**: \`X - 3 - 5 - 4 - 5 - 3\`
+
+---
+
+### 2. Mapeando Arpejos Dentro do CAGED
+Arpejo significa tocar as notas de um acorde individualmente, uma após a outra (Tônica - Terça - Quinta - Sétima). Se você sabe os formatos físicos de acordes móveis do CAGED, você já sabe onde seus dedos devem pousar para solar em cima de qualquer acorde!
+
+#### O Arpejo de Sol Maior com Sétima Maior (G7M) - Fôrma de E (Mi)
+Aqui estão as exatas notas do acorde de Sol Maior com 7M nos arredores da Casa 3, percorrido dedilhado a dedilhado:
+
+\`\`\`text
+1ª Corda (Mizinha): |---------|---(2 - Fá#)---|---(3 - Sol)---| (Dedos 1 e 2)
+2ª Corda (Si):      |---------|---(3 - Ré)----|---------------| (Dedo 2)
+3ª Corda (Sol):     |---------|---------------|---(4 - Si)----| (Dedo 3)
+4ª Corda (Ré):      |---------|---------------|---(4 - Fá#)---| (Dedo 3)
+5ª Corda (Lá):      |---------|---(2 - Si)----|---(5 - Ré)----| (Dedos 1 e 4)
+6ª Corda (Mizão):   |---------|---(3 - Sol)---|---------------| (Dedo 2)
+Casas:                Casa 2      Casa 3          Casa 5
+\`\`\`
+
+#### O Arpejo de Dó Maior com Sétima Maior (C7M) - Fôrma de A (Lá)
+Notas nos arredores da Casa 3 (Tônica na 5ª corda):
+
+\`\`\`text
+1ª Corda (Mizinha): |---------|---(3 - Sol)---|---------------| (Dedo 1)
+2ª Corda (Si):      |---------|---------------|---(5 - Mi)----| (Dedo 3)
+3ª Corda (Sol):     |---------|---------------|---(4 - Si)----| (Dedo 2)
+4ª Corda (Ré):      |---------|---------------|---(5 - Sol)---| (Dedo 3)
+5ª Corda (Lá):      |---------|---(3 - Dó)----|---------------| (Dedo 1)
+Casas:                Casa 2      Casa 3          Casa 5
+\`\`\`
+
+---
+
+### 3. Rotina Avançada de Improviso
+Para solar livremente usando o conceito CAGED master:
+1. Monte um loop rítmico lento no metrônomo alternando entre os graus: **G7M** (em formato de E na Casa 3) e **C7M** (em formato de A na Casa 3).
+2. Toque as notas sequenciais dos arpejos de cima de cada um desses acordes mostrados acima.
+3. Comece a misturar a ordem das notas (por exemplo: Tônica -> Quinta -> Terça -> Sétima) para criar pequenos frases melódicas (licks).
+
+*Visão Suprema:* Você não precisa de escalas gigantes para solar. O melhor improvisador é aquele que toca os arpejos de cada acorde acompanhando a harmonia em tempo real!`
     }
   ];
 
@@ -998,8 +1244,8 @@ Toque com o polegar tocando o baixo e os dedos I, M, A agindo como puxadas sinco
 // Seed level quiz questions
 try {
   const checkQuestionsCount = db.prepare("SELECT COUNT(*) as count FROM level_test_questions").get() as any;
-  if (!checkQuestionsCount || checkQuestionsCount.count < 15) {
-    console.log("[Database] Semeando tabela completa de perguntas do quiz no SQLite (18 questões)...");
+  if (!checkQuestionsCount || checkQuestionsCount.count < 21) {
+    console.log("[Database] Semeando tabela completa de perguntas do quiz no SQLite (21 questões)...");
     db.prepare("DELETE FROM level_test_questions").run();
     const insertQuestion = db.prepare(`
       INSERT INTO level_test_questions (level, question, options, correct_index, explanation)
@@ -1007,6 +1253,19 @@ try {
     `);
 
     // Iniciante
+    insertQuestion.run(
+      "Iniciante",
+      "O que significa a sigla do método 'CAGED' amplamente utilizado para mapear o braço do violão?",
+      JSON.stringify([
+        "Uma abreviação para os acordes maiores abertos: C (Dó), A (Lá), G (Sol), E (Mi) e D (Ré)",
+        "O nome do criador do método de dedilhado moderno",
+        "Uma afinação alternativa usada no flamenco e blues",
+        "A nomenclatura internacional para cordas de aço pesadas"
+      ]),
+      0,
+      "A sigla CAGED refere-se aos 5 formatos/desenhos básicos de acordes maiores abertos (Dó, Lá, Sol, Mi e Ré). Movendo estas fôrmas com pestanas, você consegue tocar qualquer acorde em todo o braço do violão."
+    );
+
     insertQuestion.run(
       "Iniciante",
       "No violão de 6 cordas padrão, qual é o nome e a afinação da corda mais grossa (6ª corda)?",
@@ -1134,6 +1393,14 @@ try {
       "Uma tríade menor é composta pela Tônica (grau I), Terça Menor (grau bIII - que dá o caráter triste/melancólico) e Quinta Justa (grau V)."
     );
 
+    insertQuestion.run(
+      "Intermediário",
+      "No Sistema CAGED, se você quiser tocar o acorde de Dó Maior (C) usando o formato físico de Lá Maior (A), em qual casa do violão deve ser posicionada a pestana?",
+      JSON.stringify(["Na 1ª casa", "Na 3ª casa", "Na 5ª casa", "Na 7ª casa"]),
+      1,
+      "Para fazer o acorde de Dó Maior (C) usando a fôrma de Lá Maior (A), deslocamos o desenho de Lá de forma que a tônica (que fica na 5ª corda) seja a nota Dó. Como a nota Dó na 5ª corda está na 3ª casa, a pestana deve ser montada na 3ª casa!"
+    );
+
     // Avançado
     insertQuestion.run(
       "Avançado",
@@ -1208,7 +1475,20 @@ try {
       "A escala de Blues (Pentablues) é formada pela pentatônica menor acrescida da 'Blue Note', que é a 4ª aumentada (ou 5ª diminuta), trazendo aquele som clássico e melancólico do Blues."
     );
 
-    console.log("[Database] Tabela completa de perguntas do quiz (18 questões) semeada com sucesso no SQLite.");
+    insertQuestion.run(
+      "Avançado",
+      "No mapeamento do braço através do Sistema CAGED, de que maneira se conectam as fôrmas vizinhas de Dó (C) e Lá (A)?",
+      JSON.stringify([
+        "Elas compartilham a mesma nota tônica localizada na 5ª corda",
+        "Elas compartilham a tônica localizada na 6ª corda",
+        "Elas não possuem nenhuma tônica em comum",
+        "Suas tônicas ficam separadas por um intervalo de quinta justa"
+      ]),
+      0,
+      "Os formatos adjacentes do Sistema CAGED se conectam compartilhando pontos comuns. O formato de C e o formato de A compartilham a exata mesma nota tônica localizada na 5ª corda (raiz comum)."
+    );
+
+    console.log("[Database] Tabela completa de perguntas do quiz (21 questões) semeada com sucesso no SQLite.");
   }
 } catch (e) {
   console.error("[Database] Erro ao semear perguntas do quiz:", e);
@@ -1290,6 +1570,91 @@ try {
   console.error("[Database] Erro ao semear videoaulas:", e);
 }
 
+// Seed helper student questions and explanation videos
+try {
+  const checkQuestionsCount = db.prepare("SELECT COUNT(*) as count FROM student_questions").get() as any;
+  if (!checkQuestionsCount || checkQuestionsCount.count === 0) {
+    console.log("[Database] Semeando dúvidas e perguntas do fórum no SQLite...");
+    const insertQuestion = db.prepare(`
+      INSERT INTO student_questions (user_email, level, title, question, answer, video_url, video_title, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    // Iniciante
+    insertQuestion.run(
+      "professor@violao.com",
+      "Iniciante",
+      "Como afinar o violão de ouvido se eu não tiver nenhum afinador por perto?",
+      "No início parece impossível, mas é uma habilidade que você desenvolve rápido! O método clássico é usar a afinação relativa. Como fazer?",
+      "Comece encontrando uma referência para dar a nota da 6ª corda solta (Mi). Depois, pressione a 5ª casa da 6ª corda: essa nota deve soar idêntica à 5ª corda solta. Repita para as outras cordas (5ª casa da 5ª corda = 4ª solta; 5ª casa da 4ª corda = 3ª solta; 4ª casa da 3ª corda = 2ª solta; 5ª casa da 2ª corda = 1ª solta).",
+      "https://www.youtube.com/embed/n30D-Y5eU3c",
+      "Como afinar o violão de ouvido (AULA COMPLETA)",
+      new Date().toISOString()
+    );
+
+    insertQuestion.run(
+      "professor@violao.com",
+      "Iniciante",
+      "Meus dedos doem muito ao pressionar as cordas! O que fazer?",
+      "É normal sentir essa dorzinha nos primeiros dias enquanto a ponta dos seus dedos ainda está muito macia e os calos protetores não se formaram.",
+      "A principal recomendação é praticar intervalos mais curtos todos os dias (ex: 15 a 20 minutos por dia) em vez de estudar 2 horas de uma só vez. Além disso, verifique se você não está usando força em excesso de forma desnecessária; aperte a nota o mais próximo possível do traste de metal, que exige bem menos esforço.",
+      "https://www.youtube.com/embed/SgXMIpW8tjs",
+      "Dicas fundamentais sobre a postura e dores nos dedos",
+      new Date().toISOString()
+    );
+
+    // Intermediário
+    insertQuestion.run(
+      "professor@violao.com",
+      "Intermediário",
+      "Como dominar a pestana e fazê-la soar perfeitamente limpa sem doer tanto?",
+      "Essa é a maior barreira para quem está subindo de nível! O segredo clínico não está na força bruta do indicador, mas sim na técnica e alavancagem.",
+      "Primeiro: não use a parte da 'frente' mole do seu indicador. Gire o dedo indicador levemente para fora, utilizando a borda lateral externa, que é mais óssea e rígida. Segundo: ajuste a altura do dedão (polegar) atrás do braço, deixando-o bem centralizado. Terceiro: certifique-se de que a regulagem das cordas do seu violão (nut e rastilho) não está excessivamente alta.",
+      "https://www.youtube.com/embed/fexn6l6tT_w",
+      "Domine a pestana de uma vez por todas (Segredos)",
+      new Date().toISOString()
+    );
+
+    insertQuestion.run(
+      "professor@violao.com",
+      "Intermediário",
+      "Como posso usar a famosa Escala Pentatônica para começar a Solar no violão?",
+      "A escala pentatônica é a mais famosa e amigável para solos porque ela remove as notas de intervalos tensos, permitindo improvisos sempre afinados.",
+      "Comece aprendendo o Desenho 1 da escala pentatônica menor (ex: em Lá Menor). Pratique subir e descer a escala mantendo um ritmo constante com metrônomo a 60 bpm. Assim que solar as notas em sequência estiver fluido, tente criar melodias intercalando as notas e aplicando pequenos ligados (hammer-on e pull-off) sobre uma base harmônica menor.",
+      "https://www.youtube.com/embed/7r-A7R4O7F0",
+      "Como usar a Pentatônica para Improvisar do Zero",
+      new Date().toISOString()
+    );
+
+    // Avançado
+    insertQuestion.run(
+      "professor@violao.com",
+      "Avançado",
+      "Como funciona a rearmonização funcional de músicas e aplicação de Tétrades?",
+      "Estudar harmonia avançada no violão significa expandir os acordes de tríades básicas para tétrades ricamente coloridas (com 7ª maior, menor, 9ª, 11ª, e outras tensões).",
+      "Para rearmonizar, identifique a função harmônica do acorde original (Tônica, Subdominante ou Dominante) e substitua-o por outro acorde da mesma família (ex: trocar C por Am7 ou Em7). Introduza acordes de passagem como diminutos ou faça conexões usando acordes de empréstimo modal (A.E.M). Assista à aula de harmonia aplicada para ver exemplos no violão.",
+      "https://www.youtube.com/embed/K8U2Fp3jH50",
+      "Como rearmonizar e aplicar harmonia funcional no violão",
+      new Date().toISOString()
+    );
+
+    insertQuestion.run(
+      "professor@violao.com",
+      "Avançado",
+      "Qual o padrão rítmico definitivo para tocar Bossa Nova e MPB?",
+      "Toque com síncope! Diferente de batidas retas de pop ou rock, a Bossa Nova tem um balanço sofisticado onde o polegar e os dedos agudos se comportam de maneira independente.",
+      "O polegar atua marcando as fundamentais dos acordes (simulando a batida do surdo no samba), ocorrendo nos tempos fortes. Enquanto isso, o conjunto de dedos indicador, médio e anelar (I-M-A) puxa as cordas agudas de forma sincopada, criando contratempos. Pratique puxar o acorde exatamente no contra-tempo do baixo e segurar a nota.",
+      "https://www.youtube.com/embed/D3sO_MbeR2c",
+      "Levada de Bossa Nova profissional com síncope e baixos",
+      new Date().toISOString()
+    );
+
+    console.log("[Database] Tabela de dúvidas e perguntas semeada com sucesso.");
+  }
+} catch (e) {
+  console.error("[Database] Erro ao semear perguntas e dúvidas:", e);
+}
+
 // Seed default test student account so it works out of the box
 try {
   const insertUser = db.prepare(`
@@ -1327,6 +1692,391 @@ try {
   console.log("[Database] Contas iniciais semeadas com sucesso no SQLite.");
 } catch (error) {
   console.error("[Database] Erro ao semear contas iniciais:", error);
+}
+
+// Seed harmonic fields & chords
+try {
+  const checkFields = db.prepare("SELECT COUNT(*) as count FROM harmonic_fields").get() as any;
+  if (!checkFields || checkFields.count < 24) {
+    console.log("[Database] Semeando tabela completa de campos harmônicos (todas as tonalidades)...");
+    // Clear existing to avoid duplicate conflicts
+    db.prepare("DELETE FROM harmonic_field_chords").run();
+    db.prepare("DELETE FROM harmonic_fields").run();
+
+    const insertField = db.prepare(`
+      INSERT INTO harmonic_fields (field_key, main_chord, description)
+      VALUES (?, ?, ?)
+    `);
+
+    const insertFieldChord = db.prepare(`
+      INSERT INTO harmonic_field_chords (field_id, degree, chord_name, role, description)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+
+    // Define harmonic field records to seed
+    const fieldsToSeed = [
+      {
+        key: "Dó Maior (C)",
+        mainChord: "C",
+        description: "O campo mais básico e brilhante do violão. Não possui nenhum sustenido (#) ou bemol (b). Perfeito para baladas doces e pop acústico.",
+        chords: [
+          { degree: "I", chordName: "C", role: "Tônica", description: "Acorde de repouso e resolução principal." },
+          { degree: "I7M", chordName: "C7M", role: "Tônica", description: "Variação sofisticada do primeiro grau (Bossa Nova)." },
+          { degree: "IIm", chordName: "Dm", role: "Subdominante", description: "Prepara o caminho, gerando um som suave de transição." },
+          { degree: "IIIm", chordName: "Em", role: "Tônica (Atuante)", description: "Grau melancólico subordinado ao repouso." },
+          { degree: "IV", chordName: "F", role: "Subdominante", description: "Gera sensação de suspensão e afastamento da tônica." },
+          { degree: "V", chordName: "G", role: "Dominante", description: "Acorde de tensionamento forte que exige resolução voltando ao C." },
+          { degree: "V7", chordName: "G7", role: "Dominante", description: "Tensão máxima com trítono clássico de preparação dominante." },
+          { degree: "VIm", chordName: "Am", role: "Tônica (Atuante)", description: "Relativo menor oficial. Excelente para pontes reflexivas." },
+          { degree: "VIIm7(b5)", chordName: "Bm7(b5)", role: "Dominante Pas.", description: "Meio-diminuto que adiciona dramaticidade jazzística." }
+        ]
+      },
+      {
+        key: "Dó Sustenido Maior (C#)",
+        mainChord: "C#",
+        description: "Tonalidade com sonorizaçao brilhante e cheia, rica em sustenidos. Possui 7 sustenidos.",
+        chords: [
+          { degree: "I", chordName: "C#", role: "Tônica", description: "Grau de estabilidade e repouso principal." },
+          { degree: "IIm", chordName: "D#m", role: "Subdominante", description: "Excelente para caminhos de passagem suave." },
+          { degree: "IIIm", chordName: "Fm", role: "Tônica", description: "Grau que serve como substituto suave da tônica." },
+          { degree: "IV", chordName: "F#", role: "Subdominante", description: "Gera afastamento e sensação de amplitude." },
+          { degree: "V", chordName: "G#", role: "Dominante", description: "Tensão clássica para preparar o repouso absoluto no C#." },
+          { degree: "V7", chordName: "G#7", role: "Dominante", description: "Tensão máxima que puxa fortemente para a tônica." },
+          { degree: "VIm", chordName: "A#m", role: "Tônica", description: "Relativo menor que acrescenta sobriedade." }
+        ]
+      },
+      {
+        key: "Ré Maior (D)",
+        mainChord: "D",
+        description: "Excelente para ritmos rápidos, pop nacional e rock. Possui 2 sustenidos (Fá# e Dó#).",
+        chords: [
+          { degree: "I", chordName: "D", role: "Tônica", description: "Alegre e extremamente vibrante." },
+          { degree: "I7M", chordName: "D7M", role: "Tônica", description: "Textura aveludada romântica." },
+          { degree: "IIm", chordName: "Em", role: "Subdominante", description: "Passagem fácil e de som redondo de dedilhado." },
+          { degree: "IIIm", chordName: "F#m", role: "Tônica", description: "Contraste sereno e nostálgico." },
+          { degree: "IV", chordName: "G", role: "Subdominante", description: "Contrapeso robusto e aberto." },
+          { degree: "V", chordName: "A", role: "Dominante", description: "Encaminhamento direto e tenso rumo ao repouso." },
+          { degree: "V7", chordName: "A7", role: "Dominante", description: "Tensão clássica indispensável de blues acústico." },
+          { degree: "VIm", chordName: "Bm", role: "Tônica", description: "Relativo menor dramático que fecha bem estrofes." }
+        ]
+      },
+      {
+        key: "Mi Bemol Maior (Eb)",
+        mainChord: "Eb",
+        description: "Tonalidade com sonoridade aveludada e profunda, bastante usada em metais e arranjos sofisticados.",
+        chords: [
+          { degree: "I", chordName: "Eb", role: "Tônica", description: "Estabilidade principal da tonalidade com som encorpado." },
+          { degree: "IIm", chordName: "Fm", role: "Subdominante", description: "Preparador melancólico de harmonia." },
+          { degree: "IIIm", chordName: "Gm", role: "Tônica", description: "Sabor reflexivo com menor estável." },
+          { degree: "IV", chordName: "Ab", role: "Subdominante", description: "Abertura aberta e cheia de ar." },
+          { degree: "V", chordName: "Bb", role: "Dominante", description: "Empurrão de tensão harmônica." },
+          { degree: "V7", chordName: "Bb7", role: "Dominante", description: "Preparador essencial para resolver no Eb." },
+          { degree: "VIm", chordName: "Cm", role: "Tônica", description: "Relativo menor expressivo e nostálgico." }
+        ]
+      },
+      {
+        key: "Mi Maior (E)",
+        mainChord: "E",
+        description: "A tonalidade preferida dos tocadores de blues de Chicago, folk e modas de viola. 4 sustenidos (Fá#, Dó#, Sol# e Ré#).",
+        chords: [
+          { degree: "I", chordName: "E", role: "Tônica", description: "Som poderoso aproveitando todos os graves do violão de 6 cordas." },
+          { degree: "IIm", chordName: "F#m", role: "Subdominante", description: "Acorde de suporte indispensável." },
+          { degree: "IIIm", chordName: "C#m", role: "Tônica", description: "Nostalgias de menor relativo." },
+          { degree: "IV", chordName: "A", role: "Subdominante", description: "Mudança aberta com os agudos livres." },
+          { degree: "V", chordName: "B", role: "Dominante", description: "Tensão com abertura rítmica." },
+          { degree: "V7", chordName: "B7", role: "Dominante", description: "A fôrma aberta de B7 gera uma das tensões mais ricas do violão." }
+        ]
+      },
+      {
+        key: "Fá Maior (F)",
+        mainChord: "F",
+        description: "Uma tonalidade robusta que exige pestana forte no violão, proporcionando canções encorpadas e expressivas.",
+        chords: [
+          { degree: "I", chordName: "F", role: "Tônica", description: "Base tônica com peso e sustentação na pestana." },
+          { degree: "IIm", chordName: "Gm", role: "Subdominante", description: "Sonoridade suavemente sombria de preparação." },
+          { degree: "IIIm", chordName: "Am", role: "Tônica", description: "Alternativa melancólica e levemente estável." },
+          { degree: "IV", chordName: "Bb", role: "Subdominante", description: "Abertura de espaço e frescor melódico de passagem." },
+          { degree: "V", chordName: "C", role: "Dominante", description: "Tensão luminosa de encaminhamento." },
+          { degree: "V7", chordName: "C7", role: "Dominante", description: "Preparação dominante perfeita para voltar ao repouso no F." },
+          { degree: "VIm", chordName: "Dm", role: "Tônica", description: "Relativo menor oficial que confere drama e emoção." }
+        ]
+      },
+      {
+        key: "Fá Sustenido Maior (F#)",
+        mainChord: "F#",
+        description: "Tonalidade ultra vibrante e complexa, com pestanas e timbres brilhantes no violão.",
+        chords: [
+          { degree: "I", chordName: "F#", role: "Tônica", description: "Grande brilho e estabilidade harmônica." },
+          { degree: "IIm", chordName: "G#m", role: "Subdominante", description: "Gesto clássico de avanço e suspensão." },
+          { degree: "IIIm", chordName: "A#m", role: "Tônica", description: "Contraponto estável romântico menor." },
+          { degree: "IV", chordName: "B", role: "Subdominante", description: "Abertura cheia e limpa." },
+          { degree: "V", chordName: "C#", role: "Dominante", description: "Tensão de impulsão clássica." },
+          { degree: "V7", chordName: "C#7", role: "Dominante", description: "Tensão total para retorno glorioso à tônica F#." },
+          { degree: "VIm", chordName: "D#m", role: "Tônica", description: "Relativo de extrema melancolia." }
+        ]
+      },
+      {
+        key: "Sol Maior (G)",
+        mainChord: "G",
+        description: "Um dos campos harmônicos mais populares no violão folk e sertanejo universitário. Contém 1 sustenido (Fá#).",
+        chords: [
+          { degree: "I", chordName: "G", role: "Tônica", description: "Base feliz e sólida da tonalidade." },
+          { degree: "I7M", chordName: "G7M", role: "Tônica", description: "Som ultra-relaxante de fim de tarde." },
+          { degree: "IIm", chordName: "Am", role: "Subdominante", description: "Transição suave e melancólica." },
+          { degree: "IIIm", chordName: "Bm", role: "Tônica", description: "Ponto triste de estabilidade harmônica menor." },
+          { degree: "IV", chordName: "C", role: "Subdominante", description: "Abertura de espaço e frescor melódico." },
+          { degree: "V", chordName: "D", role: "Dominante", description: "Arremates de tensão brilhantes." },
+          { degree: "V7", chordName: "D9", role: "Dominante", description: "A nona adiciona luxo resolvendo de volta no Sol." },
+          { degree: "VIm", chordName: "Em", role: "Tônica", description: "Relativo melancólico de peso extremo." }
+        ]
+      },
+      {
+        key: "Lá Bemol Maior (Ab)",
+        mainChord: "Ab",
+        description: "Tonalidade doce e calorosa, de timbre fechado e aveludado.",
+        chords: [
+          { degree: "I", chordName: "Ab", role: "Tônica", description: "Tonalidade principal com timbre encorpado." },
+          { degree: "IIm", chordName: "Bbm", role: "Subdominante", description: "Passagem melindrosa e intimista." },
+          { degree: "IIIm", chordName: "Cm", role: "Tônica", description: "Tonalidade menor melancólica de estabilidade." },
+          { degree: "IV", chordName: "Db", role: "Subdominante", description: "Efeito amplo de abertura de ar." },
+          { degree: "V", chordName: "Eb", role: "Dominante", description: "Vigor com tensão que empurra de volta." },
+          { degree: "V7", chordName: "Eb7", role: "Dominante", description: "Preparador mestre para resolução suave." },
+          { degree: "VIm", chordName: "Fm", role: "Tônica", description: "Relativo apaixonado e melancólico menor." }
+        ]
+      },
+      {
+        key: "Lá Maior (A)",
+        mainChord: "A",
+        description: "Muito utilizado no blues, rock clássico e na Bossa Nova tradicional. Possui 3 sustenidos (Fá#, Dó# e Sol#).",
+        chords: [
+          { degree: "I", chordName: "A", role: "Tônica", description: "Acorde encorpado com os baixos na 5ª corda solta." },
+          { degree: "I7M", chordName: "A7M", role: "Tônica", description: "Chave harmônica favorita dos amantes de Bossa Nova." },
+          { degree: "IIm", chordName: "Bm", role: "Subdominante", description: "Pestana refinada de preparação." },
+          { degree: "IIIm", chordName: "C#m", role: "Tônica", description: "Sensação reflexiva e intimista." },
+          { degree: "IV", chordName: "D", role: "Subdominante", description: "Aperto vibrante de expansão." },
+          { degree: "V", chordName: "E", role: "Dominante", description: "Preparador fundamental carregado de brilho." },
+          { degree: "V7", chordName: "E7(9)", role: "Dominante", description: "Tensão com sabor de lounge jazz e brasilidade." },
+          { degree: "VIm", chordName: "F#m", role: "Tônica", description: "Balanço melódico suave e elegante." }
+        ]
+      },
+      {
+        key: "Si Bemol Maior (Bb)",
+        mainChord: "Bb",
+        description: "Excelente para canções de MPB, Bossa Nova e jazz acústico. Possui 2 bemóis.",
+        chords: [
+          { degree: "I", chordName: "Bb", role: "Tônica", description: "Grande profundidade, muito macio e elegante." },
+          { degree: "IIm", chordName: "Cm", role: "Subdominante", description: "Ponto de passagem redondo menor." },
+          { degree: "IIIm", chordName: "Dm", role: "Tônica", description: "Melancolia reconfortante de suporte estável." },
+          { degree: "IV", chordName: "Eb", role: "Subdominante", description: "Contrabalanço de ar que amplia a harmonia." },
+          { degree: "V", chordName: "F", role: "Dominante", description: "Tensão luminosa clássica." },
+          { degree: "V7", chordName: "F7", role: "Dominante", description: "Tensão com tritono perfeito de retorno para Bb." },
+          { degree: "VIm", chordName: "Gm", role: "Tônica", description: "Relativo menor oficial forte e solene." }
+        ]
+      },
+      {
+        key: "Si Maior (B)",
+        mainChord: "B",
+        description: "Possui brilho penetrante e timbre muito vivo no violão. 5 sustenidos.",
+        chords: [
+          { degree: "I", chordName: "B", role: "Tônica", description: "Base brilhante e cheia de energia harmônica." },
+          { degree: "IIm", chordName: "C#m", role: "Subdominante", description: "Ponto clássico menor de suporte rítmico." },
+          { degree: "IIIm", chordName: "D#m", role: "Tônica", description: "Grau melancólico com afinação rica." },
+          { degree: "IV", chordName: "E", role: "Subdominante", description: "Abertura limpa de grande amplitude." },
+          { degree: "V", chordName: "F#", role: "Dominante", description: "Preparação brilhante e incisiva." },
+          { degree: "V7", chordName: "F#7", role: "Dominante", description: "Tensão dominante irresistível puxando para o si." },
+          { degree: "VIm", chordName: "G#m", role: "Tônica", description: "Relativo que confere drama denso." }
+        ]
+      },
+      {
+        key: "Dó Menor (Cm)",
+        mainChord: "Cm",
+        description: "Sonoridade dramática e densa, excelente para expressar sentimentos misteriosos ou solenes.",
+        chords: [
+          { degree: "Im", chordName: "Cm", role: "Tônica", description: "Fundação escura de enorme dramaticidade." },
+          { degree: "IIm7(b5)", chordName: "Dm7(b5)", role: "Subdominante", description: "Prepara com angústia de meio-diminuto." },
+          { degree: "bIII", chordName: "Eb", role: "Tônica", description: "O refúgio tônico maior brilhante e alegre." },
+          { degree: "IVm", chordName: "Fm", role: "Subdominante", description: "Suporte melancólico clássico e sombrio." },
+          { degree: "Vm", chordName: "Gm", role: "Dominante Natural", description: "Transição suave de clima nórdico." },
+          { degree: "V7", chordName: "G7", role: "Dominante Harmônico", description: "Força dramática imperativa de retorno ao repouso." },
+          { degree: "bVI", chordName: "Ab", role: "Subdominante", description: "Aumento de dinâmica épica e inspiradora." },
+          { degree: "bVII", chordName: "Bb", role: "Dominante", description: "Caminho natural de glória maior." }
+        ]
+      },
+      {
+        key: "Dó Sustenido Menor (C#m)",
+        mainChord: "C#m",
+        description: "Um dos tons menores favoritos para violão acústico e pop rock. Muito expressivo e fácil encaixe harmônico.",
+        chords: [
+          { degree: "Im", chordName: "C#m", role: "Tônica", description: "Melancolia robusta, linda dedilhada de passagem." },
+          { degree: "IIm7(b5)", chordName: "D#m7(b5)", role: "Subdominante", description: "Tensão meio-diminuta elegante." },
+          { degree: "bIII", chordName: "E", role: "Tônica", description: "Passagem aberta e iluminada de tônica maior." },
+          { degree: "IVm", chordName: "F#m", role: "Subdominante", description: "Cria atmosfera de recolhimento e profundidade." },
+          { degree: "Vm", chordName: "G#m", role: "Dominante Natural", description: "Base límpida e repousante suave menor." },
+          { degree: "V7", chordName: "G#7", role: "Dominante Harmônico", description: "Clássico preparador dominante de forte retorno." },
+          { degree: "bVI", chordName: "A", role: "Subdominante", description: "Abertura tônica com grande fôlego acústico." },
+          { degree: "bVII", chordName: "B", role: "Dominante", description: "Força de transição brilhante." }
+        ]
+      },
+      {
+        key: "Ré Menor (Dm)",
+        mainChord: "Dm",
+        description: "Tonalidade preferida para baladas profundas, canções renascentistas e músicas de clima misterioso.",
+        chords: [
+          { degree: "Im", chordName: "Dm", role: "Tônica", description: "O acorde mais triste possível, segundo cientistas harmônicos." },
+          { degree: "Im9", chordName: "Dm9", role: "Tônica", description: "Sublime para músicas acústicas modernas estilo lofi." },
+          { degree: "bIII", chordName: "F", role: "Tônica", description: "Abertura acolhedora de esperança." },
+          { degree: "IVm", chordName: "Gm", role: "Subdominante", description: "Dramático e clássico de canções românticas." },
+          { degree: "Vm", chordName: "Am", role: "Dominante Natural", description: "Clima limpo, nórdico ou medieval." },
+          { degree: "V7", chordName: "A7", role: "Dominante Harmônico", description: "Prepara de forma imponente a entrada do Re Menor." },
+          { degree: "bVI", chordName: "C", role: "Tônica", description: "Ponto suave de apoio." }
+        ]
+      },
+      {
+        key: "Mi Bemol Menor (Ebm)",
+        mainChord: "Ebm",
+        description: "Pesado, misterioso e profundo. Uma tonalidade carregada de sentimento de súplica ou introspecção profunda.",
+        chords: [
+          { degree: "Im", chordName: "D#m", role: "Tônica", description: "Tônica sombria mas infinitamente expressiva." },
+          { degree: "IIm7(b5)", chordName: "Fm7(b5)", role: "Subdominante", description: "Tensão meio-diminuta complexa." },
+          { degree: "bIII", chordName: "Gb", role: "Tônica", description: "Ponto maior de repouso refrescante." },
+          { degree: "IVm", chordName: "G#m", role: "Subdominante", description: "Suporte profundo de base." },
+          { degree: "Vm", chordName: "A#m", role: "Dominante Natural", description: "Contraste pacífico e suave menor." },
+          { degree: "V7", chordName: "A#7", role: "Dominante Harmônico", description: "Fecho tenso clássico rumo à tônica." },
+          { degree: "bVI", chordName: "B", role: "Subdominante", description: "Gera energia grandiosa de libertação." }
+        ]
+      },
+      {
+        key: "Mi Menor (Em)",
+        mainChord: "Em",
+        description: "Som de peso no rock nacional, folk nórdico e baladas acústicas intensas.",
+        chords: [
+          { degree: "Im", chordName: "Em", role: "Tônica", description: "O acorde menor mais fácil e encorpado do violão." },
+          { degree: "IIm7", chordName: "F#m7", role: "Subdominante", description: "Pestana com passagem ágil de ritmo." },
+          { degree: "bIII", chordName: "G", role: "Tônica", description: "Relativo alegre que contrasta a escuridão do Em." },
+          { degree: "bIII7M", chordName: "G7M", role: "Tônica", description: "Estética suave e aberta." },
+          { degree: "IVm", chordName: "Am", role: "Subdominante", description: "Sensação de profundidade no meio da música." },
+          { degree: "Vm", chordName: "Bm7", role: "Dominante Natural", description: "Base moderna e fresca de transição." },
+          { degree: "V7", chordName: "B7", role: "Dominante Harmônico", description: "Tensão clássica e forte de resolução para Em." },
+          { degree: "bVI", chordName: "C", role: "Tônica", description: "Brilho aberto e expansivo de esperança." },
+          { degree: "bVII", chordName: "D", role: "Dominante", description: "Ponto de partida clássico de retorno para Sol maior." }
+        ]
+      },
+      {
+        key: "Fá Menor (Fm)",
+        mainChord: "Fm",
+        description: "Tonalidade melancólica extrema, com som profundo e lamentos harmônicos requintados.",
+        chords: [
+          { degree: "Im", chordName: "Fm", role: "Tônica", description: "Sabor de extrema escuridão e seriedade de timbre." },
+          { degree: "IIm7(b5)", chordName: "Gm7(b5)", role: "Subdominante", description: "Sinalizador melancólico sofisticado." },
+          { degree: "bIII", chordName: "Ab", role: "Tônica", description: "O escape alegre tônico oficial." },
+          { degree: "IVm", chordName: "Bbm", role: "Subdominante", description: "Efeito nostálgico e comovente de fado." },
+          { degree: "Vm", chordName: "Cm", role: "Dominante Natural", description: "Grau que desacelera a tensão dramaticamente." },
+          { degree: "V7", chordName: "C7", role: "Dominante Harmônico", description: "Tensão majestosa e forte imperativa sobre Fm." },
+          { degree: "bVI", chordName: "Db", role: "Subdominante", description: "Abertura épica cheia de esperança." }
+        ]
+      },
+      {
+        key: "Fá Sustenido Menor (F#m)",
+        mainChord: "F#m",
+        description: "Muito amada na música popular brasileira e pop rock de tons reflexivos e profundidade poética.",
+        chords: [
+          { degree: "Im", chordName: "F#m", role: "Tônica", description: "Postura elegante de timbre equilibrado nas pestanas." },
+          { degree: "IIm7(b5)", chordName: "G#m7(b5)", role: "Subdominante", description: "Preparador melancólico mestre." },
+          { degree: "bIII", chordName: "A", role: "Tônica", description: "Brilho relaxante e espaçoso de tônica amorosa maior." },
+          { degree: "IVm", chordName: "Bm", role: "Subdominante", description: "Suporte intimista excelente para rascunhos de compasso." },
+          { degree: "Vm", chordName: "C#m", role: "Dominante Natural", description: "Suavidade de passagem no meio de estrofes." },
+          { degree: "V7", chordName: "C#7", role: "Dominante Harmônico", description: "Gera forte empuxo espanhol direto ao repouso." },
+          { degree: "bVI", chordName: "D", role: "Subdominante", description: "Contraste bonito e expansivo aberto." }
+        ]
+      },
+      {
+        key: "Sol Menor (Gm)",
+        mainChord: "Gm",
+        description: "Elegante e melancólico, muito comum no samba antigo, choro e no jazz melancólico.",
+        chords: [
+          { degree: "Im", chordName: "Gm", role: "Tônica", description: "Repouso elegante de sabor tradicional e refinado." },
+          { degree: "IIm7(b5)", chordName: "Am7(b5)", role: "Subdominante", description: "Cadência meio-diminuta clássica brasileira." },
+          { degree: "bIII", chordName: "Bb", role: "Tônica", description: "Repouso tômico maior de brilho sofisticadamente macio." },
+          { degree: "IVm", chordName: "Cm", role: "Subdominante", description: "Delineador dramático de grande melancolia." },
+          { degree: "Vm", chordName: "Dm", role: "Dominante Natural", description: "Suave transmutação de tons." },
+          { degree: "V7", chordName: "D7", role: "Dominante Harmônico", description: "Alavanca de tensão clássica de re-resolução rápida." },
+          { degree: "bVI", chordName: "Eb", role: "Subdominante", description: "Amplitude de tom que areja as estrofes." }
+        ]
+      },
+      {
+        key: "Sol Sustenido Menor (G#m)",
+        mainChord: "G#m",
+        description: "Altamente emotiva, com timbre denso e afinação com grande coloração acústica.",
+        chords: [
+          { degree: "Im", chordName: "G#m", role: "Tônica", description: "Base escura de grande introspecção." },
+          { degree: "IIm7(b5)", chordName: "A#m7(b5)", role: "Subdominante", description: "Preparador sofisticado." },
+          { degree: "bIII", chordName: "B", role: "Tônica", description: "Teto luminoso de estabilidade maior." },
+          { degree: "IVm", chordName: "C#m", role: "Subdominante", description: "Contraste intimista menor excelente." },
+          { degree: "Vm", chordName: "D#m", role: "Dominante Natural", description: "Suave andamento melancólico." },
+          { degree: "V7", chordName: "D#7", role: "Dominante Harmônico", description: "Tensão imposta clássica." },
+          { degree: "bVI", chordName: "E", role: "Subdominante", description: "Contrapeso robusto de libertação emocional." }
+        ]
+      },
+      {
+        key: "Lá Menor (Am)",
+        mainChord: "Am",
+        description: "Tonalidade melancólica e introspectiva por excelência. Sem acidentes na armadura, mas usa acordes harmônicos ricos (como E7).",
+        chords: [
+          { degree: "Im", chordName: "Am", role: "Tônica", description: "Fundação sombria e linda das canções mais sentimentais." },
+          { degree: "Im9", chordName: "Am9", role: "Tônica", description: "Tensionado e elegante com a inclusão da nona." },
+          { degree: "IIm7(b5)", chordName: "Bm7(b5)", role: "Subdominante", description: "Acorde de desequilíbrio dramático usado na descida." },
+          { degree: "bIII", chordName: "C", role: "Tônica", description: "O repouso alternativo alegre da música." },
+          { degree: "bIII7M", chordName: "C7M", role: "Tônica", description: "Bossa nova melancólica." },
+          { degree: "IVm", chordName: "Dm", role: "Subdominante", description: "Nostalgia clássica do fado e canção popular." },
+          { degree: "Vm", chordName: "Em", role: "Dominante Natural", description: "Cria uma melancolia limpa medieval." },
+          { degree: "V7", chordName: "E7(9)", role: "Dominante Harmônico", description: "Aproximação espanhola flamenca e rítmica." },
+          { degree: "bVI", chordName: "F", role: "Subdominante", description: "Aumento emotivo épico." },
+          { degree: "bVII", chordName: "G", role: "Dominante", description: "Prepara o retorno à claridade." }
+        ]
+      },
+      {
+        key: "Si Bemol Menor (Bbm)",
+        mainChord: "Bbm",
+        description: "Uma tonalidade profunda, luxuosa e misteriosa, excelente para composições reflexivas lentas.",
+        chords: [
+          { degree: "Im", chordName: "Bbm", role: "Tônica", description: "Base tônica aveludada, escura e intimista." },
+          { degree: "IIm7(b5)", chordName: "Cm7(b5)", role: "Subdominante", description: "Cadência de passagem meio-diminuta elegante." },
+          { degree: "bIII", chordName: "Db", role: "Tônica", description: "Relativo alegre limpo de repouso." },
+          { degree: "IVm", chordName: "Ebm", role: "Subdominante", description: "Intensidade sentimental e melancólica clássica." },
+          { degree: "Vm", chordName: "Fm", role: "Dominante Natural", description: "Suavidade que acalma o drama." },
+          { degree: "V7", chordName: "F7", role: "Dominante Harmônico", description: "Tensão alta que puxa vigorosamente rumo à tônica." },
+          { degree: "bVI", chordName: "Gb", role: "Subdominante", description: "Amplitude que areja o sentimento melancólico." }
+        ]
+      },
+      {
+        key: "Si Menor (Bm)",
+        mainChord: "Bm",
+        description: "Umas das tonalidades menores mais belas no violão, extremamente usada em arranjos de violão dedilhado.",
+        chords: [
+          { degree: "Im", chordName: "Bm", role: "Tônica", description: "Sensação profunda de nostalgia e estabilidade." },
+          { degree: "IIm7(b5)", chordName: "C#m7(b5)", role: "Subdominante", description: "Prepara a cadência com toque doloroso jazzístico." },
+          { degree: "bIII", chordName: "D", role: "Tônica", description: "Equilíbrio feliz e tônico maior brilhante de passagem." },
+          { degree: "IVm", chordName: "Em", role: "Subdominante", description: "Grande suporte de graves encorpados de passagem." },
+          { degree: "Vm", chordName: "F#m", role: "Dominante Natural", description: "Conexão suave menor melancólica." },
+          { degree: "V7", chordName: "F#7", role: "Dominante Harmônico", description: "Tensão de preparação clássica indispensável." },
+          { degree: "bVI", chordName: "G", role: "Subdominante", description: "Contraste vibrante aberto de esperança." },
+          { degree: "bVII", chordName: "A", role: "Dominante", description: "Base brilhante e luminosa de transição." }
+        ]
+      }
+    ];
+
+    fieldsToSeed.forEach((field) => {
+      const fieldResult = insertField.run(field.key, field.mainChord, field.description);
+      const fieldId = fieldResult.lastInsertRowid;
+      field.chords.forEach((chord) => {
+        insertFieldChord.run(fieldId, chord.degree, chord.chordName, chord.role, chord.description);
+      });
+    });
+
+    console.log("[Database] Tabela completa de todos os 24 campos harmônicos individuais semeada com sucesso no SQLite.");
+  }
+} catch (e) {
+  console.error("[Database] Erro ao semear campos harmônicos:", e);
 }
 
 // Database helper operations
@@ -1748,6 +2498,119 @@ export const dbOperations = {
       ORDER BY level, id ASC
     `);
     return stmt.all() as any[];
+  },
+
+  getStudentQuestions(level: string) {
+    const stmt = db.prepare(`
+      SELECT * FROM student_questions
+      WHERE level = ?
+      ORDER BY id DESC
+    `);
+    return stmt.all(level) as any[];
+  },
+
+  getAllStudentQuestions() {
+    const stmt = db.prepare(`
+      SELECT * FROM student_questions
+      ORDER BY id DESC
+    `);
+    return stmt.all() as any[];
+  },
+
+  answerStudentQuestion(questionId: number, answer: string, videoUrl?: string, videoTitle?: string) {
+    const stmt = db.prepare(`
+      UPDATE student_questions
+      SET answer = ?, video_url = ?, video_title = ?
+      WHERE id = ?
+    `);
+    const result = stmt.run(answer, videoUrl || null, videoTitle || null, questionId);
+    return result.changes > 0;
+  },
+
+  addStudentQuestion(userEmail: string, level: string, title: string, question: string) {
+    const stmt = db.prepare(`
+      INSERT INTO student_questions (user_email, level, title, question, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    return stmt.run(userEmail, level, title, question, new Date().toISOString());
+  },
+
+  getChordLockStatus(userEmail?: string) {
+    const lockStmt = db.prepare("SELECT is_locked FROM system_locks WHERE lock_name = 'advanced_chords'");
+    const lockRow = lockStmt.get() as { is_locked: number } | undefined;
+    const isGlobalLocked = lockRow ? lockRow.is_locked === 1 : true;
+
+    let userLevel = "Iniciante";
+    if (userEmail) {
+      const userStmt = db.prepare("SELECT guitar_level FROM users WHERE email = ?");
+      const userRow = userStmt.get(userEmail) as { guitar_level: string } | undefined;
+      if (userRow) {
+        userLevel = userRow.guitar_level;
+      }
+    }
+
+    const isLockedForUser = isGlobalLocked && userLevel !== "Avançado";
+
+    return {
+      globalLocked: isGlobalLocked,
+      userLevel,
+      isLockedForUser
+    };
+  },
+
+  toggleChordLock(isLocked: boolean) {
+    const stmt = db.prepare(`
+      UPDATE system_locks
+      SET is_locked = ?
+      WHERE lock_name = 'advanced_chords'
+    `);
+    const result = stmt.run(isLocked ? 1 : 0);
+    return result.changes > 0;
+  },
+
+  logPdfDownload(email: string, downloadType: string) {
+    const stmt = db.prepare(`
+      INSERT INTO pdf_downloads (user_email, download_type, downloaded_at)
+      VALUES (?, ?, ?)
+    `);
+    const result = stmt.run(email, downloadType, new Date().toISOString());
+    return result.changes > 0;
+  },
+
+  getUserPdfDownloads(email: string) {
+    const stmt = db.prepare(`
+      SELECT * FROM pdf_downloads
+      WHERE user_email = ?
+      ORDER BY id DESC
+    `);
+    return stmt.all(email) as any[];
+  },
+
+  getAllPdfDownloads() {
+    const stmt = db.prepare(`
+      SELECT p.*, u.username FROM pdf_downloads p
+      LEFT JOIN users u ON p.user_email = u.email
+      ORDER BY p.id DESC
+    `);
+    return stmt.all() as any[];
+  },
+
+  getHarmonicFields(): any[] {
+    const fields = db.prepare("SELECT * FROM harmonic_fields ORDER BY id ASC").all() as any[];
+    return fields.map((field) => {
+      const chords = db.prepare("SELECT * FROM harmonic_field_chords WHERE field_id = ? ORDER BY id ASC").all(field.id) as any[];
+      return {
+        key: field.field_key,
+        mainChord: field.main_chord,
+        description: field.description,
+        chords: chords.map(c => ({
+          degree: c.degree,
+          chordName: c.chord_name,
+          role: c.role,
+          description: c.description
+        }))
+      };
+    });
   }
 };
 

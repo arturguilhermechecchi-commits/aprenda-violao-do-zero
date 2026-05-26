@@ -44,6 +44,16 @@ export function getAudioContext(): AudioContext {
 }
 
 /**
+ * Play a single guitar note with an optional delay in milliseconds
+ */
+export function playGuitarNote(stringIndex: number, fret: number, delayMs: number = 0, duration: number = 1.5) {
+  const ctx = getAudioContext();
+  const now = ctx.currentTime;
+  const time = now + (delayMs / 1000);
+  playStringTone(ctx, stringIndex, fret, time, duration);
+}
+
+/**
  * Play a single guitar string tone (fretted or open)
  */
 function playStringTone(

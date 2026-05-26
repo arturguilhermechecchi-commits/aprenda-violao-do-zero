@@ -146,6 +146,16 @@ app.get("/api/lessons", (req, res) => {
   }
 });
 
+app.get("/api/harmonic-fields", (req, res) => {
+  try {
+    const fields = dbOperations.getHarmonicFields();
+    return res.json({ fields });
+  } catch (error) {
+    console.error("Erro ao obter campos harmônicos do SQLite:", error);
+    return res.status(500).json({ error: "Erro ao obter lista de campos harmônicos registrados." });
+  }
+});
+
 app.get("/api/lessons/completed", (req, res) => {
   try {
     const email = String(req.query.email || "").trim().toLowerCase();
@@ -522,6 +532,154 @@ app.get("/api/video-lessons", (req, res) => {
   } catch (error) {
     console.error("Erro ao carregar videoaulas:", error);
     return res.status(500).json({ error: "Erro interno ao buscar as videoaulas por nível." });
+  }
+});
+
+// Student questions routes
+app.get("/api/student-questions", (req, res) => {
+  try {
+    const level = String(req.query.level || "").trim();
+    if (!level) {
+      return res.status(400).json({ error: "O parâmetro de nível é obrigatório." });
+    }
+    const questions = dbOperations.getStudentQuestions(level);
+    return res.json({ questions });
+  } catch (error) {
+    console.error("Erro ao carregar dúvidas dos alunos:", error);
+    return res.status(500).json({ error: "Erro interno ao buscar as dúvidas por nível." });
+  }
+});
+
+app.post("/api/student-questions", (req, res) => {
+  try {
+    const { email, level, title, question } = req.body;
+    if (!email || !level || !title || !question) {
+      return res.status(400).json({ error: "Todos os campos (email, level, title, question) são obrigatórios." });
+    }
+    const result = dbOperations.addStudentQuestion(
+      email.trim().toLowerCase(),
+      String(level).trim(),
+      String(title).trim(),
+      String(question).trim()
+    );
+    return res.json({ success: true, insertId: result.lastInsertRowid });
+  } catch (error) {
+    console.error("Erro ao registrar dúvida do aluno:", error);
+    return res.status(550).json({ error: "Erro interno ao enviar sua pergunta." });
+  }
+});
+
+// Admin student questions routes for seeding/managing custom explanatory videos
+app.get("/api/admin/student-questions", (req, res) => {
+  try {
+    const adminEmail = String(req.query.adminEmail || "").trim().toLowerCase();
+    if (adminEmail !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas administradores podem ver todas as dúvidas." });
+    }
+    const questions = dbOperations.getAllStudentQuestions();
+    return res.json({ questions });
+  } catch (error) {
+    console.error("Erro ao puxar todas as dúvidas pelo administrador:", error);
+    return res.status(500).json({ error: "Erro interno ao buscar as dúvidas gerais." });
+  }
+});
+
+app.post("/api/admin/student-questions/answer", (req, res) => {
+  try {
+    const { adminEmail, questionId, answer, videoUrl, videoTitle } = req.body;
+    if (!adminEmail || !questionId || !answer) {
+      return res.status(400).json({ error: "Parâmetros adminEmail, questionId e answer são obrigatórios para registrar uma resposta." });
+    }
+
+    if (adminEmail.trim().toLowerCase() !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas o administrador Artur pode responder às dúvidas." });
+    }
+
+    const success = dbOperations.answerStudentQuestion(
+      Number(questionId),
+      String(answer).trim(),
+      videoUrl ? String(videoUrl).trim() : undefined,
+      videoTitle ? String(videoTitle).trim() : undefined
+    );
+
+    if (!success) {
+      return res.status(404).json({ error: "Pergunta do aluno não encontrada no SQLite." });
+    }
+
+    return res.json({ success: true, message: "Resposta e vídeo explicativo gravados com sucesso no SQLite!" });
+  } catch (error) {
+    console.error("Erro ao salvar resposta do administrador no SQLite:", error);
+    return res.status(500).json({ error: "Erro interno do servidor ao registrar resposta." });
+  }
+});
+
+// Advanced Chords Lock API
+app.get("/api/chords/lock-status", (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    const status = dbOperations.getChordLockStatus(email || undefined);
+    return res.json(status);
+  } catch (error) {
+    console.error("Erro ao buscar status do bloqueio de acordes:", error);
+    return res.status(500).json({ error: "Erro interno ao consultar status de bloqueio dos acordes." });
+  }
+});
+
+app.post("/api/admin/chords/toggle-lock", (req, res) => {
+  try {
+    const { adminEmail, isLocked } = req.body;
+    if (!adminEmail || adminEmail.trim().toLowerCase() !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas o administrador Artur pode alterar configurações globais." });
+    }
+    
+    const success = dbOperations.toggleChordLock(!!isLocked);
+    return res.json({ success, globalLocked: !!isLocked, message: `Bloqueio dos acordes avançados alterado para: ${!!isLocked}` });
+  } catch (error) {
+    console.error("Erro ao alterar bloqueio de acordes avançados:", error);
+    return res.status(500).json({ error: "Erro interno do servidor ao alterar bloqueio." });
+  }
+});
+
+// PDF download logging routes
+app.post("/api/pdf-download/log", (req, res) => {
+  try {
+    const { email, downloadType } = req.body;
+    if (!email || !downloadType) {
+      return res.status(400).json({ error: "E-mail e tipo de download são obrigatórios." });
+    }
+    const success = dbOperations.logPdfDownload(email.trim().toLowerCase(), String(downloadType));
+    return res.json({ success });
+  } catch (error) {
+    console.error("Erro ao registrar log de download de PDF:", error);
+    return res.status(500).json({ error: "Erro interno ao salvar log de download do PDF." });
+  }
+});
+
+app.get("/api/pdf-download/history", (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "E-mail é obrigatório." });
+    }
+    const history = dbOperations.getUserPdfDownloads(email);
+    return res.json({ history });
+  } catch (error) {
+    console.error("Erro ao carregar histórico de downloads de PDF:", error);
+    return res.status(500).json({ error: "Erro interno ao buscar histórico de downloads de PDF." });
+  }
+});
+
+app.get("/api/admin/pdf-downloads", (req, res) => {
+  try {
+    const adminEmail = String(req.query.adminEmail || "").trim().toLowerCase();
+    if (adminEmail !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas administradores podem ver o log global de downloads." });
+    }
+    const downloads = dbOperations.getAllPdfDownloads();
+    return res.json({ downloads });
+  } catch (error) {
+    console.error("Erro ao puxar todos os downloads de PDF pelo administrador:", error);
+    return res.status(500).json({ error: "Erro interno ao buscar histórico completo de downloads." });
   }
 });
 
