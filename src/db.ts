@@ -2611,6 +2611,155 @@ export const dbOperations = {
         }))
       };
     });
+  },
+
+  getUserBackup(email: string) {
+    const cleanEmail = email.trim().toLowerCase();
+    
+    // Fetch completed lessons
+    const lessonsCompleted = db.prepare(`
+      SELECT lesson_id, completed_at FROM lessons_completed WHERE user_email = ?
+    `).all(cleanEmail) as any[];
+
+    // Fetch notes
+    const studentNotes = db.prepare(`
+      SELECT item_id, item_type, content, updated_at FROM student_notes WHERE user_email = ?
+    `).all(cleanEmail) as any[];
+
+    // Fetch completed challenges
+    const completedChallenges = db.prepare(`
+      SELECT challenge_id, completed_at FROM completed_challenges WHERE user_email = ?
+    `).all(cleanEmail) as any[];
+
+    // Fetch audio settings
+    const audioSettings = db.prepare(`
+      SELECT master_volume, guitar_type, metronome_frequency, strum_speed, updated_at 
+      FROM user_audio_settings WHERE user_email = ?
+    `).get(cleanEmail) as any || null;
+
+    // Fetch practice sessions
+    const practiceSessions = db.prepare(`
+      SELECT session_date, duration_minutes, focus_area, notes, difficulty 
+      FROM practice_sessions WHERE user_email = ?
+    `).all(cleanEmail) as any[];
+
+    // Fetch quiz results
+    const quizResults = db.prepare(`
+      SELECT level, score, total, passed, completed_at, blocked_until 
+      FROM level_test_results WHERE user_email = ?
+    `).all(cleanEmail) as any[];
+
+    return {
+      lessonsCompleted,
+      studentNotes,
+      completedChallenges,
+      audioSettings,
+      practiceSessions,
+      quizResults
+    };
+  },
+
+  restoreUserBackup(email: string, backup: any) {
+    const cleanEmail = email.trim().toLowerCase();
+    
+    // We use a transaction to guarantee data integrity
+    const restoreTx = db.transaction(() => {
+      // 1. Restore completed lessons
+      db.prepare(`DELETE FROM lessons_completed WHERE user_email = ?`).run(cleanEmail);
+      if (Array.isArray(backup.lessonsCompleted)) {
+        const stmt = db.prepare(`
+          INSERT INTO lessons_completed (user_email, lesson_id, completed_at)
+          VALUES (?, ?, ?)
+        `);
+        for (const item of backup.lessonsCompleted) {
+          stmt.run(cleanEmail, item.lesson_id, item.completed_at || new Date().toISOString());
+        }
+      }
+
+      // 2. Restore student notes
+      db.prepare(`DELETE FROM student_notes WHERE user_email = ?`).run(cleanEmail);
+      if (Array.isArray(backup.studentNotes)) {
+        const stmt = db.prepare(`
+          INSERT INTO student_notes (user_email, item_id, item_type, content, updated_at)
+          VALUES (?, ?, ?, ?, ?)
+        `);
+        for (const item of backup.studentNotes) {
+          stmt.run(cleanEmail, item.item_id, item.item_type, item.content, item.updated_at || new Date().toISOString());
+        }
+      }
+
+      // 3. Restore completed challenges
+      db.prepare(`DELETE FROM completed_challenges WHERE user_email = ?`).run(cleanEmail);
+      if (Array.isArray(backup.completedChallenges)) {
+        const stmt = db.prepare(`
+          INSERT INTO completed_challenges (user_email, challenge_id, completed_at)
+          VALUES (?, ?, ?)
+        `);
+        for (const item of backup.completedChallenges) {
+          stmt.run(cleanEmail, item.challenge_id, item.completed_at || new Date().toISOString());
+        }
+      }
+
+      // 4. Restore audio settings
+      if (backup.audioSettings) {
+        db.prepare(`DELETE FROM user_audio_settings WHERE user_email = ?`).run(cleanEmail);
+        const stmt = db.prepare(`
+          INSERT INTO user_audio_settings (user_email, master_volume, guitar_type, metronome_frequency, strum_speed, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        const s = backup.audioSettings;
+        stmt.run(
+          cleanEmail,
+          s.master_volume || 80,
+          s.guitar_type || "acoustic_steel",
+          s.metronome_frequency || 1000,
+          s.strum_speed || "strum",
+          s.updated_at || new Date().toISOString()
+        );
+      }
+
+      // 5. Restore practice sessions
+      db.prepare(`DELETE FROM practice_sessions WHERE user_email = ?`).run(cleanEmail);
+      if (Array.isArray(backup.practiceSessions)) {
+        const stmt = db.prepare(`
+          INSERT INTO practice_sessions (user_email, session_date, duration_minutes, focus_area, notes, difficulty)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `);
+        for (const item of backup.practiceSessions) {
+          stmt.run(
+            cleanEmail,
+            item.session_date,
+            item.duration_minutes || 15,
+            item.focus_area || "Geral",
+            item.notes || "",
+            item.difficulty || "Médio"
+          );
+        }
+      }
+
+      // 6. Restore quiz results
+      db.prepare(`DELETE FROM level_test_results WHERE user_email = ?`).run(cleanEmail);
+      if (Array.isArray(backup.quizResults)) {
+        const stmt = db.prepare(`
+          INSERT INTO level_test_results (user_email, level, score, total, passed, completed_at, blocked_until)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `);
+        for (const item of backup.quizResults) {
+          stmt.run(
+            cleanEmail,
+            item.level,
+            item.score,
+            item.total,
+            item.passed,
+            item.completed_at || new Date().toISOString(),
+            item.blocked_until || null
+          );
+        }
+      }
+    });
+
+    restoreTx();
+    return true;
   }
 };
 

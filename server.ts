@@ -126,6 +126,37 @@ app.post("/api/admin/users/delete", (req, res) => {
   }
 });
 
+// Resgata o backup consolidado do aluno
+app.get("/api/user/backup", (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "E-mail do aluno é obrigatório." });
+    }
+    const backup = dbOperations.getUserBackup(email);
+    return res.json({ success: true, backup });
+  } catch (error) {
+    console.error("Erro ao gerar backup de usuário:", error);
+    return res.status(500).json({ error: "Erro interno ao gerar backup de progresso." });
+  }
+});
+
+// Realiza a restauração a partir do JSON de backup enviado
+app.post("/api/user/restore", (req, res) => {
+  try {
+    const { email, backup } = req.body;
+    if (!email || !backup) {
+      return res.status(400).json({ error: "Parâmetros e-mail e backup são obrigatórios." });
+    }
+    
+    dbOperations.restoreUserBackup(email, backup);
+    return res.json({ success: true, message: "Progresso e anotações restaurados com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao restaurar backup:", error);
+    return res.status(500).json({ error: "Erro interno ao restaurar dados salvos." });
+  }
+});
+
 app.get("/api/lessons", (req, res) => {
   try {
     const level = req.query.level ? String(req.query.level) : undefined;

@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Song, SongLine, UserSession } from "../types";
 import { playGuitarChord, playGuitarNote } from "./AcousticAudio";
-import { Music, Play, Disc, ArrowRight, Video, FileText, CheckCircle, Edit3, Save, Sparkles, Pause, RotateCcw, Volume2, Info, GraduationCap, Flame, FileDown, BookOpen } from "lucide-react";
+import { Music, Play, Disc, ArrowRight, Video, FileText, CheckCircle, Edit3, Save, Sparkles, Pause, RotateCcw, Volume2, Info, GraduationCap, Flame, FileDown, BookOpen, Cloud } from "lucide-react";
 import { jsPDF } from "jspdf";
+import { getAccessToken } from "../lib/firebase";
 
 const SONG_DATABASE: Song[] = [
   {
@@ -1447,6 +1448,7 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
 
   const [downloadingSongbook, setDownloadingSongbook] = useState(false);
   const [downloadingSingle, setDownloadingSingle] = useState(false);
+  const [uploadingToDrive, setUploadingToDrive] = useState(false);
 
   const handleDownloadSingleSongPDF = async (song: Song) => {
     setDownloadingSingle(true);
@@ -1557,6 +1559,173 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
       console.error("Erro ao gerar PDF da música único:", e);
     } finally {
       setDownloadingSingle(false);
+    }
+  };
+
+  const handleUploadSongPDFToDrive = async (song: Song) => {
+    const token = getAccessToken();
+    if (!token) {
+      alert("Por favor, conecte sua conta Google no menu 'Google Drive' para salvar no Drive.");
+      return;
+    }
+
+    setUploadingToDrive(true);
+    try {
+      const doc = new jsPDF();
+      
+      // Theme colors
+      const primaryColor = [30, 41, 59];
+      const accentColor = [217, 119, 6];
+      
+      // Page setup & title banner
+      doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.rect(0, 0, 210, 36, "F");
+      
+      // Title
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.text(song.title.toUpperCase(), 15, 16);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Cifra de Violao - Artista: ${song.artist}`, 15, 24);
+      
+      const today = new Date().toLocaleDateString("pt-BR");
+      doc.text(`Guitar Studio - ${today}`, 150, 16);
+      
+      // Info board
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("INFORMACOES DE EXECUCAO", 15, 48);
+      
+      doc.setDrawColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.setLineWidth(0.5);
+      doc.line(15, 51, 195, 51);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(75, 85, 99);
+      doc.text(`Ritmo/Levada: ${song.rhythm}`, 15, 58);
+      doc.text(`BPM: ${song.bpm}`, 15, 63);
+      doc.text(`Acordes Utilizados: ${song.chordsUsed.join(", ")}`, 110, 58);
+      doc.text(`Padrao de Batida: ${song.strummingPattern.join(" ")}`, 110, 63);
+      
+      if (song.videoTip) {
+        doc.setFont("helvetica", "italic");
+        doc.text(`Dica de Treino: ${song.videoTip}`, 15, 69);
+      }
+      
+      // Lyrics + Chords board
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("CIFRA DA MUSICA", 15, 82);
+      doc.line(15, 85, 195, 85);
+      
+      let currentY = 94;
+      
+      song.lines.forEach((line) => {
+        if (line.chords && line.chords.length > 0) {
+          doc.setFont("courier", "bold");
+          doc.setFontSize(10);
+          doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+          
+          let chordLine = "";
+          let lastPos = 0;
+          line.chords.forEach((c) => {
+            const spaces = Math.max(1, Math.floor(c.position / 1.5) - lastPos);
+            chordLine += " ".repeat(spaces) + c.chord;
+            lastPos = Math.floor(c.position / 1.5) + c.chord.length;
+          });
+          
+          doc.text(chordLine, 18, currentY);
+          currentY += 5.5;
+        }
+        
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9.5);
+        doc.setTextColor(30, 41, 59);
+        doc.text(line.text, 18, currentY);
+        currentY += 8.5;
+        
+        if (currentY > 270) {
+          doc.addPage();
+          currentY = 20;
+        }
+      });
+
+      const pdfArrayBuffer = doc.output("arraybuffer");
+      
+      // Find or create "Guitar Studio" folder
+      const folderQuery = encodeURIComponent("name = 'Guitar Studio' and mimeType = 'application/vnd.google-apps.folder' and trashed = false");
+      const folderRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${folderQuery}&fields=files(id,name)`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const folderData = await folderRes.json();
+      let folderId = folderData.files?.[0]?.id;
+
+      if (!folderId) {
+        const createFolderRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: "Guitar Studio",
+            mimeType: "application/vnd.google-apps.folder",
+            description: "Pasta reservada para salvar cifras impressas e backups de progresso do Guitar Studio."
+          })
+        });
+        const newFolder = await createFolderRes.json();
+        folderId = newFolder.id;
+      }
+
+      // Create PDF file entry on Drive
+      const filename = `Cifra_${song.title.replace(/\s+/g, "_")}.pdf`;
+      const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          name: filename,
+          parents: [folderId]
+        })
+      });
+      const fileData = await createRes.json();
+
+      // Patch the file binary payload
+      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileData.id}?uploadType=media`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/pdf"
+        },
+        body: pdfArrayBuffer
+      });
+
+      alert(`A cifra "${song.title}" foi salva diretamente no seu Google Drive com sucesso! ☁️`);
+
+      // Log save to system
+      if (currentUser?.email) {
+        await fetch("/api/pdf-download/log", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: currentUser.email,
+            downloadType: `OneDrive Drive: Cifra - ${song.title}`
+          })
+        });
+      }
+    } catch (e) {
+      console.error("Erro ao subir PDF para o Google Drive:", e);
+      alert("Erro ao enviar a cifra para o Google Drive. Certifique-se de que conectou sua conta.");
+    } finally {
+      setUploadingToDrive(false);
     }
   };
 
@@ -1927,6 +2096,20 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
                       <FileDown className="w-4 h-4 text-amber-700 dark:text-amber-500" />
                     )}
                     <span>Baixar Cifra (PDF)</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleUploadSongPDFToDrive(selectedSong)}
+                    disabled={uploadingToDrive}
+                    id="upload-single-drive-btn"
+                    className="px-3.5 py-2 bg-slate-900 dark:bg-stone-900 hover:bg-slate-800 dark:hover:bg-stone-800 active:scale-95 text-stone-100 dark:text-stone-300 font-extrabold text-xs rounded-2xl border border-slate-250 dark:border-stone-800 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {uploadingToDrive ? (
+                      <span className="w-3.5 h-3.5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Cloud className="w-4 h-4 text-amber-500" />
+                    )}
+                    <span>Salvar no Google Drive ☁️</span>
                   </button>
                 </div>
               </div>
