@@ -462,6 +462,38 @@ const CHORD_DATABASE: Chord[] = [
     usageTip: "Prepara uma entrada de altíssima tensão emocional antes de repousar na tônica principal (normalmente F# ou Gb)."
   },
   {
+    name: "Fdim7",
+    altName: "Fá Diminuto c/ Sétima",
+    frets: ["x", 8, 9, 7, 9, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 7,
+    usageTip: "Acorde simétrico de altíssima tensão cromática, resolvendo perfeitamente meio tom acima (F# na 2ª casa / G na 3ª casa)."
+  },
+  {
+    name: "F#dim7",
+    altName: "Fá Sost. Dim. c/ Sétima",
+    frets: ["x", "x", 4, 5, 4, 5],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 4,
+    usageTip: "Um dos formatos mais usados no chorinho e na MPB para transição harmônica tensa em direção ao tom de Sol Maior (G)."
+  },
+  {
+    name: "Fm7(b5)",
+    altName: "Fá Meio-Diminuto",
+    frets: ["x", 8, 9, 8, 9, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 8,
+    usageTip: "Mecanismo clássico da MPB / Jazz. Forma o acorde subdominante perfeito em tonalidades menores como Sol Menor."
+  },
+  {
+    name: "F#m7(b5)",
+    altName: "Fá Sost. Meio-Dim.",
+    frets: [2, "x", 2, 2, 1, "x"],
+    fingers: [2, null, 3, 4, 1, null],
+    baseFret: 1,
+    usageTip: "Tonalidade riquíssima e ideal para preparar caminhos em direção a Sol Maior ou Sol Menor."
+  },
+  {
     name: "Bdim",
     altName: "Si Diminuto",
     frets: ["x", 2, 3, 1, 3, "x"],
@@ -1090,6 +1122,96 @@ const CHORD_VARIATIONS: Record<string, ChordVariation[]> = {
       baseFret: 6,
       usageTip: "Excelente shape com inversão para preencher o baixo de samba e bossas."
     }
+  ],
+  "Fdim": [
+    {
+      name: "Fá Diminuto Agudo (Padrão)",
+      difficulty: "Avançado",
+      frets: ["x", "x", 3, 4, 3, 4],
+      fingers: [null, null, 1, 3, 2, 4],
+      baseFret: 3,
+      usageTip: "Prepara uma entrada de altíssima tensão emocional antes de repousar na tônica principal."
+    },
+    {
+      name: "Fá Diminuto com Baixo na 6ª Corda",
+      difficulty: "Avançado",
+      frets: [1, "x", 0, 1, 0, "x"],
+      fingers: [1, null, null, 2, null, null],
+      baseFret: 1,
+      usageTip: "Toca com o polegar tocando o Fá baixo na 6ª corda, aproveitando cordas soltas melódicas."
+    }
+  ],
+  "Fdim7": [
+    {
+      name: "Fá Diminuto c/ Sétima (5ª Corda)",
+      difficulty: "Avançado",
+      frets: ["x", 8, 9, 7, 9, "x"],
+      fingers: [null, 2, 4, 1, 3, null],
+      baseFret: 7,
+      usageTip: "Voz central na 5ª corda. Excelente sonoridade encorpada para harmonizar melodias."
+    },
+    {
+      name: "Fá Diminuto c/ Sétima Aberto",
+      difficulty: "Avançado",
+      frets: [1, "x", 0, 1, 0, "x"],
+      fingers: [1, null, null, 2, null, null],
+      baseFret: 1,
+      usageTip: "Usa cordas soltas facilitando a digitação ao mesmo tempo que entrega muita riqueza harmônica."
+    }
+  ],
+  "F#dim7": [
+    {
+      name: "Fá Sost. Dim. c/ Sétima (4ª Corda)",
+      difficulty: "Avançado",
+      frets: ["x", "x", 4, 5, 4, 5],
+      fingers: [null, null, 1, 3, 2, 4],
+      baseFret: 4,
+      usageTip: "Formato simétrico clássico de 4 cordas. Pode ser movido a cada 3 casas mantendo a mesma fôrma."
+    },
+    {
+      name: "Fá Sost. Dim. c/ Sétima (5ª Corda)",
+      difficulty: "Avançado",
+      frets: ["x", 9, 10, 8, 10, "x"],
+      fingers: [null, 2, 4, 1, 3, null],
+      baseFret: 8,
+      usageTip: "Idêntico ao desenho da 5ª corda de Fdim7, mas deslocado uma casa acima para a 9ª casa."
+    }
+  ],
+  "Fm7(b5)": [
+    {
+      name: "Fá Meio-Diminuto Padrão (5ª Corda)",
+      difficulty: "Avançado",
+      frets: ["x", 8, 9, 8, 9, "x"],
+      fingers: [null, 1, 3, 2, 4, null],
+      baseFret: 8,
+      usageTip: "Clássico desenho sobre a 5ª corda com som super refinado."
+    },
+    {
+      name: "Fá Meio-Diminuto Baixo na 6ª Corda",
+      difficulty: "Avançado",
+      frets: [1, "x", 1, 1, 0, "x"],
+      fingers: [1, null, 2, 3, null, null],
+      baseFret: 1,
+      usageTip: "Posição aberta clássica do jazz que usa a nota Si aberta como a quinta bemol (b5)."
+    }
+  ],
+  "F#m7(b5)": [
+    {
+      name: "Fá Sost. Meio-Dim. Baixo na 6ª Corda",
+      difficulty: "Avançado",
+      frets: [2, "x", 2, 2, 1, "x"],
+      fingers: [2, null, 3, 4, 1, null],
+      baseFret: 1,
+      usageTip: "Fôrma padrão sobre a 6ª corda, essencial para o II-V-I menor do tom de Sol Menor."
+    },
+    {
+      name: "Fá Sost. Meio-Dim. no Braço (5ª Corda)",
+      difficulty: "Avançado",
+      frets: ["x", 9, 10, 9, 10, "x"],
+      fingers: [null, 1, 3, 2, 4, null],
+      baseFret: 9,
+      usageTip: "Deslocado uma casa acima do formato Fm7(b5), na 9ª casa para sonoridades mais agudas."
+    }
   ]
 };
 
@@ -1570,10 +1692,10 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
       return chord.barre !== undefined;
     }
     if (filter === "advanced") {
-      return !BASIC_CHORD_NAMES.includes(chord.name) && chord.barre === undefined && !chord.name.includes("dim");
+      return !BASIC_CHORD_NAMES.includes(chord.name) && chord.barre === undefined && !chord.name.includes("dim") && !chord.name.includes("b5") && !chord.name.includes("º");
     }
     if (filter === "diminuto") {
-      return chord.name.includes("dim");
+      return chord.name.includes("dim") || chord.name.includes("b5") || chord.name.includes("º");
     }
     return true;
   });
@@ -1695,7 +1817,7 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
           <button
             onClick={() => {
               setFilter("advanced");
-              const firstAdv = CHORD_DATABASE.find(c => !BASIC_CHORD_NAMES.includes(c.name) && c.barre === undefined && !c.name.includes("dim"));
+              const firstAdv = CHORD_DATABASE.find(c => !BASIC_CHORD_NAMES.includes(c.name) && c.barre === undefined && !c.name.includes("dim") && !c.name.includes("b5") && !c.name.includes("º"));
               if (firstAdv) handleSelectChord(firstAdv);
             }}
             id="filter-chords-advanced"
@@ -1711,7 +1833,7 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
           <button
             onClick={() => {
               setFilter("diminuto");
-              const firstDim = CHORD_DATABASE.find(c => c.name.includes("dim"));
+              const firstDim = CHORD_DATABASE.find(c => c.name.includes("dim") || c.name.includes("b5") || c.name.includes("º"));
               if (firstDim) handleSelectChord(firstDim);
             }}
             id="filter-chords-diminuto"
