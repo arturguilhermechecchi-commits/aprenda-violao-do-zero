@@ -528,7 +528,7 @@ export default function App() {
           <button
             onClick={() => setActiveTab("chords")}
             id="tab-btn-chords"
-            className={`flex items-center gap-2 py-3 px-5 rounded-2xl font-bold text-xs transition duration-150 border ${
+            className={`flex items-center gap-2 pt-[12px] pb-3 px-5 w-[166px] h-[43px] rounded-2xl font-bold text-xs transition duration-150 border ${
               activeTab === "chords"
                 ? "bg-amber-900 border-amber-900 text-stone-50 shadow-sm"
                 : "bg-white dark:bg-stone-900 text-slate-650 dark:text-stone-300 border-slate-200 dark:border-stone-800 hover:border-slate-350 dark:hover:border-stone-700"

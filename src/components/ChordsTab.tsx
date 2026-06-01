@@ -310,6 +310,164 @@ const CHORD_DATABASE: Chord[] = [
     fingers: [null, 1, 3, 2, 4, null],
     baseFret: 2,
     usageTip: "O acorde fundamental de passagem harmônica menor (II-V-I). Traz um som dramático e sofisticado de preparação harmônica.",
+  },
+  {
+    name: "C#dim",
+    altName: "Dó Sost. Diminuto",
+    frets: ["x", 4, 5, 3, 5, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 3,
+    usageTip: "Clássico acorde diminuto de aproximação cromática. Resolva um semitom acima na tônica secundária (Dm).",
+  },
+  {
+    name: "D#dim",
+    altName: "Ré Sost. Diminuto",
+    frets: ["x", "x", 1, 2, 1, 2],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 1,
+    usageTip: "Passagem harmônica perfeita entre Ré Maior (D) e Mi Menor (Em). Mantenha o som das outras cordas silenciado.",
+  },
+  {
+    name: "Edim",
+    altName: "Mi Diminuto",
+    frets: ["x", "x", 2, 3, 2, 3],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 2,
+    usageTip: "Som altamente polarizado e tenso. Ele é simétrico e pode ser transportado ao longo do braço a cada 3 casas.",
+  },
+  {
+    name: "F#dim",
+    altName: "Fá Sost. Diminuto",
+    frets: [2, "x", 1, 2, 1, "x"],
+    fingers: [2, null, 1, 3, 1, null],
+    baseFret: 1,
+    usageTip: "Gera uma preparação tensa fantástica para caminhar em direção a Sol Maior (G). Abafe as cordas 5 e 1 com a lateral dos dedos.",
+  },
+  {
+    name: "G#dim",
+    altName: "Sol Sost. Diminuto",
+    frets: [4, "x", 3, 4, 3, "x"],
+    fingers: [2, null, 1, 3, 1, null],
+    baseFret: 3,
+    usageTip: "O mestre dos sambas antigos. É a ponte ideal para carregar intensidade dramática até desaguar em Lá Menor (Am).",
+  },
+  {
+    name: "Adim",
+    altName: "Lá Diminuto",
+    frets: ["x", 0, 1, 2, 1, 2],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 1,
+    usageTip: "Usado com maestria no Choro, Jazz e Violão Cigano para transições elegantes de acordes agudos."
+  },
+  {
+    name: "C#",
+    altName: "Dó Sost. Maior",
+    frets: ["x", 4, 6, 6, 6, 4],
+    fingers: [null, 1, 3, 4, 2, 1],
+    baseFret: 4,
+    barre: {
+      fret: 1,
+      startString: 1,
+      endString: 5
+    },
+    usageTip: "Pestana idêntica ao Si Maior (B), porém duas casas adiante. Excelente sonoridade cheia e vibrante."
+  },
+  {
+    name: "D#m",
+    altName: "Ré Sost. Menor",
+    frets: ["x", 6, 8, 8, 7, 6],
+    fingers: [null, 1, 3, 4, 2, 1],
+    baseFret: 6,
+    barre: {
+      fret: 1,
+      startString: 1,
+      endString: 5
+    },
+    usageTip: "Usa a digitação clássica de Am transposta para a 6ª casa. Traz um tom melancólico e misterioso."
+  },
+  {
+    name: "G#",
+    altName: "Sol Sost. Maior",
+    frets: [4, 6, 6, 5, 4, 4],
+    fingers: [1, 3, 4, 2, 1, 1],
+    baseFret: 4,
+    barre: {
+      fret: 1,
+      startString: 0,
+      endString: 5
+    },
+    usageTip: "Design idêntico a Fá Maior (F), deslocado para a 4ª casa do braço do violão. Perfeito para dar brilho e peso."
+  },
+  {
+    name: "G#m",
+    altName: "Sol Sost. Menor",
+    frets: [4, 6, 6, 4, 4, 4],
+    fingers: [1, 3, 4, 1, 1, 1],
+    baseFret: 4,
+    barre: {
+      fret: 1,
+      startString: 0,
+      endString: 5
+    },
+    usageTip: "Idêntico ao formato de F#m, porém na 4ª casa. Tonalidade dramática muito comum em canções pop contemporâneas."
+  },
+  {
+    name: "Bb",
+    altName: "Si Bemol Maior",
+    frets: ["x", 1, 3, 3, 3, 1],
+    fingers: [null, 1, 3, 4, 2, 1],
+    baseFret: 1,
+    barre: {
+      fret: 1,
+      startString: 1,
+      endString: 5
+    },
+    usageTip: "Fique de olho na inclinação do polegar no verso do braço. Ajuda a obter pressão uniforme em todas as cinco cordas prendidas."
+  },
+  {
+    name: "Bbm",
+    altName: "Si Bemol Menor",
+    frets: ["x", 1, 3, 3, 2, 1],
+    fingers: [null, 1, 3, 4, 2, 1],
+    baseFret: 1,
+    barre: {
+      fret: 1,
+      startString: 1,
+      endString: 5
+    },
+    usageTip: "Pestana localizada na primeira casa. A proximidade da pestana com a pestana fixa do violão exige um pouco mais de força."
+  },
+  {
+    name: "Cdim",
+    altName: "Dó Diminuto",
+    frets: ["x", 3, 4, 2, 4, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 2,
+    usageTip: "Transição perfeita de aproximação cromática para Dm ou C#m. Extremamente jazzístico."
+  },
+  {
+    name: "Ddim",
+    altName: "Ré Diminuto",
+    frets: ["x", "x", 0, 1, 0, 1],
+    fingers: [null, null, null, 2, null, 1],
+    baseFret: 1,
+    usageTip: "Sonoridade aberta e muito simples de executar. Excelente ponte para transições em tom de Ré Maior."
+  },
+  {
+    name: "Fdim",
+    altName: "Fá Diminuto",
+    frets: ["x", "x", 3, 4, 3, 4],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 3,
+    usageTip: "Prepara uma entrada de altíssima tensão emocional antes de repousar na tônica principal (normalmente F# ou Gb)."
+  },
+  {
+    name: "Bdim",
+    altName: "Si Diminuto",
+    frets: ["x", 2, 3, 1, 3, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 1,
+    usageTip: "Excelente e clássica transição para o acorde de C ou de Am em MPB e Bossa Nova."
   }
 ];
 
@@ -1134,7 +1292,7 @@ const HARMONIC_FIELDS: HarmonicField[] = [
     mainChord: "B",
     description: "Possui brilho penetrante e timbre muito vivo no violão. 5 sustenidos.",
     chords: [
-      { degree: "I", chordName: "B", role: "Tônica", description: "Base brilhante e cheia de energy harmônica." },
+      { degree: "I", chordName: "B", role: "Tônica", description: "Base brilhante and cheia de energia harmônica." },
       { degree: "IIm", chordName: "C#m", role: "Subdominante", description: "Ponto clássico menor de suporte rítmico." },
       { degree: "IIIm", chordName: "D#m", role: "Tônica", description: "Grau melancólico com afinação rica." },
       { degree: "IV", chordName: "E", role: "Subdominante", description: "Abertura limpa de grande amplitude." },
@@ -1179,12 +1337,13 @@ const HARMONIC_FIELDS: HarmonicField[] = [
     description: "Tonalidade preferida para baladas profundas, canções renascentistas e músicas de clima misterioso.",
     chords: [
       { degree: "Im", chordName: "Dm", role: "Tônica", description: "O acorde mais triste possível, segundo cientistas harmônicos." },
-      { degree: "Im9", chordName: "Dm9", role: "Tônica", description: "Sublime para músicas acústicas modernas estilo lofi." },
-      { degree: "bIII", chordName: "F", role: "Tônica", description: "Abertura acolhedora de esperança." },
+      { degree: "IIm7(b5)", chordName: "Em7(b5)", role: "Subdominante", description: "Preparação tensa meio-diminuta para a cadência menor." },
+      { degree: "bIII", chordName: "F", role: "Tônica", description: "Abertura acolhedora de esperança e brilho maior." },
       { degree: "IVm", chordName: "Gm", role: "Subdominante", description: "Dramático e clássico de canções românticas." },
       { degree: "Vm", chordName: "Am", role: "Dominante Natural", description: "Clima limpo, nórdico ou medieval." },
-      { degree: "V7", chordName: "A7", role: "Dominante Harmônico", description: "Prepara de forma imponente a entrada do Re Menor." },
-      { degree: "bVI", chordName: "C", role: "Tônica", description: "Ponto suave de apoio." }
+      { degree: "V7", chordName: "A7", role: "Dominante Harmônico", description: "Prepara de forma imponente a entrada do Ré Menor." },
+      { degree: "bVI", chordName: "Bb", role: "Subdominante", description: "Gera sensação de amplitude e emoção crescente." },
+      { degree: "bVII", chordName: "C", role: "Dominante", description: "Ponto suave de apoio e transição de repouso." }
     ]
   },
   {
@@ -1195,10 +1354,11 @@ const HARMONIC_FIELDS: HarmonicField[] = [
       { degree: "Im", chordName: "D#m", role: "Tônica", description: "Tônica sombria mas infinitamente expressiva." },
       { degree: "IIm7(b5)", chordName: "Fm7(b5)", role: "Subdominante", description: "Tensão meio-diminuta complexa." },
       { degree: "bIII", chordName: "Gb", role: "Tônica", description: "Ponto maior de repouso refrescante." },
-      { degree: "IVm", chordName: "G#m", role: "Subdominante", description: "Suporte profundo de base." },
-      { degree: "Vm", chordName: "A#m", role: "Dominante Natural", description: "Contraste pacífico e suave menor." },
-      { degree: "V7", chordName: "A#7", role: "Dominante Harmônico", description: "Fecho tenso clássico rumo à tônica." },
-      { degree: "bVI", chordName: "B", role: "Subdominante", description: "Gera energia grandiosa de libertação." }
+      { degree: "IVm", chordName: "Abm", role: "Subdominante", description: "Suporte profundo de base." },
+      { degree: "Vm", chordName: "Bbm", role: "Dominante Natural", description: "Contraste pacífico e suave menor." },
+      { degree: "V7", chordName: "Bb7", role: "Dominante Harmônico", description: "Fecho tenso clássico rumo à tônica." },
+      { degree: "bVI", chordName: "B", role: "Subdominante", description: "Gera energia grandiosa de libertação." },
+      { degree: "bVII", chordName: "Db", role: "Dominante", description: "Apoio harmônico maior de transição." }
     ]
   },
   {
@@ -1207,13 +1367,12 @@ const HARMONIC_FIELDS: HarmonicField[] = [
     description: "Som de peso no rock nacional, folk nórdico e baladas acústicas intensas.",
     chords: [
       { degree: "Im", chordName: "Em", role: "Tônica", description: "O acorde menor mais fácil e encorpado do violão." },
-      { degree: "IIm7", chordName: "F#m7", role: "Subdominante", description: "Pestana com passagem ágil de ritmo." },
+      { degree: "IIm7(b5)", chordName: "F#m7(b5)", role: "Subdominante", description: "Pestana meio-diminuta de passagem melódica." },
       { degree: "bIII", chordName: "G", role: "Tônica", description: "Relativo alegre que contrasta a escuridão do Em." },
-      { degree: "bIII7M", chordName: "G7M", role: "Tônica", description: "Estética suave e aberta." },
       { degree: "IVm", chordName: "Am", role: "Subdominante", description: "Sensação de profundidade no meio da música." },
-      { degree: "Vm", chordName: "Bm7", role: "Dominante Natural", description: "Base moderna e fresca de transição." },
+      { degree: "Vm", chordName: "Bm", role: "Dominante Natural", description: "Base clássica e fresca de transição suave." },
       { degree: "V7", chordName: "B7", role: "Dominante Harmônico", description: "Tensão clássica e forte de resolução para Em." },
-      { degree: "bVI", chordName: "C", role: "Tônica", description: "Brilho aberto e expansivo de esperança." },
+      { degree: "bVI", chordName: "C", role: "Subdominante", description: "Brilho aberto e expansivo de esperança." },
       { degree: "bVII", chordName: "D", role: "Dominante", description: "Ponto de partida clássico de retorno para Sol maior." }
     ]
   },
@@ -1228,7 +1387,8 @@ const HARMONIC_FIELDS: HarmonicField[] = [
       { degree: "IVm", chordName: "Bbm", role: "Subdominante", description: "Efeito nostálgico e comovente de fado." },
       { degree: "Vm", chordName: "Cm", role: "Dominante Natural", description: "Grau que desacelera a tensão dramaticamente." },
       { degree: "V7", chordName: "C7", role: "Dominante Harmônico", description: "Tensão majestosa e forte imperativa sobre Fm." },
-      { degree: "bVI", chordName: "Db", role: "Subdominante", description: "Abertura éopica cheia de esperança." }
+      { degree: "bVI", chordName: "Db", role: "Subdominante", description: "Abertura épica cheia de esperança." },
+      { degree: "bVII", chordName: "Eb", role: "Dominante", description: "Base maior de resolução e contraste." }
     ]
   },
   {
@@ -1242,7 +1402,8 @@ const HARMONIC_FIELDS: HarmonicField[] = [
       { degree: "IVm", chordName: "Bm", role: "Subdominante", description: "Suporte intimista excelente para rascunhos de compasso." },
       { degree: "Vm", chordName: "C#m", role: "Dominante Natural", description: "Suavidade de passagem no meio de estrofes." },
       { degree: "V7", chordName: "C#7", role: "Dominante Harmônico", description: "Gera forte empuxo espanhol direto ao repouso." },
-      { degree: "bVI", chordName: "D", role: "Subdominante", description: "Contraste bonito e expansivo aberto." }
+      { degree: "bVI", chordName: "D", role: "Subdominante", description: "Contraste bonito e expansivo aberto." },
+      { degree: "bVII", chordName: "E", role: "Dominante", description: "Transição natural de repouso resolutivo." }
     ]
   },
   {
@@ -1256,7 +1417,8 @@ const HARMONIC_FIELDS: HarmonicField[] = [
       { degree: "IVm", chordName: "Cm", role: "Subdominante", description: "Delineador dramático de grande melancolia." },
       { degree: "Vm", chordName: "Dm", role: "Dominante Natural", description: "Suave transmutação de tons." },
       { degree: "V7", chordName: "D7", role: "Dominante Harmônico", description: "Alavanca de tensão clássica de re-resolução rápida." },
-      { degree: "bVI", chordName: "Eb", role: "Subdominante", description: "Amplitude de tom que areja as estrofes." }
+      { degree: "bVI", chordName: "Eb", role: "Subdominante", description: "Amplitude de tom que areja as estrofes." },
+      { degree: "bVII", chordName: "F", role: "Dominante", description: "Acorde de suporte brilhante e impulsão maior." }
     ]
   },
   {
@@ -1265,12 +1427,13 @@ const HARMONIC_FIELDS: HarmonicField[] = [
     description: "Altamente emotiva, com timbre denso e afinação com grande coloração acústica.",
     chords: [
       { degree: "Im", chordName: "G#m", role: "Tônica", description: "Base escura de grande introspecção." },
-      { degree: "IIm7(b5)", chordName: "A#m7(b5)", role: "Subdominante", description: "Preparador sofisticado." },
+      { degree: "IIm7(b5)", chordName: "A#m7(b5)", role: "Subdominante", description: "Preparador sofisticado meio-diminuto." },
       { degree: "bIII", chordName: "B", role: "Tônica", description: "Teto luminoso de estabilidade maior." },
       { degree: "IVm", chordName: "C#m", role: "Subdominante", description: "Contraste intimista menor excelente." },
       { degree: "Vm", chordName: "D#m", role: "Dominante Natural", description: "Suave andamento melancólico." },
       { degree: "V7", chordName: "D#7", role: "Dominante Harmônico", description: "Tensão imposta clássica." },
-      { degree: "bVI", chordName: "E", role: "Subdominante", description: "Contrapeso robusto de libertação emocional." }
+      { degree: "bVI", chordName: "E", role: "Subdominante", description: "Contrapeso robusto de libertação emocional." },
+      { degree: "bVII", chordName: "F#", role: "Dominante", description: "Base brilhante e luminosa de passagem ampla." }
     ]
   },
   {
@@ -1279,13 +1442,11 @@ const HARMONIC_FIELDS: HarmonicField[] = [
     description: "Tonalidade melancólica e introspectiva por excelência. Sem acidentes na armadura, mas usa acordes harmônicos ricos (como E7).",
     chords: [
       { degree: "Im", chordName: "Am", role: "Tônica", description: "Fundação sombria e linda das canções mais sentimentais." },
-      { degree: "Im9", chordName: "Am9", role: "Tônica", description: "Tensionado e elegante com a inclusão da nona." },
       { degree: "IIm7(b5)", chordName: "Bm7(b5)", role: "Subdominante", description: "Acorde de desequilíbrio dramático usado na descida." },
       { degree: "bIII", chordName: "C", role: "Tônica", description: "O repouso alternativo alegre da música." },
-      { degree: "bIII7M", chordName: "C7M", role: "Tônica", description: "Bossa nova melancólica." },
       { degree: "IVm", chordName: "Dm", role: "Subdominante", description: "Nostalgia clássica do fado e canção popular." },
       { degree: "Vm", chordName: "Em", role: "Dominante Natural", description: "Cria uma melancolia limpa medieval." },
-      { degree: "V7", chordName: "E7(9)", role: "Dominante Harmônico", description: "Aproximação espanhola flamenca e rítmica." },
+      { degree: "V7", chordName: "E7", role: "Dominante Harmônico", description: "Aproximação espanhola flamenca e rítmica de preparação tônica." },
       { degree: "bVI", chordName: "F", role: "Subdominante", description: "Aumento emotivo épico." },
       { degree: "bVII", chordName: "G", role: "Dominante", description: "Prepara o retorno à claridade." }
     ]
@@ -1301,7 +1462,8 @@ const HARMONIC_FIELDS: HarmonicField[] = [
       { degree: "IVm", chordName: "Ebm", role: "Subdominante", description: "Intensidade sentimental e melancólica clássica." },
       { degree: "Vm", chordName: "Fm", role: "Dominante Natural", description: "Suavidade que acalma o drama." },
       { degree: "V7", chordName: "F7", role: "Dominante Harmônico", description: "Tensão alta que puxa vigorosamente rumo à tônica." },
-      { degree: "bVI", chordName: "Gb", role: "Subdominante", description: "Amplitude que areja o sentimento melancólico." }
+      { degree: "bVI", chordName: "Gb", role: "Subdominante", description: "Amplitude que areja o sentimento melancólico." },
+      { degree: "bVII", chordName: "Ab", role: "Dominante", description: "Brilho suave maior e apoio de passagem harmônica." }
     ]
   },
   {
@@ -1323,7 +1485,7 @@ const HARMONIC_FIELDS: HarmonicField[] = [
 
 const BASIC_CHORD_NAMES = ["C", "G", "D", "Am", "Em", "E", "A", "Dm"];
 
-type ChordFilter = "all" | "basic" | "pestana" | "advanced";
+type ChordFilter = "all" | "basic" | "pestana" | "advanced" | "diminuto";
 
 export default function ChordsTab({ currentUser }: { currentUser?: UserSession | null }) {
   const [filter, setFilter] = useState<ChordFilter>("all");
@@ -1408,7 +1570,10 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
       return chord.barre !== undefined;
     }
     if (filter === "advanced") {
-      return !BASIC_CHORD_NAMES.includes(chord.name) && chord.barre === undefined;
+      return !BASIC_CHORD_NAMES.includes(chord.name) && chord.barre === undefined && !chord.name.includes("dim");
+    }
+    if (filter === "diminuto") {
+      return chord.name.includes("dim");
     }
     return true;
   });
@@ -1530,7 +1695,7 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
           <button
             onClick={() => {
               setFilter("advanced");
-              const firstAdv = CHORD_DATABASE.find(c => !BASIC_CHORD_NAMES.includes(c.name) && c.barre === undefined);
+              const firstAdv = CHORD_DATABASE.find(c => !BASIC_CHORD_NAMES.includes(c.name) && c.barre === undefined && !c.name.includes("dim"));
               if (firstAdv) handleSelectChord(firstAdv);
             }}
             id="filter-chords-advanced"
@@ -1542,6 +1707,22 @@ export default function ChordsTab({ currentUser }: { currentUser?: UserSession |
           >
             <Sparkles className="w-3 h-3 text-amber-500" />
             Elevados
+          </button>
+          <button
+            onClick={() => {
+              setFilter("diminuto");
+              const firstDim = CHORD_DATABASE.find(c => c.name.includes("dim"));
+              if (firstDim) handleSelectChord(firstDim);
+            }}
+            id="filter-chords-diminuto"
+            className={`flex-1 min-w-[75px] py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+              filter === "diminuto"
+                ? "bg-amber-800 dark:bg-amber-700/40 text-white dark:text-amber-400 border border-amber-800/20 dark:border-amber-500/20"
+                : "text-slate-500 dark:text-stone-400 hover:text-slate-800 dark:hover:text-stone-200"
+            }`}
+          >
+            <Music className="w-3 h-3 text-amber-500 animate-pulse" />
+            Diminutos º
           </button>
         </div>
 
