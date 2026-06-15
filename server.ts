@@ -157,6 +157,69 @@ app.post("/api/user/restore", (req, res) => {
   }
 });
 
+// Custom Songs API
+app.get("/api/songs", (req, res) => {
+  try {
+    const songs = dbOperations.getCustomSongs();
+    return res.json({ songs });
+  } catch (error) {
+    console.error("Erro ao obter músicas customizadas do SQLite:", error);
+    return res.status(500).json({ error: "Erro ao obter lista de músicas." });
+  }
+});
+
+app.post("/api/admin/songs", (req, res) => {
+  try {
+    const { adminEmail, song } = req.body;
+    if (!adminEmail || !song) {
+      return res.status(400).json({ error: "E-mail do administrador e detalhes da música são obrigatórios." });
+    }
+
+    const cleanAdminEmail = adminEmail.trim().toLowerCase();
+    if (cleanAdminEmail !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas o administrador Artur pode gerenciar músicas." });
+    }
+
+    if (!song.id || !song.title || !song.artist) {
+      return res.status(400).json({ error: "Título, artista e ID da música são obrigatórios." });
+    }
+
+    const success = dbOperations.createSong(song);
+    if (!success) {
+      return res.status(500).json({ error: "Falha de banco de dados ao salvar a música no SQLite." });
+    }
+
+    return res.json({ success: true, message: "Música salva com sucesso!", songId: song.id });
+  } catch (error) {
+    console.error("Erro ao cadastrar música:", error);
+    return res.status(500).json({ error: "Erro interno no servidor ao tentar salvar a música." });
+  }
+});
+
+app.post("/api/admin/songs/delete", (req, res) => {
+  try {
+    const { adminEmail, songId } = req.body;
+    if (!adminEmail || !songId) {
+      return res.status(400).json({ error: "E-mail do administrador e ID da música são obrigatórios." });
+    }
+
+    const cleanAdminEmail = adminEmail.trim().toLowerCase();
+    if (cleanAdminEmail !== "arturguilhermechecchi@gmail.com") {
+      return res.status(403).json({ error: "Acesso negado. Apenas o administrador Artur pode deletar músicas." });
+    }
+
+    const success = dbOperations.deleteSong(songId);
+    if (!success) {
+      return res.status(404).json({ error: "Música customizada não encontrada no banco de dados." });
+    }
+
+    return res.json({ success: true, message: "Música customizada deletada com sucesso!" });
+  } catch (error) {
+    console.error("Erro ao deletar música customizada do SQLite:", error);
+    return res.status(500).json({ error: "Erro interno no servidor de banco de dados." });
+  }
+});
+
 app.get("/api/lessons", (req, res) => {
   try {
     const level = req.query.level ? String(req.query.level) : undefined;

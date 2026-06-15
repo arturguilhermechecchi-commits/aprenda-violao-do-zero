@@ -1342,6 +1342,31 @@ const RIFF_DATABASE: Riff[] = [
 ];
 
 export default function SongsTab({ currentUser }: { currentUser: UserSession | null }) {
+  const [customSongs, setCustomSongs] = useState<Song[]>([]);
+
+  const handleFetchCustomSongs = () => {
+    fetch("/api/songs")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.songs) {
+          setCustomSongs(data.songs);
+        }
+      })
+      .catch((err) => console.error("Erro ao carregar as cifras personalizadas do SQLite:", err));
+  };
+
+  useEffect(() => {
+    handleFetchCustomSongs();
+    
+    // Listen to custom song updates from the Admin tab
+    window.addEventListener("refreshCustomSongs", handleFetchCustomSongs);
+    return () => {
+      window.removeEventListener("refreshCustomSongs", handleFetchCustomSongs);
+    };
+  }, []);
+
+  const allSongs = [...SONG_DATABASE, ...customSongs];
+
   const [selectedSong, setSelectedSong] = useState<Song>(SONG_DATABASE[0]);
   const [noteText, setNoteText] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
@@ -1764,7 +1789,7 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
       doc.setTextColor(255, 255, 255);
-      doc.text(`Total de Músicas: ${SONG_DATABASE.length}`, 105, 195, { align: "center" });
+      doc.text(`Total de Músicas: ${allSongs.length}`, 105, 195, { align: "center" });
       
       const studentName = currentUser?.username || "Estudante Dedicado";
       doc.text(`Compilado Especialmente para: ${studentName}`, 105, 210, { align: "center" });
@@ -1803,7 +1828,7 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
       
       let pageNum = 1;
       
-      SONG_DATABASE.forEach((song) => {
+      allSongs.forEach((song) => {
         doc.addPage();
         pageNum++;
         
@@ -1998,7 +2023,7 @@ export default function SongsTab({ currentUser }: { currentUser: UserSession | n
             </button>
 
             <div className="flex flex-col gap-3">
-              {SONG_DATABASE.map((song) => {
+              {allSongs.map((song) => {
                 const isSelected = selectedSong.id === song.id;
                 return (
                   <button

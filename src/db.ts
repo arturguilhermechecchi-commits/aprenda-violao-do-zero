@@ -198,6 +198,26 @@ try {
   console.error("Erro ao configurar system_locks no SQLite:", e);
 }
 
+// Create custom_songs table for allowing administrator to add custom songs dynamically
+try {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS custom_songs (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      artist TEXT NOT NULL,
+      bpm INTEGER NOT NULL,
+      rhythm TEXT NOT NULL,
+      strumming_pattern TEXT NOT NULL,
+      chords_used TEXT NOT NULL,
+      lines TEXT NOT NULL,
+      video_tip TEXT
+    )
+  `);
+  console.log("[Database] Tabela 'custom_songs' configurada com sucesso.");
+} catch (e) {
+  console.error("Erro ao configurar custom_songs no SQLite:", e);
+}
+
 // Seed all lessons (beginner, intermediate, advanced) in the database
 try {
   console.log("[Database] Semeando/atualizando tabela de lições no SQLite...");
@@ -2108,6 +2128,63 @@ export const dbOperations = {
       VALUES (?, ?, ?)
     `);
     stmt.run(email, new Date().toISOString(), userAgent || "");
+  },
+
+  // Songs
+  getCustomSongs() {
+    try {
+      const stmt = db.prepare("SELECT * FROM custom_songs");
+      const rows = stmt.all() as any[];
+      return rows.map((row) => ({
+        id: row.id,
+        title: row.title,
+        artist: row.artist,
+        bpm: Number(row.bpm),
+        rhythm: row.rhythm,
+        strummingPattern: JSON.parse(row.strumming_pattern || "[]"),
+        chordsUsed: JSON.parse(row.chords_used || "[]"),
+        lines: JSON.parse(row.lines || "[]"),
+        videoTip: row.video_tip || undefined,
+      }));
+    } catch (e) {
+      console.error("Erro ao resgatar custom_songs do SQLite:", e);
+      return [];
+    }
+  },
+
+  createSong(song: any) {
+    try {
+      const stmt = db.prepare(`
+        INSERT OR REPLACE INTO custom_songs (id, title, artist, bpm, rhythm, strumming_pattern, chords_used, lines, video_tip)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      const info = stmt.run(
+        song.id,
+        song.title,
+        song.artist,
+        song.bpm,
+        song.rhythm,
+        JSON.stringify(song.strummingPattern),
+        JSON.stringify(song.chordsUsed),
+        JSON.stringify(song.lines),
+        song.videoTip || null
+      );
+      return info.changes > 0;
+    } catch (e) {
+      console.error("Erro ao criar custom_song no SQLite:", e);
+      return false;
+    }
+  },
+
+  deleteSong(id: string) {
+    try {
+      const stmt = db.prepare("DELETE FROM custom_songs WHERE id = ?");
+      const info = stmt.run(id);
+      return info.changes > 0;
+    } catch (e) {
+      console.error("Erro ao deletar custom_song do SQLite:", e);
+      return false;
+    }
   },
 
   // Admin query dashboards stats

@@ -70,6 +70,233 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
   const [adminPdfDownloads, setAdminPdfDownloads] = useState<any[]>([]);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
 
+  // States for custom songs manager
+  const [adminSongs, setAdminSongs] = useState<any[]>([]);
+  const [isLoadingSongs, setIsLoadingSongs] = useState(false);
+  const [editingSongId, setEditingSongId] = useState<string | null>(null);
+  
+  // Song fields
+  const [songTitle, setSongTitle] = useState("");
+  const [songArtist, setSongArtist] = useState("");
+  const [songBpm, setSongBpm] = useState(80);
+  const [songRhythm, setSongRhythm] = useState("Pop Rock");
+  const [songChords, setSongChords] = useState("G, C, D, Em");
+  const [songStrumming, setSongStrumming] = useState("↓, ↓, ↑, ↑, ↓, ↑");
+  const [songVideoTip, setSongVideoTip] = useState("");
+  const [songCipher, setSongCipher] = useState(
+    "[G]Minha terra tem pal[C]meiras\n[D]Onde canta o sa[G]biá"
+  );
+  const [songSuccess, setSongSuccess] = useState<string | null>(null);
+  const [songError, setSongError] = useState<string | null>(null);
+  const [isSavingSong, setIsSavingSong] = useState(false);
+
+  const fetchAdminSongs = () => {
+    setIsLoadingSongs(true);
+    fetch("/api/songs")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        setAdminSongs(data.songs || []);
+      })
+      .catch((err) => {
+        console.error("Erro ao puxar músicas customizadas para o administrador:", err);
+      })
+      .finally(() => {
+        setIsLoadingSongs(false);
+      });
+  };
+
+  const parseBracketNotation = (rawText: string) => {
+    const rawLines = rawText.split("\n");
+    return rawLines.map((rawLine) => {
+      const chords: { chord: string; position: number }[] = [];
+      let cleanText = "";
+      let characterIndex = 0;
+      
+      let i = 0;
+      while (i < rawLine.length) {
+        if (rawLine[i] === "[") {
+          const closeBracket = rawLine.indexOf("]", i);
+          if (closeBracket !== -1) {
+            const chordName = rawLine.substring(i + 1, closeBracket);
+            chords.push({ chord: chordName.trim(), position: characterIndex });
+            i = closeBracket + 1;
+            continue;
+          }
+        }
+        cleanText += rawLine[i];
+        characterIndex++;
+        i++;
+      }
+      return { chords, text: cleanText };
+    });
+  };
+
+  const handleSaveSongSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!songTitle.trim() || !songArtist.trim()) {
+      setSongError("Título e artista da música são obrigatórios.");
+      return;
+    }
+
+    setIsSavingSong(true);
+    setSongError(null);
+    setSongSuccess(null);
+
+    const chordsUsed = songChords
+      .split(",")
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0);
+
+    const strummingPattern = songStrumming
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    const lines = parseBracketNotation(songCipher);
+    const songId = editingSongId || `custom-song-${Date.now()}`;
+
+    const newSong = {
+      id: songId,
+      title: songTitle.trim(),
+      artist: songArtist.trim(),
+      bpm: Number(songBpm) || 80,
+      rhythm: songRhythm.trim() || "Pop Rock",
+      strummingPattern,
+      chordsUsed,
+      lines,
+      videoTip: songVideoTip.trim() || undefined
+    };
+
+    fetch("/api/admin/songs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminEmail: currentUser.email,
+        song: newSong
+      })
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((data) => {
+            throw new Error(data.error || "Erro ao salvar música.");
+          });
+        }
+        return res.json();
+      })
+      .then(() => {
+        setSongSuccess(editingSongId ? "Música atualizada com sucesso!" : "Música adicionada com sucesso!");
+        fetchAdminSongs();
+        window.dispatchEvent(new CustomEvent("refreshCustomSongs"));
+
+        // Reset
+        setEditingSongId(null);
+        setSongTitle("");
+        setSongArtist("");
+        setSongBpm(80);
+        setSongRhythm("Pop Rock");
+        setSongChords("G, C, D, Em");
+        setSongStrumming("↓, ↓, ↑, ↑, ↓, ↑");
+        setSongVideoTip("");
+        setSongCipher("[G]Minha terra tem pal[C]meiras\n[D]Onde canta o sa[G]biá");
+        
+        setTimeout(() => setSongSuccess(null), 3000);
+      })
+      .catch((err: any) => {
+        console.error("Erro ao salvar música:", err);
+        setSongError(err.message || "Erro para conectar-se ao servidor.");
+      })
+      .finally(() => {
+        setIsSavingSong(false);
+      });
+  };
+
+  const handleDeleteSong = (songId: string) => {
+    if (!window.confirm("Deseja realmente excluir esta música permanentemente?")) return;
+
+    fetch("/api/admin/songs/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        adminEmail: currentUser.email,
+        songId
+      })
+    })
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((data) => {
+            throw new Error(data.error || "Erro ao deletar.");
+          });
+        }
+        return res.json();
+      })
+      .then(() => {
+        fetchAdminSongs();
+        window.dispatchEvent(new CustomEvent("refreshCustomSongs"));
+      })
+      .catch((err: any) => {
+        console.error("Erro ao excluir música:", err);
+        alert(err.message || "Não foi possível excluir a música.");
+      });
+  };
+
+  const handleLoadSongForEdit = (song: any) => {
+    setEditingSongId(song.id);
+    setSongTitle(song.title);
+    setSongArtist(song.artist);
+    setSongBpm(song.bpm);
+    setSongRhythm(song.rhythm);
+    setSongChords(song.chordsUsed.join(", "));
+    setSongStrumming(song.strummingPattern.join(", "));
+    setSongVideoTip(song.videoTip || "");
+    
+    // Deconstruct structural lines to bracket strings
+    let reconstructedText = "";
+    song.lines.forEach((line: any, index: number) => {
+      const lineChords = [...(line.chords || [])].sort((a, b) => b.position - a.position);
+      let lineText = line.text;
+      lineChords.forEach((chordData: any) => {
+        const pos = chordData.position;
+        lineText = lineText.slice(0, pos) + `[${chordData.chord}]` + lineText.slice(pos);
+      });
+      reconstructedText += lineText + (index < song.lines.length - 1 ? "\n" : "");
+    });
+    setSongCipher(reconstructedText);
+    
+    const formElement = document.getElementById("admin-song-editor-card");
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const handleLoadPreset = (presetName: string) => {
+    if (presetName === "tempo_perdido") {
+      setSongTitle("Tempo Perdido");
+      setSongArtist("Legião Urbana");
+      setSongBpm(124);
+      setSongRhythm("Pop Rock (Toque Pop)");
+      setSongChords("C, Am7, Bm7, Em");
+      setSongStrumming("↓, ↓, ↑, ↑, ↓, ↑");
+      setSongVideoTip("Mantenha a batida constante e foque nos silêncios estratégicos do contratempo.");
+      setSongCipher(
+        "[C]Todos os dias antes de de[Am7]itar\nLembro e esqueço como foi o [Bm7]dia\nSempre em frente, [Em]não temos tempo a perder"
+      );
+    } else if (presetName === "garota_de_ipanema") {
+      setSongTitle("Garota de Ipanema");
+      setSongArtist("Tom Jobim");
+      setSongBpm(80);
+      setSongRhythm("Bossa Nova Tradicional");
+      setSongChords("G7M, A7, Am7, D7");
+      setSongStrumming("↓, x, ↑, ↓, x, ↑");
+      setSongVideoTip("Toque usando dedilhado polegar e três dedos marcando bem a síncope da bossa.");
+      setSongCipher(
+        "[G7M]Olha que coisa mais linda, mais cheia de [A7]graça\nÉ ela, menina, que vem e que [Am7]passa\nNum doce bal[D7]anço a caminho do [G7M]mar"
+      );
+    }
+  };
+
   const fetchAdminPdfDownloads = () => {
     setIsLoadingPdf(true);
     fetch(`/api/admin/pdf-downloads?adminEmail=${encodeURIComponent(currentUser.email)}`)
@@ -278,6 +505,7 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
     fetchAdminQuestions();
     fetchChordLockStatus();
     fetchAdminPdfDownloads();
+    fetchAdminSongs();
   }, [currentUser.email]);
 
   if (errorText) {
@@ -621,6 +849,275 @@ export default function AdminTab({ currentUser }: AdminTabProps) {
             {lockStatusMessage}
           </div>
         )}
+      </div>
+
+      {/* SECTION: Custom Songs Repertório Management */}
+      <div id="admin-song-editor-card" className="bg-white dark:bg-stone-900 rounded-3xl border border-slate-200 dark:border-stone-850 p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 dark:border-stone-850 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-amber-600" />
+              <h4 className="font-extrabold text-slate-900 dark:text-white text-base">Gerenciador de Músicas do Repertório</h4>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-stone-400 mt-1">
+              Adicione e gerencie músicas dinâmicas no repertório. Use a prática sintaxe de colchetes como <code className="bg-stone-100 dark:bg-stone-950 p-0.5 rounded text-amber-600">[C]</code> antes de cada sílaba para que a cifra apareça perfeitamente em cima da letra.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleLoadPreset("tempo_perdido")}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-200 text-xs rounded-xl transition font-bold border-0 cursor-pointer"
+            >
+              Exemplo Tempo Perdido
+            </button>
+            <button
+              onClick={() => handleLoadPreset("garota_de_ipanema")}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-200 text-xs rounded-xl transition font-bold border-0 cursor-pointer"
+            >
+              Exemplo Garota de Ipanema
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Form Side */}
+          <form onSubmit={handleSaveSongSubmit} className="lg:col-span-12 xl:col-span-7 space-y-4">
+            <h5 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              {editingSongId ? "📝 Editando Música" : "✨ Criar Nova Música no Banco"}
+            </h5>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                  Título da Música
+                </label>
+                <input
+                  type="text"
+                  value={songTitle}
+                  onChange={(e) => setSongTitle(e.target.value)}
+                  placeholder="Ex: Como Nossos Pais"
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition animate-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                  Artista / Banda
+                </label>
+                <input
+                  type="text"
+                  value={songArtist}
+                  onChange={(e) => setSongArtist(e.target.value)}
+                  placeholder="Ex: Belchior"
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition animate-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                  Batida / Ritmo (Texto descritivo)
+                </label>
+                <input
+                  type="text"
+                  value={songRhythm}
+                  onChange={(e) => setSongRhythm(e.target.value)}
+                  placeholder="Ex: Pop Rock ou Guarânia"
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition animate-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                    BPM (Tempo)
+                  </label>
+                  <input
+                    type="number"
+                    value={songBpm}
+                    onChange={(e) => setSongBpm(Number(e.target.value))}
+                    min={40}
+                    max={250}
+                    required
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition animate-none"
+                  />
+                </div>
+                <div className="flex items-end mb-1">
+                  <span className="text-[10px] font-semibold text-slate-405 dark:text-stone-550 block bg-slate-50 dark:bg-stone-950 p-2.5 border border-slate-200 dark:border-stone-850 rounded-xl w-full text-center">
+                    ⏱️ Batidas
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                  Acordes Usados (Separados por vírgula)
+                </label>
+                <input
+                  type="text"
+                  value={songChords}
+                  onChange={(e) => setSongChords(e.target.value)}
+                  placeholder="Ex: G, C, D, Em"
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                  Padrão de Levada (Setas separadas por vírgula)
+                </label>
+                <input
+                  type="text"
+                  value={songStrumming}
+                  onChange={(e) => setSongStrumming(e.target.value)}
+                  placeholder="Ex: ↓, ↓, ↑, ↑, ↓, ↑"
+                  required
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition font-semibold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block mb-1">
+                Dica de Treino em Vídeo / Texto (Instruções adicionais)
+              </label>
+              <input
+                type="text"
+                value={songVideoTip}
+                onChange={(e) => setSongVideoTip(e.target.value)}
+                placeholder="Ex: Foque na transição rápida de G para C na segunda estrofe do refrão."
+                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[10px] font-black text-slate-705 dark:text-stone-300 uppercase tracking-wider block">
+                  Cifra e Letra Completa (Com a fôrma [Acorde])
+                </label>
+                <span className="text-[9px] text-amber-600 font-bold font-mono">Prática & Rápida</span>
+              </div>
+              <textarea
+                value={songCipher}
+                onChange={(e) => setSongCipher(e.target.value)}
+                placeholder="Exemplo de digitação:&#10;[G]Quando oiei a te[C]rra ardendo&#10;[G]Qual fogueira de S[C]ão João"
+                required
+                className="w-full h-44 p-3 rounded-xl border border-slate-200 dark:border-stone-850 dark:bg-stone-950 dark:text-stone-100 placeholder-slate-400 dark:placeholder-stone-600 text-xs focus:ring-1 focus:ring-amber-500/50 focus:border-amber-500/50 focus:outline-none transition font-mono whitespace-pre resize-y"
+              />
+            </div>
+
+            <div className="flex justify-between items-center gap-2 pt-2">
+              {editingSongId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingSongId(null);
+                    setSongTitle("");
+                    setSongArtist("");
+                    setSongBpm(80);
+                    setSongRhythm("Pop Rock");
+                    setSongChords("G, C, D, Em");
+                    setSongStrumming("↓, ↓, ↑, ↑, ↓, ↑");
+                    setSongVideoTip("");
+                    setSongCipher("[G]Minha terra tem pal[C]meiras\n[D]Onde canta o sa[G]biá");
+                  }}
+                  className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-200 font-extrabold text-xs rounded-xl border-0 cursor-pointer transition animate-none"
+                >
+                  Cancelar Edição
+                </button>
+              )}
+              <button
+                type="submit"
+                disabled={isSavingSong}
+                className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-slate-950 font-black rounded-xl text-xs transition shadow flex items-center justify-center gap-2 border-0 cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle className="w-4 h-4" />
+                {isSavingSong ? "Salvando no Banco..." : editingSongId ? "Salvar Alterações no SQLite" : "Cadastrar Música no SQLite"}
+              </button>
+            </div>
+
+            {songError && (
+              <p className="text-xs text-rose-600 font-bold block bg-rose-500/10 p-2.5 rounded-lg border border-rose-500/20">
+                {songError}
+              </p>
+            )}
+
+            {songSuccess && (
+              <p className="text-xs text-emerald-600 font-bold block bg-emerald-500/10 p-2.5 rounded-lg border border-emerald-500/20">
+                ✓ {songSuccess}
+              </p>
+            )}
+          </form>
+
+          {/* List side */}
+          <div className="lg:col-span-12 xl:col-span-5 flex flex-col justify-between space-y-4">
+            <div className="bg-slate-50 dark:bg-stone-950 p-4 rounded-2xl border border-slate-200 dark:border-stone-850 h-full flex flex-col">
+              <h5 className="text-xs font-black text-slate-900 dark:text-stone-200 uppercase tracking-wider mb-3">
+                Músicas Customizadas Ativas ({adminSongs.length})
+              </h5>
+
+              <div className="flex-1 overflow-y-auto max-h-[460px] pr-1 space-y-2.5">
+                {isLoadingSongs ? (
+                  <div className="text-center py-10">
+                    <span className="w-5 h-5 border-2 border-amber-600 border-t-transparent rounded-full animate-spin inline-block" />
+                    <p className="text-[10px] text-slate-450 mt-1 font-mono">Buscando músicas no banco...</p>
+                  </div>
+                ) : adminSongs.length === 0 ? (
+                  <div className="text-center py-12 border border-dashed border-slate-300 dark:border-stone-800 rounded-xl bg-white dark:bg-stone-900 text-slate-450 dark:text-stone-550 italic text-xs">
+                    Nenhuma música adicionada pelo administrador ainda. Use o formulário à esquerda para adicionar a sua primeira cifra!
+                  </div>
+                ) : (
+                  adminSongs.map((song) => (
+                    <div
+                      key={song.id}
+                      className="p-3 bg-white dark:bg-stone-900 border border-slate-200 dark:border-stone-850 rounded-xl shadow-xs flex justify-between items-center group relative hover:border-slate-350 dark:hover:border-stone-750 transition"
+                    >
+                      <div className="text-left">
+                        <h6 className="font-bold text-xs text-slate-900 dark:text-stone-100">{song.title}</h6>
+                        <span className="text-[10px] text-slate-500 dark:text-stone-400 block mt-0.5">{song.artist} ({song.rhythm})</span>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {song.chordsUsed.slice(0, 4).map((c: string) => (
+                            <span key={c} className="text-[9px] font-semibold bg-amber-50 dark:bg-amber-950/25 px-1 py-0.2 rounded font-mono text-amber-700 dark:text-amber-400">
+                              {c}
+                            </span>
+                          ))}
+                          {song.chordsUsed.length > 4 && (
+                            <span className="text-[9px] text-slate-400 font-mono">+{song.chordsUsed.length - 4}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => handleLoadSongForEdit(song)}
+                          className="p-1 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-stone-800 dark:hover:bg-stone-750 text-slate-700 dark:text-stone-200 rounded-lg text-[10px] font-bold border-0 cursor-pointer transition"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSong(song.id)}
+                          className="p-1 text-red-500 hover:bg-red-550/10 rounded-lg border-0 cursor-pointer transition"
+                          title="Excluir Música"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* SECTION: Student Questions & Customized Explanatory Videos */}
