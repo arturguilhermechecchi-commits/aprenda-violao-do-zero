@@ -500,6 +500,150 @@ const CHORD_DATABASE: Chord[] = [
     fingers: [null, 2, 4, 1, 3, null],
     baseFret: 1,
     usageTip: "Excelente e clássica transição para o acorde de C ou de Am em MPB e Bossa Nova."
+  },
+  {
+    name: "Cdim7",
+    altName: "Dó Diminuto c/ Sétima",
+    frets: ["x", 3, 4, 2, 4, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 2,
+    usageTip: "Clássico desenho diminuto com tônica na 5ª corda. Sofisticado e resolve perfeitamente em C#m ou Dm."
+  },
+  {
+    name: "C#dim7",
+    altName: "Dó Sost. Dim. c/ Sétima",
+    frets: ["x", 4, 5, 3, 5, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 3,
+    usageTip: "Pode ser usado no lugar de C#dim para adicionar a sétima diminuta. Resolve muito bem em Dm ou Dm7."
+  },
+  {
+    name: "Ddim7",
+    altName: "Ré Diminuto c/ Sétima",
+    frets: ["x", "x", 0, 1, 0, 1],
+    fingers: [null, null, null, 2, null, 1],
+    baseFret: 1,
+    usageTip: "Simples de tocar, aproveitando a corda Ré solta como tônica. Excelente preparação para Mib ou Em."
+  },
+  {
+    name: "D#dim7",
+    altName: "Ré Sost. Dim. c/ Sétima",
+    frets: ["x", "x", 1, 2, 1, 2],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 1,
+    usageTip: "Shape simétrico perfeito com tônica na 4ª corda. Desloque 3 casas acima para obter o próximo tom diminuto."
+  },
+  {
+    name: "Edim7",
+    altName: "Mi Diminuto c/ Sétima",
+    frets: ["x", "x", 2, 3, 2, 3],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 2,
+    usageTip: "Muito usado na música clássica e no flamenco. Shape extremamente simétrico de alta tensão."
+  },
+  {
+    name: "Gdim7",
+    altName: "Sol Diminuto c/ Sétima",
+    frets: [3, "x", 2, 3, 2, "x"],
+    fingers: [2, null, 1, 3, 1, null],
+    baseFret: 2,
+    usageTip: "Tônica na 6ª corda, com a 5ª e 1ª cordas abafadas. Muito comum no samba tradicional e choro."
+  },
+  {
+    name: "G#dim7",
+    altName: "Sol Sost. Dim. c/ Sétima",
+    frets: [4, "x", 3, 4, 3, "x"],
+    fingers: [2, null, 1, 3, 1, null],
+    baseFret: 3,
+    usageTip: "Ponte perfeita para Lá Menor (Am) com muita tensão dramática."
+  },
+  {
+    name: "Adim7",
+    altName: "Lá Diminuto c/ Sétima",
+    frets: ["x", 0, 1, 2, 1, 2],
+    fingers: [null, null, 1, 3, 2, 4],
+    baseFret: 1,
+    usageTip: "Usa a tônica solta na 5ª corda. Excelente sonoridade aberta típica da MPB antiga."
+  },
+  {
+    name: "Bdim7",
+    altName: "Si Diminuto c/ Sétima",
+    frets: ["x", 2, 3, 1, 3, "x"],
+    fingers: [null, 2, 4, 1, 3, null],
+    baseFret: 1,
+    usageTip: "Excelente de se usar antes do acorde de Dó Maior (C), criando uma forte atração tonal."
+  },
+  {
+    name: "Cm7(b5)",
+    altName: "Dó Meio-Diminuto",
+    frets: ["x", 3, 4, 3, 4, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 3,
+    usageTip: "Desenho clássico de meio-diminuto sobre a 5ª corda. Essencial para o II-V-I menor de Sib menor."
+  },
+  {
+    name: "C#m7(b5)",
+    altName: "Dó Sost. Meio-Dim.",
+    frets: ["x", 4, 5, 4, 5, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 4,
+    usageTip: "O mestre da bossa nova. Prepara com sofisticação o caminho para o acorde de F#7."
+  },
+  {
+    name: "Dm7(b5)",
+    altName: "Ré Meio-Diminuto",
+    frets: ["x", 5, 6, 5, 6, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 5,
+    usageTip: "Segundo grau do tom de Dó Menor (Cm). Abre as portas para o acorde G7(b9) com muita tensão."
+  },
+  {
+    name: "D#m7(b5)",
+    altName: "Ré Sost. Meio-Dim.",
+    frets: ["x", 6, 7, 6, 7, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 6,
+    usageTip: "Usado com sofisticação na MPB e jazz. Caminha perfeitamente em direção ao acorde de G#7."
+  },
+  {
+    name: "Em7(b5)",
+    altName: "Mi Meio-Diminuto",
+    frets: ["x", 7, 8, 7, 8, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 7,
+    usageTip: "Desenho encorpado na 7ª casa. Prepara o acorde de Lá Maior com Sétima (A7) de forma muito elegante."
+  },
+  {
+    name: "Gm7(b5)",
+    altName: "Sol Meio-Diminuto",
+    frets: [3, "x", 3, 3, 2, "x"],
+    fingers: [2, null, 3, 4, 1, null],
+    baseFret: 2,
+    usageTip: "Tônica na 6ª corda. Essencial no jazz e bossa nova para preparar acordes dominantes como C7."
+  },
+  {
+    name: "G#m7(b5)",
+    altName: "Sol Sost. Meio-Dim.",
+    frets: [4, "x", 4, 4, 3, "x"],
+    fingers: [2, null, 3, 4, 1, null],
+    baseFret: 3,
+    usageTip: "Sofisticada sonoridade meio-diminuta com baixo na 6ª corda. Excelente para tons de Fá Sostido Menor."
+  },
+  {
+    name: "Am7(b5)",
+    altName: "Lá Meio-Diminuto",
+    frets: ["x", 0, 1, 0, 1, "x"],
+    fingers: [null, null, 1, null, 2, null],
+    baseFret: 1,
+    usageTip: "Shape muito acessível que aproveita a 5ª corda solta (Lá) como tônica. Ideal para a bossa nova."
+  },
+  {
+    name: "A#m7(b5)",
+    altName: "Lá Sost. Meio-Dim.",
+    frets: ["x", 1, 2, 1, 2, "x"],
+    fingers: [null, 1, 3, 2, 4, null],
+    baseFret: 1,
+    usageTip: "Excelente passagem harmônica de transição cromática descendente ou ascendente."
   }
 ];
 

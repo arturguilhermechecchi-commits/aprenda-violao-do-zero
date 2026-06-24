@@ -10,10 +10,72 @@ import PerformanceTab from "./components/PerformanceTab";
 import LoginScreen from "./components/LoginScreen";
 import GoogleDriveTab from "./components/GoogleDriveTab";
 import { UserSession } from "./types";
-import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck, Pocket, AudioWaveform, Sliders, Check, Settings2, RefreshCw, BarChart3, Cloud } from "lucide-react";
+import { BookOpen, Disc, Volume2, Sparkles, Activity, Music, HelpCircle, Star, ListMusic, LogOut, User, ShieldCheck, Pocket, AudioWaveform, Sliders, Check, Settings2, RefreshCw, BarChart3, Cloud, Award, Crown, Shield, X } from "lucide-react";
 import { updateAudioConfig, playGuitarChord } from "./components/AcousticAudio";
 
 type TabId = "lessons" | "chords" | "songs" | "tuner" | "metronome" | "performance" | "aichat" | "gdrive" | "admin";
+
+const getMemberBadge = (level: string) => {
+  const normalized = level?.trim().toLowerCase() || "iniciante";
+  if (normalized === "avançado" || normalized === "avancado") {
+    return {
+      name: "Membro Ouro",
+      levelLabel: "Avançado",
+      color: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800/50",
+      icon: <Crown className="w-3.5 h-3.5 text-amber-500 fill-amber-500/20" />,
+      bigIcon: <Crown className="w-12 h-12 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.5)] animate-pulse" />,
+      textColor: "text-amber-700 dark:text-amber-400",
+      badgeColor: "from-amber-500 to-yellow-400 text-stone-950",
+      description: "Executando acordes complexos, improvisação e harmonias avançadas com maestria!",
+      cardStyle: "bg-gradient-to-br from-amber-500/10 via-stone-900 to-amber-950/20 border-amber-500/30",
+      unlockedSkills: [
+        "Acordes Diminutos e Meio-Diminutos 🎸",
+        "Harmonia Funcional Avançada 🎼",
+        "Técnicas de Dedilhado Sincopado ✨",
+        "Improvisação e Solos de Escalas 🚀"
+      ],
+      nextRequirement: "Parabéns! Você alcançou o nível máximo do aprendizado prático de violão!"
+    };
+  } else if (normalized === "intermediário" || normalized === "intermediario") {
+    return {
+      name: "Membro Prata",
+      levelLabel: "Intermediário",
+      color: "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-900/50 dark:text-slate-300 dark:border-slate-800/50",
+      icon: <Award className="w-3.5 h-3.5 text-slate-450" />,
+      bigIcon: <Award className="w-12 h-12 text-slate-300 drop-shadow-[0_0_8px_rgba(148,163,184,0.4)]" />,
+      textColor: "text-slate-750 dark:text-slate-300",
+      badgeColor: "from-slate-400 to-slate-250 text-slate-950",
+      description: "Dominando pestanas desafiadoras, dedilhados e campos harmônicos com firmeza!",
+      cardStyle: "bg-gradient-to-br from-slate-500/10 via-stone-900 to-slate-800/10 border-slate-400/30",
+      unlockedSkills: [
+        "Pestanas completas (F, Bm, etc.) 🎸",
+        "Dedilhado clássico fluído 🎶",
+        "Campo Harmônico Maior Completo 🎼",
+        "Novos ritmos (Bossa Nova, Reggae, etc.) 🌊"
+      ],
+      nextRequirement: "Complete com sucesso o Teste de Nível Intermediário (80% de acerto) para subir para o Membro Ouro!"
+    };
+  } else {
+    return {
+      name: "Membro Bronze",
+      levelLabel: "Iniciante",
+      color: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/40",
+      icon: <Shield className="w-3.5 h-3.5 text-orange-600 fill-orange-600/10" />,
+      bigIcon: <Shield className="w-12 h-12 text-orange-600 drop-shadow-[0_0_8px_rgba(249,115,22,0.3)]" />,
+      textColor: "text-orange-700 dark:text-orange-400",
+      badgeColor: "from-orange-500 to-amber-600 text-stone-950",
+      description: "Iniciando a jornada no violão, conquistando acordes básicos e ritmos essenciais!",
+      cardStyle: "bg-gradient-to-br from-orange-500/10 via-stone-900 to-stone-900 border-orange-500/20",
+      unlockedSkills: [
+        "Anatomia e Postura do Violão 🎸",
+        "Acordes Maiores e Menores Básicos (C, G, D, Am, Em) 🎵",
+        "Ritmos de Pop Rock e Balada 🥁",
+        "Afinação de Ouvido Interativa 🎧"
+      ],
+      nextRequirement: "Faça o Teste de Nível Iniciante na aba de Lições para desbloquear o Membro Prata!"
+    };
+  }
+};
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("lessons");
@@ -37,6 +99,7 @@ export default function App() {
 
   // Audio configuration settings backed by SQLite
   const [isAudioPanelOpen, setIsAudioPanelOpen] = useState<boolean>(false);
+  const [isMemberCardOpen, setIsMemberCardOpen] = useState<boolean>(false);
   const [masterVolume, setMasterVolume] = useState<number>(80);
   const [guitarType, setGuitarType] = useState<string>("acoustic_steel");
   const [metronomeFrequency, setMetronomeFrequency] = useState<number>(1000);
@@ -226,21 +289,35 @@ export default function App() {
           {/* Quick info badges or dark mode switcher */}
           <div className="flex items-center gap-3">
             {/* User Session Profile details */}
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-stone-950 border border-slate-200 dark:border-stone-850 rounded-2xl">
-              <div id="user-avatar" className="w-7 h-7 rounded-full bg-amber-800 text-stone-100 flex items-center justify-center text-xs font-bold font-mono">
+            <div 
+              onClick={() => setIsMemberCardOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-stone-950 hover:bg-slate-100 dark:hover:bg-stone-900 border border-slate-200 dark:border-stone-850 rounded-2xl cursor-pointer transition duration-150 group"
+              title="Ver minha Carteira de Membro Violonista"
+            >
+              <div id="user-avatar" className="w-7 h-7 rounded-full bg-amber-800 text-stone-100 flex items-center justify-center text-xs font-bold font-mono relative">
                 {currentUser?.username ? currentUser.username.charAt(0).toUpperCase() : "U"}
+                <span className="absolute -bottom-1 -right-1 bg-white dark:bg-stone-950 border border-slate-200 dark:border-stone-800 rounded-full w-4 h-4 flex items-center justify-center text-[8px] font-bold shadow-xs">
+                  {getMemberBadge(currentUser?.guitarLevel || "Iniciante").icon}
+                </span>
               </div>
               <div className="hidden md:block text-left text-xs">
-                <span className="font-bold text-slate-900 dark:text-stone-200 block max-w-[140px] truncate">
+                <span className="font-bold text-slate-900 dark:text-stone-200 block max-w-[140px] truncate group-hover:text-amber-600 dark:group-hover:text-amber-500 transition">
                   {currentUser?.username}
                 </span>
-                <span className="text-[9px] text-slate-400 dark:text-stone-500 block leading-none font-mono mt-0.5">
-                  {currentUser?.email === "convidado@violao.com" ? "Convidado" : "Aluno Ativo"} • <strong className="text-amber-700 dark:text-amber-500 font-bold">{currentUser?.guitarLevel || "Iniciante"}</strong>
-                </span>
+                <div className="flex items-center gap-1.5 text-[9px] text-slate-400 dark:text-stone-500 leading-none font-mono mt-0.5">
+                  <span>{currentUser?.email === "convidado@violao.com" ? "Convidado" : "Aluno Ativo"}</span>
+                  <span>•</span>
+                  <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded-sm font-bold border ${getMemberBadge(currentUser?.guitarLevel || "Iniciante").color}`}>
+                    {currentUser?.guitarLevel || "Iniciante"}
+                  </span>
+                </div>
               </div>
               
               <button
-                onClick={handleLogout}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLogout();
+                }}
                 id="logout-btn"
                 title="Sair da Conta"
                 className="ml-1 p-1 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition duration-150"
@@ -654,6 +731,98 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* MODAL: Carteira de Membro Violonista */}
+      {isMemberCardOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div 
+            className={`w-full max-w-md p-6 rounded-3xl border shadow-2xl relative text-center overflow-hidden transition-all duration-300 ${
+              isDarkMode ? "bg-stone-900 text-stone-100" : "bg-white text-slate-800"
+            } ${getMemberBadge(currentUser?.guitarLevel || "Iniciante").cardStyle}`}
+          >
+            {/* Background elements */}
+            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-amber-600/10 to-transparent pointer-events-none" />
+            
+            {/* Header / Fechar */}
+            <button
+              onClick={() => setIsMemberCardOpen(false)}
+              className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-stone-500/10 text-stone-400 hover:text-stone-200 transition border-0 cursor-pointer bg-transparent"
+              title="Fechar"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Identidade de Membro */}
+            <div className="relative mt-2 flex flex-col items-center">
+              {/* Distintivo de Nível */}
+              <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-stone-950 to-stone-850 flex items-center justify-center border border-amber-500/20 shadow-lg relative mb-4">
+                {getMemberBadge(currentUser?.guitarLevel || "Iniciante").bigIcon}
+              </div>
+
+              {/* Título de Membro */}
+              <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gradient-to-r shadow-xs ${getMemberBadge(currentUser?.guitarLevel || "Iniciante").badgeColor}`}>
+                {getMemberBadge(currentUser?.guitarLevel || "Iniciante").name}
+              </span>
+
+              <h3 className="text-xl font-black tracking-tight mt-3">
+                {currentUser?.username}
+              </h3>
+              <p className="text-xs text-slate-400 dark:text-stone-500 font-mono mt-0.5">
+                {currentUser?.email}
+              </p>
+
+              {/* Linha Divisória */}
+              <div className="w-full border-t border-slate-200 dark:border-stone-800/80 my-4" />
+
+              {/* Descrição */}
+              <p className="text-xs text-slate-600 dark:text-stone-300 px-2 italic leading-relaxed">
+                "{getMemberBadge(currentUser?.guitarLevel || "Iniciante").description}"
+              </p>
+
+              {/* Habilidades Desbloqueadas */}
+              <div className="w-full text-left mt-4 space-y-2.5">
+                <span className="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider block">
+                  🚀 Habilidades Desbloqueadas neste Nível:
+                </span>
+                <div className="grid grid-cols-1 gap-1.5">
+                  {getMemberBadge(currentUser?.guitarLevel || "Iniciante").unlockedSkills.map((skill, idx) => (
+                    <div 
+                      key={idx}
+                      className="flex items-center gap-2 p-2 bg-stone-950/40 border border-stone-850/60 rounded-xl text-[11px] font-medium"
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                      <span className="truncate">{skill}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Requisitos para Evoluir */}
+              <div className="w-full text-left mt-5 p-3 bg-amber-500/5 border border-amber-500/10 rounded-xl">
+                <div className="flex items-center gap-1.5 mb-1 text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-wider">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Como Subir de Nível de Membro:
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-stone-300 leading-relaxed">
+                  {getMemberBadge(currentUser?.guitarLevel || "Iniciante").nextRequirement}
+                </p>
+              </div>
+
+              {/* Botão de Ir para os Testes */}
+              <button
+                onClick={() => {
+                  setIsMemberCardOpen(false);
+                  setActiveTab("lessons");
+                }}
+                className="w-full mt-5 py-2.5 bg-amber-700 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition duration-150 flex items-center justify-center gap-2 cursor-pointer border-0 shadow-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+                Ir para Lições e Testes de Nível
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
